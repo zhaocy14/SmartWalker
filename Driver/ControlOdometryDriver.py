@@ -161,7 +161,7 @@ class ControlDriver(Thread):
         # 如果 record_mode 是 True，则停掉电机，只记录数据
         if self.record_mode:
             self.stopMotor()
-
+        # TODO update the recording on NUC
         while True:
             # 读取驱动器监控信息
             vl, vr = self.get_rpm_Omega()

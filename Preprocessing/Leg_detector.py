@@ -97,13 +97,13 @@ class Leg_detector(object):
             self.right_leg = infinite_far
             return infinite_far, infinite_far
 
-    def scan_procedure(self, show: bool = False, is_record: bool = False):
+    def scan_procedure(self, file_path: str = "", show: bool = False, is_record: bool = False):
         info = self.rplidar.get_info()
         print(info)
         health = self.rplidar.get_health()
         print(health)
         if is_record:
-            data_path = father_path + os.path.sep + "record_irdata" + os.path.sep + "Record_data" + os.path.sep + "leg.txt"
+            data_path = file_path + os.path.sep + "leg.txt"
             file_leg = open(data_path, 'w')
         try:
             for i, scan in enumerate(self.rplidar.iter_scans(max_buf_meas=5000)):

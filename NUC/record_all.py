@@ -2,21 +2,20 @@ import time
 import numpy as np
 import serial
 import threading
-import os,sys
+import os, sys
 
 from Sensors import IMU, IRCamera, softskin
 from Preprocessing import Leg_detector
 from Driver import ControlOdometryDriver as CD
 
 resource = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep +"SmartWalker"+
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep + "SmartWalker" +
     os.path.sep + "data")
 
 """portal num"""
 camera_portal = '/dev/ttyUSB2'
 lidar_portal = '/dev/ttyUSB0'
 IMU_walker_portal = '/dev/ttyUSB3'
-
 
 """IMU part"""
 # IMU_human = IMU.IMU()
@@ -37,14 +36,13 @@ Skin.build_base_line_data()
 
 seperately_recording = True
 
-
 if seperately_recording:
     thread_skin = threading.Thread(target=Skin.read_and_record, args=(True,))
-    thread_camera = threading.Thread(target=Camera.record_write, args=(True, True, True))
+    thread_camera = threading.Thread(target=Camera.record_write, args=(resource, True, True, True))
     # thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
-    thread_IMU_walker = threading.Thread(target=IMU_walker.read_record, args=())
-    thread_cd = threading.Thread(target=Cd.control_part, args=())
-    thread_leg = threading.Thread(target=Ld.scan_procedure, args=(False,True))
+    thread_IMU_walker = threading.Thread(target=IMU_walker.read_record, args=(resource,))
+    thread_cd = threading.Thread(target=Cd.control_part, args=(resource,))
+    thread_leg = threading.Thread(target=Ld.scan_procedure, args=(False, True))
 
     thread_skin.start()
     thread_camera.start()
@@ -79,9 +77,3 @@ else:
     #         data = data + Camera.temperature
     #         data = data +
     #         pass
-
-
-
-
-
-

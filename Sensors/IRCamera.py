@@ -17,10 +17,8 @@ from PIL import Image
 import cv2
 import math
 
-resource = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep + "Record_data")
-# resource_video = resource + os.path.sep + "output.avi"
-# resource_img = resource + os.path.sep + "output_npdata"
+
+
 
 class IRCamera(object):
     # port_name = ''
@@ -172,16 +170,13 @@ class IRCamera(object):
                     break
         return temperature
 
-    def record_write(self,time_index = False):
+    def record_write(self,file_path:str, time_index:bool = False):
         head = []
         data = []
         rest_num = 5
-        ir_data_path = resource + os.path.sep + "ir_data.txt"
+        ir_data_path = file_path + os.path.sep + "ir_data.txt"
         file_ir = open(ir_data_path, "w")
-
-        processed_data_path = resource + os.path.sep + "pro_data.txt"
-        file_processed = open(processed_data_path, 'w')
-        # time_previous = time.time()
+        # TODO: update the bool condition on NUC
         while True:
             s = self.serial.read(1).hex()
             if s != "":
@@ -289,6 +284,7 @@ class IRCamera(object):
 if __name__ == '__main__':
     ir_data = IRCamera()
     time_previous = time.time()
+    resource = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep + "SmartWalker" + os.path.sep + "data")
     ir_data_path = resource + os.path.sep + "ir_data.txt"
     file_ir = open(ir_data_path, "w")
     while True:
