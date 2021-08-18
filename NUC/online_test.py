@@ -4,15 +4,14 @@ import numpy as np
 import time
 import threading
 import tensorflow as tf
-import softskin
-import IRCamera
-from Network import train_network
+from Sensors import IRCamera, softskin
+from Network import FrontFollowingNetwork as FFL
 from Driver import ControlOdometryDriver as CD
 import cv2 as cv
 
 if __name__ == "__main__":
   win_width = 10
-  tf_model = train_network.FrontFollowing_Model(win_width=win_width)
+  tf_model = FFL.FrontFollowing_Model(win_width=win_width)
   weight_path = "./Network/checkpoints/FrontFollowing"
   tf_model.model.load_weights(weight_path)
 

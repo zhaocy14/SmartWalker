@@ -1,16 +1,15 @@
-import IMU
-import IRCamera
-import softskin
 import time
-import leg_detector
 import numpy as np
 import serial
 import threading
 import os,sys
+
+from Sensors import IMU, IRCamera, softskin
+from Preprocessing import Leg_detector
 from Driver import ControlOdometryDriver as CD
 
 resource = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep +"record_irdata"+
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep +"SmartWalker"+
     os.path.sep + "data")
 
 """portal num"""
@@ -31,7 +30,7 @@ Skin = softskin.SoftSkin()
 """control driver(record mode)"""
 Cd = CD.ControlDriver(record_mode=True)
 """leg detector part"""
-Ld = leg_detector.Leg_detector(lidar_portal)
+Ld = Leg_detector.Leg_detector(lidar_portal)
 """initiate skin part"""
 time.sleep(1)
 Skin.build_base_line_data()
