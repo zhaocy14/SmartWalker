@@ -26,10 +26,14 @@ from Driver import Odometry as odo
 import matplotlib.pyplot as plt
 import serial
 import math
+import os
+import sys
 
 
 
-
+resource = os.path.abspath(
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
+    os.path.sep + "Record_data")
 # def singleton(cls, *args, **kw):
 #     instances = {}
 #
@@ -162,6 +166,10 @@ class ControlDriver(Thread):
         if self.record_mode:
             self.stopMotor()
 
+        Odo_data_path = resource + os.path.sep + "Driver.txt"
+
+        file_odo = open(Odo_data_path, "w")
+
         while True:
             # 读取驱动器监控信息
             vl, vr = self.get_rpm_Omega()
@@ -231,12 +239,13 @@ class ControlDriver(Thread):
                     # print('Right motor malfunction: ' + self.motorStatus_r["Malfunction"])
                     self.flag_end = 1
 
-                # print("%f\t%f\t%f\t%f" % (time.time(), math.degrees(self.odo.THETA),self.position[0],self.position[1]))
-                # print(
-                #     "%f\t%f\t%f\t%f\t%f" % (
-                #     time.time(), self.odo.get_dxdydtheta()[0], self.odo.get_dxdydtheta()[1], self.odo.getROS_XYTHETA()[0],
-                #     self.odo.getROS_XYTHETA()[1]))
-                print("left wheel:",self.position[3],"right wheel:",self.position[4])
+
+                print("\rdx:%.4f, dy:%.4f, X:%.4f, Y:%.4f"%
+                      (self.position[5],self.position[6],self.position[0],self.position[1]), end='')
+                combine_data = list([time.time()]) + list(self.position)
+                # print(combine_data)
+                file_odo.write(str(combine_data) + "\n")
+                file_odo.flush()
             except IndexError as i:
                 print(i)
 
@@ -278,6 +287,6 @@ if __name__ == '__main__':
 
     cd = ControlDriver(record_mode=True)
     cd.start()
-    while True:
-        print("X=%.3fm,  Y=%.3fm,  THETA=%.2f" % (cd.position[0], cd.position[1], cd.position[2]/math.pi*180))
-        time.sleep(0.1)
+    # while True:
+    #     print("X=%.3fm,  Y=%.3fm,  THETA=%.2f" % (cd.position[0], cd.position[1], cd.position[2]/math.pi*180))
+    #     time.sleep(0.1)

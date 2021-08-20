@@ -117,7 +117,7 @@ class Odometry:
             self._THETA += 2 * math.pi
         # print("X,Y,theta",self.X,self.Y,self.THETA)
         self._previous_time = currnt_time
-        return (self._X, self._Y, self._THETA, self.d_l, self.d_r)
+        return (self._X, self._Y, self._THETA, self.d_l, self.d_r, self._dX, self._dY,self.dx,self.dy)
 
     def getROS_speed(self):
         return (self.V, self.OMEGA, self.Radius)
@@ -131,7 +131,6 @@ class Odometry:
     def getTurningRadius(self):
 
         return self.Radius
-
 
 if __name__ == "__main__":
     # odo = Odometry(X=0.0, Y=0.0, THETA=0.0, Odo_l=0, Odo_r=0)

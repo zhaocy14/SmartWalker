@@ -14,19 +14,20 @@ sys.path.append(father_path)
 
 class Leg_detector(object):
 
-    def __init__(self, portal: str = 'COM3'):
+    def __init__(self, portal: str = '/dev/ttyUSB1'):
         self.rplidar = RPLidar(portal)  # '/dev/ttyUSB1'
         self.kmeans = KMeans(n_clusters=2)
         self.left_leg = np.zeros((1, 2))
         self.right_leg = np.zeros((1, 2))
 
         self.scope = 1
-        self.size = 1000
+        self.size = 300
         self.half_size = int(self.size / 2)
-        self.column_boundry = 100
+        self.column_boundry = self.half_size-20
         self.filter_theta = 150
-        self.l_r_boundary = 30
-        self.bottom_boundary = 20
+        self.bottom_boundary = self.half_size-100
+
+        self.center_point = np.array([self.half_size+40,self.half_size])
 
     def turn_to_img(self, original_list: list, show: bool = False):
         """turn the scan data list into a ndarray"""
@@ -34,7 +35,7 @@ class Leg_detector(object):
         for i in range(len(original_list)):
             theta = original_list[i][1]
             theta = -theta / 180 * math.pi
-            distance = original_list[i][2]
+            distance = original_list[i][2] / 10  # unit: mm
             index_x = int(distance * math.cos(theta) + self.half_size)
             index_y = int(distance * math.sin(theta) + self.half_size)
             # print(index_x,index_y)
@@ -77,7 +78,8 @@ class Leg_detector(object):
                 im[center_1[0] - 2: center_1[0] + 2, center_1[1] - 2:center_1[1] + 2] = 1
                 im[center_2[0] - 2:center_2[0] + 2, center_2[1] - 2:center_2[1] + 2] = 1
                 im[self.half_size - 1:self.half_size + 1, self.half_size - 1:self.half_size + 1] = 1
-                im_show = im + img
+                # im_show = im + img
+                im_show = im
                 size = int(self.size * self.scope)
                 im_show = Image.fromarray(im_show)
                 im_show = im_show.resize((size, size), Image.BILINEAR)
@@ -85,14 +87,14 @@ class Leg_detector(object):
                 cv2.imshow("leg", im_show)
                 cv2.waitKey(1)
             if center_1[1] < center_2[1]:
-                self.left_leg = center_1
-                self.right_leg = center_2
+                self.left_leg = self.center_point - center_1
+                self.right_leg = self.center_point - center_2
             else:
-                self.left_leg = center_2
-                self.right_leg = center_1
+                self.left_leg = self.center_point - center_2
+                self.right_leg = self.center_point - center_1
             return center_1, center_2
         else:
-            infinite_far = np.array([10000, 10000])
+            infinite_far = np.array([-180, -180])
             self.left_leg = infinite_far
             self.right_leg = infinite_far
             return infinite_far, infinite_far
@@ -109,7 +111,7 @@ class Leg_detector(object):
             for i, scan in enumerate(self.rplidar.iter_scans(max_buf_meas=5000)):
                 # print('%d: Got %d measurments' % (i, len(scan)))
                 # print(scan)
-                img = self.turn_to_img(scan, show=show)
+                img = self.turn_to_img(scan)
                 self.detect_leg(self.kmeans, img, show=show)
                 print(self.left_leg, self.right_leg)
                 if is_record:
@@ -128,4 +130,4 @@ class Leg_detector(object):
 
 if __name__ == "__main__":
     lidar = Leg_detector()
-    lidar.scan_procedure(show=False)
+    lidar.scan_procedure(show=True)
