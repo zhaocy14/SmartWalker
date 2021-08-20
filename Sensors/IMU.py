@@ -5,8 +5,6 @@ import time
 import numpy as np
 import threading
 
-resource = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep + "IMU")
 class IMU(object):
 
     def __init__(self, baud_rate=115200):
@@ -201,8 +199,8 @@ class IMU(object):
             angle_z -= 2 * k_angle
         return angle_x, angle_y, angle_z
 
-    def read_record(self,time_delay=0,show=False):
-        IMU_data_path = resource + os.path.sep + "IMU"+str(self.port_name)+".txt"
+    def read_record(self, file_path:str, time_delay:float = 0,show:bool = False):
+        IMU_data_path = file_path + os.path.sep + "IMU.txt"
         print(IMU_data_path)
         file_IMU = open(IMU_data_path, "w")
         while True:
