@@ -1,11 +1,14 @@
 #-*- coding: UTF-8 -*-
+import sys,os
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import os
 from typing import Tuple
 from Network import resnet
-
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
 class Conv_part(keras.Model):
 
     def __init__(self):
@@ -217,10 +220,10 @@ if __name__ == "__main__":
 
     while True:
         test_loss, test_acc = FFL_Model.model.evaluate(test_data, test_label, verbose=1)
-        if test_acc < 0.9:
+        if test_acc < 0.5:
             FFL_Model.model.fit(train_data, train_label, batch_size=256, epochs=100, validation_data=(validation_data, validation_label),verbose=1)
             FFL_Model.model.save_weights('./checkpoints/FFL')
-        elif test_acc < 0.93:
+        elif test_acc < 0.6:
             FFL_Model.model.fit(train_data, train_label, batch_size=256, epochs=10,validation_data=(validation_data,validation_label),verbose=1)
             FFL_Model.model.save_weights('./checkpoints/FFL')
         else:
