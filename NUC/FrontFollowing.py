@@ -16,7 +16,7 @@ IMU_walker_portal = '/dev/ttyUSB1'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
-CD = cd.ControlDriver(record_mode=False)
+CD = cd.ControlDriver(record_mode=False,left_right=0)
 
 
 
@@ -38,44 +38,46 @@ def position_calculation(left_leg:np.ndarray, right_leg:np.ndarray,
     new_buffer[-1,4] = human_position[0]
     new_buffer[-1,5] = human_position[1]
     # new_buffer[-1,:] = np.c_[left_leg,right_leg,human_position]
-    current_position = np.matmul(weight_array,new_buffer[:,new_buffer.shape[1]-2:new_buffer.shape[1]-1])
+    # print(new_buffer.shape)
+    # print(new_buffer[:,new_buffer.shape[1]-2:new_buffer.shape[1]-1].shape)
+    current_position = np.matmul(weight_array,new_buffer[:,new_buffer.shape[1]-2:new_buffer.shape[1]])[0]
     return current_position, new_buffer
 
 def main_FFL(CD:cd.ControlDriver, LD:Leg_detector.Leg_detector):
     buffer_length = 3
     position_buffer = np.zeros((buffer_length, 6))
-    weight_array = np.array((range(1, buffer_length + 1)))
+    weight_array = np.array((range(1, buffer_length + 1))).reshape((1,3))
     weight_array = weight_array / weight_array.sum()
     CD.speed = 0
     CD.omega = 0
     CD.radius = 0
     while True:
-        time.sleep(0.2)
+        time.sleep(0.1)
         current_left_leg = LD.left_leg
         current_right_leg = LD.right_leg
         current_position, position_buffer = position_calculation(current_left_leg,current_right_leg,
                                                                  position_buffer,weight_array)
-
-        forward_boundry = 5
-        backward_boundry = -5
+        print(current_position)
+        forward_boundry = 3
+        backward_boundry = -8
         left_boundry = -5
         right_boundry = 5
         if current_position[0] < backward_boundry \
-                and current_position[0] > -10:
-            CD.speed = -0.2
+                and current_position[0] > -40:
+            CD.speed = -0.1
             CD.omega = 0
             CD.radius = 0
         elif current_position[0] > forward_boundry:
             if current_position[1] < left_boundry:
                 CD.speed = 0
-                CD.omega = 0.2
+                CD.omega = 0.1
                 CD.radius = 1
             elif current_position[1] > right_boundry:
                 CD.speed = 0
-                CD.omega = -0.2
+                CD.omega = -0.1
                 CD.radius = 1
             else:
-                CD.speed = 0.2
+                CD.speed = 0.1
                 CD.omega = 0
                 CD.radius = 0
         else:
