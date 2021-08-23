@@ -5,6 +5,10 @@ import time
 import numpy as np
 import threading
 
+resource = os.path.abspath(
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."
+    )
+
 class IMU(object):
 
     def __init__(self, baud_rate=115200):
@@ -20,7 +24,7 @@ class IMU(object):
         self.AngleData = [0.0] * 8
         self.FrameState = 0  # 通过0x后面的值判断属于哪一种情况
         self.Bytenum = 0  # 读取到这一段的第几位
-        self.CheckSum = 0  # 求和校验位         
+        self.CheckSum = 0  # 求和校验位
 
         self.a = [0.0] * 3
         self.w = [0.0] * 3
@@ -49,10 +53,12 @@ class IMU(object):
         port_cnt = 0
         port_list = []
         for port in ports:
-            if port.description.__contains__(description):
+            # self.print_serial(port)
+            if port.device.__contains__(description):
                 port_list = port.description
                 port_path = port.device
                 self.print_serial(port)
+                # print(port.name)
                 return port_path, port_list
 
         print("Cannot find the device: IMU")
@@ -199,8 +205,10 @@ class IMU(object):
             angle_z -= 2 * k_angle
         return angle_x, angle_y, angle_z
 
-    def read_record(self, file_path:str, time_delay:float = 0,show:bool = False):
-        IMU_data_path = file_path + os.path.sep + "IMU.txt"
+    def read_record(self,time_delay=0,show=False):
+        portnameprint = str(self.port_name)
+        portnameprint = portnameprint[-4:len(portnameprint)]
+        IMU_data_path = resource +os.path.sep+"data"+ os.path.sep + "IMU.txt"
         print(IMU_data_path)
         file_IMU = open(IMU_data_path, "w")
         while True:
@@ -221,13 +229,12 @@ class IMU(object):
             time.sleep(time_delay)
 
 if __name__ == '__main__':
-    resource = os.path.abspath(
-        os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
-        os.path.sep + "data")
-    IMU_1 = IMU("/dev/ttyUSB2")
-
-    IMU_1.read_record(resource)
-
+    IMU_1 = IMU()
+    # IMU_2 = IMU()
+    time.sleep(2)
+    IMU_1.open_serial("/dev/ttyUSB1")
+    # IMU_1.collect_data(show=True)
+    IMU_1.read_record(show=True)
     # IMU_2.open_serial("COM9")
     # I1_thread = threading.Thread(target=IMU_1.read_record,args=(0,False,))
     # I2_thread = threading.Thread(target=IMU_2.read_record,args=(0,False,))
