@@ -40,7 +40,7 @@ def position_calculation(left_leg:np.ndarray, right_leg:np.ndarray,
     # new_buffer[-1,:] = np.c_[left_leg,right_leg,human_position]
     # print(new_buffer.shape)
     # print(new_buffer[:,new_buffer.shape[1]-2:new_buffer.shape[1]-1].shape)
-    current_position = np.matmul(weight_array,new_buffer[:,new_buffer.shape[1]-2:new_buffer.shape[1]])[0]
+    current_position = np.matmul(weight_array,new_buffer)[0]
     return current_position, new_buffer
 
 def main_FFL(CD:cd.ControlDriver, LD:Leg_detector.Leg_detector):
@@ -62,17 +62,16 @@ def main_FFL(CD:cd.ControlDriver, LD:Leg_detector.Leg_detector):
         backward_boundry = -8
         left_boundry = -5
         right_boundry = 5
-        if current_position[0] < backward_boundry \
-                and current_position[0] > -40:
+        if backward_boundry > current_position[4] > -40:
             CD.speed = -0.1
             CD.omega = 0
             CD.radius = 0
-        elif current_position[0] > forward_boundry:
+        elif current_position[4] > forward_boundry:
             if current_position[1] < left_boundry:
                 CD.speed = 0
                 CD.omega = 0.1
                 CD.radius = 1
-            elif current_position[1] > right_boundry:
+            elif current_position[3] > right_boundry:
                 CD.speed = 0
                 CD.omega = -0.1
                 CD.radius = 1
