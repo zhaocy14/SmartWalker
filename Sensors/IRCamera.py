@@ -16,8 +16,8 @@ import numpy as np
 import cv2
 from PIL import Image
 resource = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep +"record_irdata"+
-    os.path.sep + "Record_data")
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."
+    )
 # resource_video = resource + os.path.sep + "output.avi"
 # resource_img = resource + os.path.sep + "output_npdata"
 

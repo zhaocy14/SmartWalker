@@ -221,11 +221,12 @@ class IMU(object):
             time.sleep(time_delay)
 
 if __name__ == '__main__':
-    IMU_1 = IMU()
-    # IMU_2 = IMU()
-    time.sleep(2)
-    IMU_1.open_serial()
-    IMU_1.collect_data(show=True)
+    resource = os.path.abspath(
+        os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
+        os.path.sep + "data")
+    IMU_1 = IMU("/dev/ttyUSB2")
+
+    IMU_1.read_record(resource)
 
     # IMU_2.open_serial("COM9")
     # I1_thread = threading.Thread(target=IMU_1.read_record,args=(0,False,))

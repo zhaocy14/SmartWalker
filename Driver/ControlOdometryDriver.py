@@ -32,8 +32,7 @@ import sys
 
 
 resource = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
-    os.path.sep + "SmartWalker")
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." )
 # def singleton(cls, *args, **kw):
 #     instances = {}
 #
