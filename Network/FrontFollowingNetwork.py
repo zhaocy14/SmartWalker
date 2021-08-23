@@ -9,7 +9,6 @@ class Conv_part(keras.Model):
 
     def __init__(self):
         super().__init__()
-        self.ir_data_width = 768
         self.layer1  = keras.layers.Conv2D(filters=3, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
         self.layer2 = keras.layers.MaxPool2D(pool_size=3,strides=2)
@@ -18,6 +17,22 @@ class Conv_part(keras.Model):
         y = self.layer1(inputs)
         y = self.layer2(y)
         return y
+
+class Skin_part(keras.Model):
+
+    def __init__(self,input_shape):
+        super().__init__()
+        self.softskin_width = 32
+        self.layer_r = keras.layers.Reshape(input_shape=(input_shape), target_shape=(1, self.softskin_width))
+        self.layer_1 = keras.layers.Dense(self.dense_unit, activation="relu")
+        self.layer_2 = keras.layers.Dense(self.dense_unit, activation="relu")
+
+    def call(self,input):
+        y = self.layer_r(input)
+        y = self.layer_1(y)
+        y = self.layer_2(y)
+        return y
+
 
 class FrontFollowing_Model(object):
 
@@ -37,29 +52,18 @@ class FrontFollowing_Model(object):
         self.is_skin_input = is_skin_input
 
         """network building"""
-        self.reshape_layer = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))
         self.ir_part_0 = Conv_part()
         self.ir_part = resnet.get_model("resnet34")
+        # self.skin_part = Skin_part()
         self.model = self.create_model_dynamic()
 
     def call(self, inputs: np.ndarray) -> tf.Tensor:
         return self.model(inputs)
 
-    def ir_conv_layers(self,inputs:tf.Tensor)->tf.Tensor:
-        y = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))(inputs)
-        y = keras.layers.Conv2D(filters=self.filter_num, kernel_size=self.kernel_size, strides=1, activation="relu",
-                                padding="SAME")(y)
-        y = keras.layers.Dropout(0.5)(y)
-        y = keras.layers.MaxPooling2D(pool_size=3, strides=2)(y)
-        y = keras.layers.Dropout(0.5)(y)
-        return y
-
     def skin_dense_layers(self,inputs:tf.Tensor,input_shape:Tuple)->tf.Tensor:
         y = keras.layers.Reshape(input_shape=(input_shape), target_shape=(1, self.softskin_width))(inputs)
         y = keras.layers.Dense(self.dense_unit, activation="relu")(y)
-        y = keras.layers.Dropout(0.5)(y)
         y = keras.layers.Dense(self.dense_unit, activation="relu")(y)
-        y = keras.layers.Dropout(0.5)(y)
         return y
 
     def feature_abstraction(self, ir_data:tf.Tensor, skin_data:tf.Tensor, leg_data:tf.Tensor) -> tf.Tensor:
@@ -78,6 +82,7 @@ class FrontFollowing_Model(object):
 
                 # soft skin feature abstraction
                 skin_shape = skin_one_frame.shape
+                print(skin_shape)
                 output_skin = keras.layers.Flatten()(self.skin_dense_layers(skin_one_frame, skin_shape))
                 output_leg = keras.layers.Flatten()(leg_data)
 
