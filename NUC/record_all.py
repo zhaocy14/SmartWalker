@@ -4,18 +4,21 @@ import serial
 import threading
 import os, sys
 
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
 from Sensors import IMU, IRCamera, softskin
 from Preprocessing import Leg_detector
 from Driver import ControlOdometryDriver as CD
 
 resource = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." + os.path.sep + "SmartWalker" +
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
     os.path.sep + "data")
-
+print(resource)
 """portal num"""
-camera_portal = '/dev/ttyUSB2'
-lidar_portal = '/dev/ttyUSB0'
-IMU_walker_portal = '/dev/ttyUSB3'
+camera_portal = '/dev/ttyUSB0'
+lidar_portal = '/dev/ttyUSB1'
+IMU_walker_portal = '/dev/ttyUSB2'
 
 """IMU part"""
 # IMU_human = IMU.IMU()

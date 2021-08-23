@@ -27,7 +27,7 @@ class Leg_detector(object):
         self.filter_theta = 150
         self.bottom_boundary = self.half_size-100
 
-        self.center_point = np.array([self.half_size+40,self.half_size])
+        self.center_point = np.array([self.half_size+45,self.half_size])
 
         self.is_show = is_show
 
