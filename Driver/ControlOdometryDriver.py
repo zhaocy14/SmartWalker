@@ -238,8 +238,8 @@ class ControlDriver(Thread):
                     self.flag_end = 1
 
 
-                print("\rdx:%.4f, dy:%.4f, X:%.4f, Y:%.4f"%
-                      (self.position[5],self.position[6],self.position[0],self.position[1]), end='')
+                # print("\rdx:%.4f, dy:%.4f, X:%.4f, Y:%.4f"%
+                #       (self.position[5],self.position[6],self.position[0],self.position[1]), end='')
                 combine_data = list([time.time()]) + list(self.position)
                 # print(combine_data)
                 if self.record_mode:

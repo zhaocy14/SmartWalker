@@ -14,7 +14,7 @@ sys.path.append(father_path)
 
 class Leg_detector(object):
 
-    def __init__(self, portal: str = '/dev/ttyUSB1'):
+    def __init__(self, portal: str = '/dev/ttyUSB1', is_show:bool=False):
         self.rplidar = RPLidar(portal)  # '/dev/ttyUSB1'
         self.kmeans = KMeans(n_clusters=2)
         self.left_leg = np.zeros((1, 2))
@@ -28,6 +28,8 @@ class Leg_detector(object):
         self.bottom_boundary = self.half_size-100
 
         self.center_point = np.array([self.half_size+40,self.half_size])
+
+        self.is_show = is_show
 
     def turn_to_img(self, original_list: list, show: bool = False):
         """turn the scan data list into a ndarray"""
@@ -113,7 +115,7 @@ class Leg_detector(object):
                 # print(scan)
                 img = self.turn_to_img(scan)
                 self.detect_leg(self.kmeans, img, show=show)
-                print(self.left_leg, self.right_leg)
+                # print(self.left_leg, self.right_leg)
                 if is_record:
                     time_index = time.time()
                     leg_data = np.r_[self.left_leg, self.right_leg]

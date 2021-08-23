@@ -30,8 +30,14 @@ def position_calculation(left_leg:np.ndarray, right_leg:np.ndarray,
     human_position = (left_leg+right_leg)/2
     new_buffer = np.copy(position_buffer)
     new_buffer[0:new_buffer.shape[0]-1,:] = position_buffer[1:position_buffer.shape[0],:]
-    new_buffer[-1,:] = np.r_[left_leg,right_leg,human_position]
-
+    # print("copy",np.r_[left_leg, right_leg, human_position].shape)
+    new_buffer[-1,0] = left_leg[0]
+    new_buffer[-1,1] = left_leg[1]
+    new_buffer[-1,2] = right_leg[0]
+    new_buffer[-1,3] = right_leg[1]
+    new_buffer[-1,4] = human_position[0]
+    new_buffer[-1,5] = human_position[1]
+    # new_buffer[-1,:] = np.c_[left_leg,right_leg,human_position]
     current_position = np.matmul(weight_array,new_buffer[:,new_buffer.shape[1]-2:new_buffer.shape[1]-1])
     return current_position, new_buffer
 
@@ -54,21 +60,22 @@ def main_FFL(CD:cd.ControlDriver, LD:Leg_detector.Leg_detector):
         backward_boundry = -5
         left_boundry = -5
         right_boundry = 5
-        if current_position[0] < backward_boundry:
-            CD.speed = -0.5
+        if current_position[0] < backward_boundry \
+                and current_position[0] > -10:
+            CD.speed = -0.2
             CD.omega = 0
             CD.radius = 0
         elif current_position[0] > forward_boundry:
             if current_position[1] < left_boundry:
                 CD.speed = 0
-                CD.omega = 0.5
+                CD.omega = 0.2
                 CD.radius = 1
             elif current_position[1] > right_boundry:
                 CD.speed = 0
-                CD.omega = -0.5
+                CD.omega = -0.2
                 CD.radius = 1
             else:
-                CD.speed = 0.5
+                CD.speed = 0.2
                 CD.omega = 0
                 CD.radius = 0
         else:
@@ -82,6 +89,7 @@ thread_cd = threading.Thread(target=CD.control_part,args=())
 thread_main = threading.Thread(target=main_FFL,args=(CD,LD))
 
 thread_leg.start()
+time.sleep(1)
 thread_cd.start()
 thread_main.start()
 
