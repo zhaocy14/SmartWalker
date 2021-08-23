@@ -201,12 +201,12 @@ if __name__ == "__main__":
     test_label = concatenate_label[portion_validation:concatenate_dataset.shape[0]]
     test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
 
-    # test_data_path = "/data/cyzhao/test_data.txt"
-    # test_data = np.loadtxt(test_data_path)
-    # test_label_path = "/data/cyzhao/test_label.txt"
-    # test_label = np.loadtxt(test_label_path)
-    # test_label = test_label.reshape((test_label.shape[0], 1))
-    # test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
+    test_data_path = "/data/cyzhao/test_data.txt"
+    test_data = np.loadtxt(test_data_path)
+    test_label_path = "/data/cyzhao/test_label.txt"
+    test_label = np.loadtxt(test_label_path)
+    test_label = test_label.reshape((test_label.shape[0], 1))
+    test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
 
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
@@ -219,10 +219,10 @@ if __name__ == "__main__":
         test_loss, test_acc = FFL_Model.model.evaluate(test_data, test_label, verbose=1)
         if test_acc < 0.9:
             FFL_Model.model.fit(train_data, train_label, batch_size=256, epochs=100, validation_data=(validation_data, validation_label),verbose=1)
-            FFL_Model.model.save_weights('./checkpoints/CNN+DNN+LSTM')
+            FFL_Model.model.save_weights('./checkpoints/FFL')
         elif test_acc < 0.93:
             FFL_Model.model.fit(train_data, train_label, batch_size=256, epochs=10,validation_data=(validation_data,validation_label),verbose=1)
-            FFL_Model.model.save_weights('./checkpoints/CNN+DNN+LSTM')
+            FFL_Model.model.save_weights('./checkpoints/FFL')
         else:
             break
 
