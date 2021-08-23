@@ -4,74 +4,21 @@ from tensorflow import keras
 import numpy as np
 import os
 from typing import Tuple
+from Network import resnet
 
-# def my_conv(x,filter_num=5,kernel_size=4,ir_data_width=768):
-#     y = keras.layers.Reshape(input_shape=(ir_data_width, 1), target_shape=(32, 24, 1))(x)
-#     y = keras.layers.Conv2D(filters=filter_num, kernel_size=kernel_size, strides=1, activation="relu",
-#                                     padding="SAME")(y)
-#     y = keras.layers.MaxPooling2D(pool_size=3, strides=2)(y)
-#     return y
-#
-# def my_skin(x,input_shape,softskin_width=32,dens_num=20):
-#     y = keras.layers.Reshape(input_shape=(input_shape),target_shape=(1,softskin_width))(x)
-#     y = keras.layers.Dense(dens_num,activation="relu")(y)
-#     y = keras.layers.Dense(dens_num, activation="relu")(y)
-#     return y
-#
-#
-# def ir_part(ir_data,win_width,ir_data_width=768):
-#     for i in range(win_width):
-#         [ir_one_frame,ir_data] = tf.split(ir_data,[ir_data_width,ir_data_width*(win_width-1-i)],axis=1)
-#         if i == 0:
-#             output_ir = my_conv(ir_one_frame)
-#         else:
-#             output_one_frame = my_conv(ir_one_frame)
-#             output_ir = keras.layers.concatenate([output_ir, output_one_frame])
-#     output_ir = keras.layers.Flatten()(output_ir)
-#     return output_ir
-#
-# def skin_part(skin_data,win_width,softskin_width=32):
-#     for i in range(win_width):
-#         [skin_one_frame,skin_data] = tf.split(skin_data,[softskin_width,softskin_width*(win_width-1-i)],axis=1)
-#         skin_shape = skin_one_frame.shape
-#         if i == 0:
-#             output_skin = my_skin(skin_one_frame,skin_shape)
-#         else:
-#             output_skin = keras.layers.concatenate([output_skin, my_skin(skin_one_frame,skin_shape)])
-#     output_skin = keras.layers.Flatten()(output_skin)
-#     return output_skin
-#
-# def feature_abstraction(ir_data,skin_data,win_width,ir_data_width=768,softskin_width=32):
-#     for i in range(win_width):
-#         [ir_one_frame, ir_data] = tf.split(ir_data, [ir_data_width, ir_data_width * (win_width - 1 - i)], axis=1)
-#         [skin_one_frame, skin_data] = tf.split(skin_data, [softskin_width, softskin_width * (win_width - 1 - i)], axis=1)
-#         skin_shape = skin_one_frame.shape
-#         output_ir = keras.layers.Flatten()(my_conv(ir_one_frame))
-#         output_skin = keras.layers.Flatten()(my_skin(skin_one_frame,skin_shape))
-#         if i == 0:
-#             output_feature = keras.layers.concatenate([output_ir,output_skin])
-#         else:
-#             output_feature = keras.layers.concatenate([output_feature,output_ir,output_skin])
-#     return output_feature
-#
-# def create_model_dynamic(win_width=10,ir_data_width=768,softskin_width=32,show_summary=False):
-#     input_all = keras.Input(shape=((ir_data_width+softskin_width)*win_width, 1))
-#
-#     """Split the input data into two parts:ir data and softskin data"""
-#     [input_ir,input_softskin] = tf.split(input_all,[ir_data_width*win_width,softskin_width*win_width],axis=1)
-#
-#     output_combine = feature_abstraction(ir_data=input_ir,skin_data=input_softskin,win_width=win_width)
-#     output_reshape = keras.layers.Reshape(input_shape=(output_combine.shape),
-#                                           target_shape=(win_width,int(output_combine.shape[1]/win_width)))(output_combine)
-#     output_LSTM = keras.layers.LSTM(128, activation='tanh')(output_reshape)
-#     output_final = keras.layers.Dense(32, activation='relu')(output_LSTM)
-#     output_final = keras.layers.Dense(7, activation='softmax')(output_final)
-#
-#     model = keras.Model(inputs=input_all, outputs=output_final)
-#     if show_summary:
-#         model.summary()
-#     return model
+class Conv_part(keras.Model):
 
+    def __init__(self):
+        super().__init__()
+        self.ir_data_width = 768
+        self.layer1  = keras.layers.Conv2D(filters=3, kernel_size=3, strides=1, activation="relu",
+                                padding="SAME")
+        self.layer2 = keras.layers.MaxPool2D(pool_size=3,strides=2)
+
+    def call(self,inputs):
+        y = self.layer1(inputs)
+        y = self.layer2(y)
+        return y
 
 class FrontFollowing_Model(object):
 
@@ -89,6 +36,11 @@ class FrontFollowing_Model(object):
         self.show_summary = False
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
+
+        """network building"""
+        self.reshape_layer = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))
+        self.ir_part_0 = Conv_part()
+        self.ir_part = resnet.get_model("resnet34")
         self.model = self.create_model_dynamic()
 
     def call(self, inputs: np.ndarray) -> tf.Tensor:
@@ -115,32 +67,49 @@ class FrontFollowing_Model(object):
         if self.is_skin_input:
             """skin data as part of input"""
             for i in range(self.win_width):
+                # split the tensor buffer into frames
                 [ir_one_frame, ir_data] = tf.split(ir_data, [self.ir_data_width, self.ir_data_width * (self.win_width - 1 - i)], axis=1)
                 [skin_one_frame, skin_data] = tf.split(skin_data, [self.softskin_width, self.softskin_width * (self.win_width - 1 - i)],
                                                        axis=1)
+
+                # ir image feature abstraction
+                output_ir = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))(ir_one_frame)
+                output_ir = self.ir_part(output_ir)
+                output_ir = keras.layers.Flatten()(output_ir)
+
+                # soft skin feature abstraction
                 skin_shape = skin_one_frame.shape
-                output_ir = keras.layers.Flatten()(self.ir_conv_layers(ir_one_frame))
                 output_skin = keras.layers.Flatten()(self.skin_dense_layers(skin_one_frame, skin_shape))
                 output_leg = keras.layers.Flatten()(leg_data)
+
+                # feature vector concatenate
                 if i == 0:
                     output_feature = keras.layers.concatenate([output_ir, output_skin,output_leg])
-
                 else:
                     output_feature = keras.layers.concatenate([output_feature, output_ir, output_skin,output_leg])
             return output_feature
+
         else:
             """skin data is not included in the input"""
             for i in range(self.win_width):
+                # split the tensor buffer into frames
                 [ir_one_frame, ir_data] = tf.split(ir_data,
                                                    [self.ir_data_width, self.ir_data_width * (self.win_width - 1 - i)],
                                                    axis=1)
-                output_ir = keras.layers.Flatten()(self.ir_conv_layers(ir_one_frame))
+
+                # ir image feature abstraction
+                output_ir = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))(ir_one_frame)
+                output_ir = self.ir_part(output_ir)
+                output_ir = keras.layers.Flatten()(output_ir)
+
+                # leg feature just shortcut
                 output_leg = keras.layers.Flatten()(leg_data)
                 if i == 0:
                     output_feature = keras.layers.concatenate([output_ir, output_leg])
                 else:
                     output_feature = keras.layers.concatenate([output_feature, output_ir, output_leg])
             return output_feature
+
 
     def create_model_dynamic(self) -> tf.keras.Model:
         if self.is_skin_input:
@@ -162,6 +131,8 @@ class FrontFollowing_Model(object):
         output_reshape = keras.layers.Reshape(input_shape=(output_combine.shape),
                                               target_shape=(self.win_width, int(output_combine.shape[1] / self.win_width)))(
             output_combine)
+
+        # LSTM part
         output_LSTM = keras.layers.LSTM(32, activation='tanh')(output_reshape)
         output_final = keras.layers.Dropout(0.5)(output_LSTM)
         output_final = keras.layers.Dense(128, activation='relu')(output_final)
