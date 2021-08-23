@@ -1,14 +1,15 @@
 #-*- coding: UTF-8 -*-
 import sys,os
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import os
 from typing import Tuple
 from Network import resnet
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-sys.path.append(father_path)
+
 class Conv_part(keras.Model):
 
     def __init__(self):
