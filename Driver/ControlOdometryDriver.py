@@ -33,7 +33,7 @@ import sys
 
 resource = os.path.abspath(
     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
-    os.path.sep + "Record_data")
+    os.path.sep + "SmartWalker")
 # def singleton(cls, *args, **kw):
 #     instances = {}
 #
@@ -165,10 +165,8 @@ class ControlDriver(Thread):
         # 如果 record_mode 是 True，则停掉电机，只记录数据
         if self.record_mode:
             self.stopMotor()
-
-        Odo_data_path = resource + os.path.sep + "Driver.txt"
-
-        file_odo = open(Odo_data_path, "w")
+            Odo_data_path = resource + os.path.sep + "Driver.txt"
+            file_odo = open(Odo_data_path, "w")
 
         while True:
             # 读取驱动器监控信息
@@ -244,8 +242,9 @@ class ControlDriver(Thread):
                       (self.position[5],self.position[6],self.position[0],self.position[1]), end='')
                 combine_data = list([time.time()]) + list(self.position)
                 # print(combine_data)
-                file_odo.write(str(combine_data) + "\n")
-                file_odo.flush()
+                if self.record_mode:
+                    file_odo.write(str(combine_data) + "\n")
+                    file_odo.flush()
             except IndexError as i:
                 print(i)
 

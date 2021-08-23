@@ -16,7 +16,7 @@ IMU_walker_portal = '/dev/ttyUSB1'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
-CD = cd.ControlDriver()
+CD = cd.ControlDriver(record_mode=False)
 
 
 
