@@ -57,24 +57,26 @@ def main_FFL(CD:cd.ControlDriver, LD:Leg_detector.Leg_detector):
         current_right_leg = LD.right_leg
         current_position, position_buffer = position_calculation(current_left_leg,current_right_leg,
                                                                  position_buffer,weight_array)
+        np.set_printoptions(precision=3,suppress=False)
         print(current_position)
-        forward_boundry = 3
+        forward_boundry = 2
         backward_boundry = -8
-        left_boundry = -5
-        right_boundry = 5
+        center_boundry = 1.2
+        left_boundry = 9
+        right_boundry = -9
         if backward_boundry > current_position[4] > -40:
             CD.speed = -0.1
             CD.omega = 0
             CD.radius = 0
         elif current_position[4] > forward_boundry:
-            if current_position[1] < left_boundry:
+            if current_position[5] > center_boundry and current_position[1] > left_boundry:
                 CD.speed = 0
-                CD.omega = 0.1
-                CD.radius = 1
-            elif current_position[3] > right_boundry:
+                CD.omega = 0.3
+                CD.radius = 4
+            elif current_position[5] <-center_boundry and current_position[3] < right_boundry:
                 CD.speed = 0
-                CD.omega = -0.1
-                CD.radius = 1
+                CD.omega = -0.3
+                CD.radius = 4
             else:
                 CD.speed = 0.1
                 CD.omega = 0
