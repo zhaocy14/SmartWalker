@@ -37,14 +37,14 @@ class FrontFollowing_Model(object):
         self.filter_num = 3
         self.kernel_size = 3
         self.dense_unit = 10
-        self.show_summary = False
+        self.show_summary = True
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
 
         """network building"""
         self.reshape_layer = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))
         self.ir_part_0 = Conv_part()
-        self.ir_part = resnet.get_model("resnet34")
+        self.ir_part = resnet.get_model("resnet50")
         self.model = self.create_model_dynamic()
 
     def call(self, inputs: np.ndarray) -> tf.Tensor:
@@ -205,28 +205,31 @@ if __name__ == "__main__":
     test_label = concatenate_label[portion_validation:concatenate_dataset.shape[0]]
     test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
 
-    test_data_path = "/data/cyzhao/test_data.txt"
-    test_data = np.loadtxt(test_data_path)
-    test_label_path = "/data/cyzhao/test_label.txt"
-    test_label = np.loadtxt(test_label_path)
-    test_label = test_label.reshape((test_label.shape[0], 1))
-    test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
+    #test_data_path = "/data/cyzhao/test_data.txt"
+    #test_data = np.loadtxt(test_data_path)
+    #test_label_path = "/data/cyzhao/test_label.txt"
+    #test_label = np.loadtxt(test_label_path)
+    #test_label = test_label.reshape((test_label.shape[0], 1))
+    #test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
 
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
     FFL_Model.model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-
+    #FFL_Model.model.load_weights("./checkpoints/FFL18")
+    FFL_Model.model.fit(train_data, train_label, batch_size=64, epochs=100, validation_data=(validation_data, validation_label), verbose=1)
+    FFL_Model.model.save_weights("./checkpoints101/FFL50")
     while True:
+        break
         test_loss, test_acc = FFL_Model.model.evaluate(test_data, test_label, verbose=1)
         if test_acc < 0.5:
-            FFL_Model.model.fit(train_data, train_label, batch_size=256, epochs=100, validation_data=(validation_data, validation_label),verbose=1)
-            FFL_Model.model.save_weights('./checkpoints/FFL')
-        elif test_acc < 0.6:
-            FFL_Model.model.fit(train_data, train_label, batch_size=256, epochs=10,validation_data=(validation_data,validation_label),verbose=1)
-            FFL_Model.model.save_weights('./checkpoints/FFL')
+            FFL_Model.model.fit(train_data, train_label, batch_size=512, epochs=50, validation_data=(validation_data, validation_label),verbose=1)
+            FFL_Model.model.save_weights('./checkpoints/FFL18')
+        elif test_acc < 0.85:
+            FFL_Model.model.fit(train_data, train_label, batch_size=512, epochs=10,validation_data=(validation_data,validation_label),verbose=1)
+            FFL_Model.model.save_weights('./checkpoints/FFL18')
         else:
             break
 

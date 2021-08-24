@@ -4,6 +4,8 @@ import numpy as np
 import os
 from typing import Tuple
 from Network import resnet
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd)+os.path.sep+"..")
 
 class Conv_part(keras.Model):
 
@@ -166,26 +168,27 @@ class FrontFollowing_Model(object):
 
 
 if __name__ == "__main__":
-
     gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
     os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
     model = FrontFollowing_Model(win_width=10,is_skin_input=False,is_multiple_output=False)
-    model.model.summary()
-    # model.model.compile(optimizer='RMSprop',
-    #                             loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    #                             metrics=['accuracy'])
-    # model.model.load_weights("./Record_data/server/checkpoints/FFL")
+    # model.model.summary()
+    model.model.compile(optimizer='RMSprop',
+                                loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                                metrics=['accuracy'])
+    check_point_path = os.path.abspath(father_path+os.path.sep+"ServerFiles"+os.path.sep+"checkpoints_saved"
+                                        + os.path.sep + "res34" + os.path.sep + "FFL34")
+    model.model.load_weights(check_point_path)
     #
-    # test_data_path = "./Record_data/data/test_data.txt"
-    # test_data = np.loadtxt(test_data_path)
-    # test_label_path = "./Record_data/data/test_label.txt"
-    # test_label = np.loadtxt(test_label_path)
-    # test_label = test_label.reshape((test_label.shape[0], 1))
-    # test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
-    # model.model.evaluate(test_data,test_label)
+    test_data_path = os.path.abspath(father_path+os.path.sep+"data"+os.path.sep+"test_data.txt")
+    test_data = np.loadtxt(test_data_path)
+    test_label_path = os.path.abspath(father_path+os.path.sep+"data"+os.path.sep+"test_label.txt")
+    test_label = np.loadtxt(test_label_path)
+    test_label = test_label.reshape((test_label.shape[0], 1))
+    test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
+    model.model.evaluate(test_data,test_label)
     # #
     # # concatenate_data_path = "./Record_data/data.txt"
     # concatenate_data = np.loadtxt(concatenate_data_path)

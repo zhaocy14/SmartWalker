@@ -21,7 +21,8 @@ def concatenate_data(num_list: list = [],istestdata:bool=False):
         if not istestdata:
             final_data_path = os.path.abspath(father_path + os.path.sep + "data.txt")
             final_label_path = os.path.abspath(father_path + os.path.sep + "label.txt")
-            np.savetxt(final_data_path, final_data, fmt="%d")
+            # print(final_data)
+            np.savetxt(final_data_path, final_data, fmt="%.3f")
             np.savetxt(final_label_path, final_label, fmt="%d")
 
             """Calculate the number/proportion of different movements"""
@@ -42,7 +43,7 @@ def concatenate_data(num_list: list = [],istestdata:bool=False):
         else:
             final_data_path = os.path.abspath(father_path + os.path.sep + "test_data.txt")
             final_label_path = os.path.abspath(father_path + os.path.sep + "test_label.txt")
-            np.savetxt(final_data_path, final_data, fmt="%d")
+            np.savetxt(final_data_path, final_data, fmt="%.3f")
             np.savetxt(final_label_path, final_label, fmt="%d")
 
             """Calculate the number/proportion of different movements"""
@@ -63,8 +64,8 @@ def concatenate_data(num_list: list = [],istestdata:bool=False):
 
 
 if __name__ == "__main__":
-    # num_list = [902, 906, 1468, 1543, 1947, 1959, 2193]
+    num_list = [902, 906, 1468, 1543, 1947, 1959, 2193]
+    concatenate_data(num_list)
 
-    # concatenate_data(num_list)
     num_list = [1456]
     concatenate_data(num_list,istestdata=True)
