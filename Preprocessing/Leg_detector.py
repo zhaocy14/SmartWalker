@@ -28,7 +28,6 @@ class Leg_detector(object):
         self.bottom_boundary = self.half_size-100
 
         self.center_point = np.array([self.half_size+45,self.half_size])
-
         self.is_show = is_show
 
     def turn_to_img(self, original_list: list, show: bool = False):

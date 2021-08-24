@@ -5,6 +5,11 @@ import math
 import matplotlib.pyplot as pyplot
 import cv2 as cv
 
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd))
+# sys.path.append(father_path)
+# print(father_path)
+
 def get_data(direction):
     # 原始信息获取
     file = open(direction)
@@ -27,7 +32,8 @@ def get_data(direction):
     return data
 
 """load the data"""
-direction_ir_data = "./Record_data/data/ir_data.txt"
+
+direction_ir_data = os.path.abspath(father_path + os.path.sep + "ir_data.txt")
 ir_data = get_data(direction_ir_data)
 print(ir_data.shape)
 
@@ -36,15 +42,15 @@ print(ir_data.shape)
 # print(softskin_data.shape)
 
 
-direction_IMU_walker = "./Record_data/data/IMU.txt"
+direction_IMU_walker = os.path.abspath(father_path + os.path.sep + "IMU.txt")
 walker_IMU_data = get_data(direction_IMU_walker)
 print(walker_IMU_data.shape)
 
-direction_driver = "./Record_data/data/driver.txt"
+direction_driver = os.path.abspath(father_path + os.path.sep + "driver.txt")
 driver_data = get_data(direction_driver)
 print(driver_data.shape)
 
-direction_leg = "./Record_data/data/leg.txt"
+direction_leg  = os.path.abspath(father_path + os.path.sep + "leg.txt")
 leg_data = get_data(direction_leg)
 print(leg_data.shape)
 
@@ -85,7 +91,11 @@ data_combine = combine_data_from_two_dataset(data_combine,driver_data)
 data_combine_cp = np.copy(data_combine)
 ir_data = data_combine_cp[:, 1:769]
 walker_IMU = data_combine_cp[:, 769:778]
-softskin = data_combine_cp[:, 778:782]
+leg = data_combine_cp[:, 778:782]
+# leg[:,1] = leg[:,0] / 40
+# leg[:,3] = leg[:,2] / 40
+# leg[:,0] = (leg[:,1] + 20) / 65
+# leg[:,2] = (leg[:,2] + 20) / 65
 driver = data_combine[:,782:791]
 left_wheel = driver[:,3]
 right_wheel = driver[:,4]
@@ -221,7 +231,7 @@ print("Still: %.2f,  Forward: %.2f, Left: %.2f, Right: %.2f, Left_Still: %.2f, R
       % (number[1,0],number[1,1], number[1,2],  number[1,3], number[1,4], number[1,5], number[1,6]))
 
 """Generate the training data with label"""
-data_with_label_gradient = np.c_[label_gradient, ir_data, softskin]
+data_with_label_gradient = np.c_[label_gradient, ir_data, leg]
 
 
 """拼接相邻数据生成时间序列数据"""
@@ -274,7 +284,9 @@ max_sk = 100
 #                                                                            concatenate_data.shape[1]] / max_sk
 
 """把softskin的数据置0，表示手离开"""
-# concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]] = (concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]])/40
+concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]] = (concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]])/40+0.4
+print(concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]].max())
+print(concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]].min())
 
 """打上label"""
 concatenate_label = np.zeros((concatenate_data.shape[0], 1))
@@ -282,10 +294,10 @@ for i in range(concatenate_label.shape[0]):
     concatenate_label[i, 0] = original_label[i + win_width - 3]
 
 
-concatenate_data_path = "./Record_data/data/concatenate_data"+str(concatenate_data.shape[0])+".txt"
+concatenate_data_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"data.txt")
 np.savetxt(concatenate_data_path,concatenate_data,fmt="%.3f")
 
-concatenate_label_path = "./Record_data/data/concatenate_label"+str(concatenate_label.shape[0])+".txt"
+concatenate_label_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"label.txt")
 np.savetxt(concatenate_label_path,concatenate_label,fmt="%d")
 print("data shape:",concatenate_data.shape)
 print("label shape:",concatenate_label.shape)
