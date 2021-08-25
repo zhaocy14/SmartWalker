@@ -40,9 +40,9 @@ class ResNetTypeI(tf.keras.Model):
         x = self.layer3(x, training=training)
         x = self.layer4(x, training=training)
         x = self.avgpool(x)
-        output = self.fc(x)
+        # output = self.fc(x)
 
-        return output
+        return x
 
 
 class ResNetTypeII(tf.keras.Model):
@@ -83,9 +83,9 @@ class ResNetTypeII(tf.keras.Model):
         x = self.layer3(x, training=training)
         x = self.layer4(x, training=training)
         x = self.avgpool(x)
-        output = self.fc(x)
+        # output = self.fc(x)
 
-        return output
+        return x
 
 
 def resnet_18():
