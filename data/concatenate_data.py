@@ -18,6 +18,7 @@ def concatenate_data(num_list: list = [],istestdata:bool=False):
             else:
                 final_data = np.concatenate([data, final_data], 0)
                 final_label = np.concatenate([label, final_label], 0)
+        print(final_data.shape)
         if not istestdata:
             final_data_path = os.path.abspath(father_path + os.path.sep + "data.txt")
             final_label_path = os.path.abspath(father_path + os.path.sep + "label.txt")
@@ -67,5 +68,5 @@ if __name__ == "__main__":
     num_list = [902, 906, 1468, 1543, 1947, 1959, 2193]
     concatenate_data(num_list)
 
-    num_list = [1456]
-    concatenate_data(num_list,istestdata=True)
+    # num_list = [1456]
+    # concatenate_data(num_list,istestdata=True)

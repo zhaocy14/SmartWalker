@@ -35,7 +35,7 @@ def get_data(direction):
 
 direction_ir_data = os.path.abspath(father_path + os.path.sep + "ir_data.txt")
 ir_data = get_data(direction_ir_data)
-print(ir_data.shape)
+print("ir",ir_data.shape)
 
 # direction_softskin = "./Record_data/data/softskin.txt"
 # softskin_data = get_data(direction_softskin)
@@ -44,15 +44,15 @@ print(ir_data.shape)
 
 direction_IMU_walker = os.path.abspath(father_path + os.path.sep + "IMU.txt")
 walker_IMU_data = get_data(direction_IMU_walker)
-print(walker_IMU_data.shape)
+print("IMU",walker_IMU_data.shape)
 
 direction_driver = os.path.abspath(father_path + os.path.sep + "driver.txt")
 driver_data = get_data(direction_driver)
-print(driver_data.shape)
+print("driver",driver_data.shape)
 
 direction_leg  = os.path.abspath(father_path + os.path.sep + "leg.txt")
 leg_data = get_data(direction_leg)
-print(leg_data.shape)
+print("leg",leg_data.shape)
 
 
 

@@ -44,7 +44,7 @@ class FrontFollowing_Model(object):
         """network building"""
         self.reshape_layer = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))
         self.ir_part_0 = Conv_part()
-        self.ir_part = resnet.get_model("resnet50")
+        self.ir_part = resnet.get_model("resnet34")
         self.model = self.create_model_dynamic()
 
     def call(self, inputs: np.ndarray) -> tf.Tensor:
@@ -138,11 +138,8 @@ class FrontFollowing_Model(object):
 
         # LSTM part
         output_LSTM = keras.layers.LSTM(32, activation='tanh')(output_reshape)
-        output_final = keras.layers.Dropout(0.5)(output_LSTM)
-        output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
+        output_final = keras.layers.Dense(128, activation='relu')(output_LSTM)
         output_final = keras.layers.Dense(64, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(7, activation='softmax')(output_final)
             model = keras.Model(inputs=input_all, outputs=output_final)
@@ -218,18 +215,18 @@ if __name__ == "__main__":
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-    #FFL_Model.model.load_weights("./checkpoints/FFL18")
-    FFL_Model.model.fit(train_data, train_label, batch_size=64, epochs=100, validation_data=(validation_data, validation_label), verbose=1)
-    FFL_Model.model.save_weights("./checkpoints101/FFL50")
+    FFL_Model.model.load_weights("./checkpoints34/FFL34")
+    #FFL_Model.model.fit(train_data, train_label, batch_size=128, epochs=100, validation_data=(validation_data, validation_label), verbose=1)
+    #FFL_Model.model.save_weights("./checkpoints34/FFL34")
     while True:
-        break
+        #break
         test_loss, test_acc = FFL_Model.model.evaluate(test_data, test_label, verbose=1)
         if test_acc < 0.5:
-            FFL_Model.model.fit(train_data, train_label, batch_size=512, epochs=50, validation_data=(validation_data, validation_label),verbose=1)
-            FFL_Model.model.save_weights('./checkpoints/FFL18')
-        elif test_acc < 0.85:
-            FFL_Model.model.fit(train_data, train_label, batch_size=512, epochs=10,validation_data=(validation_data,validation_label),verbose=1)
-            FFL_Model.model.save_weights('./checkpoints/FFL18')
+            FFL_Model.model.fit(train_data, train_label, batch_size=128, epochs=50, validation_data=(validation_data, validation_label),verbose=1)
+            FFL_Model.model.save_weights('./checkpoints34/FFL34')
+        elif test_acc < 0.88:
+            FFL_Model.model.fit(train_data, train_label, batch_size=128, epochs=10,validation_data=(validation_data,validation_label),verbose=1)
+            FFL_Model.model.save_weights('./checkpoint34/FFL34')
         else:
             break
 

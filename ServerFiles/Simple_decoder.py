@@ -3,8 +3,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
-import cv2
-from PIL import Image
+
 # class decoder():
 #     def __init__(self, win_width:int = 10):
 #         self.win_width = win_width
@@ -60,52 +59,17 @@ if __name__ == "__main__":
                                          keras.layers.Conv2D(win_width, kernel_size=3, activation='sigmoid', padding='same'),
                                          keras.layers.Flatten()])
 
+    concatenate_data_path = "/data/cyzhao/data.txt"
+    concatenate_data = np.loadtxt(concatenate_data_path)
 
+    ir_data_width = 768
+    ir_data = concatenate_data[:,0:ir_data_width*win_width]
+    leg_data = concatenate_data[:,ir_data_width*win_width:concatenate_data.shape[1]]
 
-    # model_decoder.summary()
-    model_decoder.load_weights("./Record_data/server/encoder/Encoder")
-    data = np.loadtxt("./Record_data/server/data.txt")
-    # print(data.shape)
-    for k in range(1000,1500):
-        leg = data[k,768*10:data.shape[1]].reshape(1,1,40)
-        print(leg)
-        # leg = np.ones((1,1,40))
-        # leg = leg/2
-        b = model_decoder(leg)
-        b = b.numpy()
-        # print(b.shape)
-        scope = 5
-        for i in range(10):
-            temperature = b[0,i*768:i*768+768].reshape(24, 32)
-            """original"""
-            temperature = (temperature - temperature.min()) / (temperature.max() - temperature.min()) * 256
-            # """new binarize"""
-            # # temperature = my_binarization(temperature,5,beta=0.98)
-            # """binarize"""
-            # filter_kernel = np.ones((2, 2)) / 4
-            # # filter_kernel = np.array([[1,1,1],[1,1,1],[1,1,1]])/10
-            # # filter_kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
-            # for j in range(1):
-            #     temperature = cv2.filter2D(temperature, -1, filter_kernel)
-            # threshold = max([np.mean(temperature) + 1.6, 23])
-            # temperature = my_binarization(temperature, threshold=threshold) * 256
+    model_decoder.summary()
+    model_decoder.compile(optimizer='adam',loss=tf.keras.losses.MeanSquaredError())
+    model_decoder.fit(leg_data,ir_data,batch_size=128,epochs=100)
 
-            im = Image.fromarray(temperature)
-            im = im.resize((32 * scope, 24 * scope), Image.BILINEAR)
-            if im.mode != "RGB":
-                im = im.convert('RGB')
-            path = './Record_data/img/img' + str(k*10+i + 1) + '.jpg'
-            im.save(path)
-    # model_decoder.compile(optimizer='adam',loss=tf.keras.losses.MeanSquaredError())
-    # concatenate_data_path = "/data/cyzhao/data.txt"
-    # concatenate_data = np.loadtxt(concatenate_data_path)
-    # ir_data_width = 768
-    # ir_data = concatenate_data[:,0:ir_data_width*win_width]
-    # leg_data = concatenate_data[:,ir_data_width*win_width:concatenate_data.shape[1]]
-    # leg_data = np.reshape(leg_data, (leg_data.shape[0], leg_data.shape[1], 1))
-    #
-    # model_decoder.fit(leg_data,ir_data,batch_size=64,epochs=1000)
-    # model_decoder.save("./encoder/Encoder")
 
 
 
