@@ -67,8 +67,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.speed = 0
                 # CD.omega = 0.15
                 # CD.radius = 80
-                CD.omega = 0.13*(1+(current_position[1] -left_boundry)*0.5)
-                CD.radius= 80*(1-(current_position[1] -left_boundry)*0.05)
+                CD.omega = 0.13*abs((1+(current_position[1] -left_boundry)*0.3))
+                CD.radius= 80*abs((1-(current_position[1] -left_boundry)*0.05))
                 str1 = "left"
                 time.sleep(0.2)
             elif current_position[5] < center_right_boundry \
@@ -77,8 +77,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.speed = 0
                 # CD.omega = -0.15
                 # CD.radius = 80
-                CD.omega = -0.13*(1+(right_boundry-current_position[3] )*0.5)
-                CD.radius = 80*(1-(right_boundry-current_position[3] )*0.05)
+                CD.omega = -0.13*abs((1+(right_boundry-current_position[3] )*0.3))
+                CD.radius = 80*abs((1-(right_boundry-current_position[3] )*0.05))
                 str1 = "right"
                 time.sleep(0.2)
             else:
