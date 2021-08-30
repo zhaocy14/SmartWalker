@@ -67,7 +67,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.speed = 0
                 # CD.omega = 0.15
                 # CD.radius = 80
-                CD.omega = 0.1*abs((1+(current_position[1] -left_boundry)*0.2))
+                CD.omega = 0.1*abs((1+(current_position[1] -left_boundry)*0.3))
                 CD.radius= 82*abs((1-(current_position[1] -left_boundry)*0.02))
                 str1 = "left"
                 time.sleep(0.2)
