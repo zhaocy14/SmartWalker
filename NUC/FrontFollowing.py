@@ -49,8 +49,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
         current_position, position_buffer = position_calculation(current_left_leg, current_right_leg,
                                                                  position_buffer, weight_array)
 
-        forward_boundry = 4
-        backward_boundry = -8
+        forward_boundry = 10
+        backward_boundry = -5
         center_left_boundry = 0.2   #change gwz
         center_right_boundry = 0.2
         left_boundry = 10   #change gwz
@@ -67,7 +67,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.speed = 0
                 # CD.omega = 0.15
                 # CD.radius = 80
-                CD.omega = 0.2*abs((1+(current_position[1] -left_boundry)*0.25))
+                CD.omega = 0.15*abs((1+(current_position[1] -left_boundry)*0.25))
                 CD.radius= 75*abs((1-(current_position[1] -left_boundry)*0.02))
                 str1 = "left"
                 time.sleep(0.2)
@@ -77,7 +77,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.speed = 0
                 # CD.omega = -0.15
                 # CD.radius = 80
-                CD.omega = -0.2*abs((1+(right_boundry-current_position[3] )*0.25))
+                CD.omega = -0.15*abs((1+(right_boundry-current_position[3] )*0.25))
                 CD.radius = 75*abs((1-(right_boundry-current_position[3] )*0.02))
                 str1 = "right"
                 time.sleep(0.2)
