@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow import keras
 import cv2
 from PIL import Image
+import os,sys
 # class decoder():
 #     def __init__(self, win_width:int = 10):
 #         self.win_width = win_width
@@ -49,6 +50,9 @@ if __name__ == "__main__":
     #     keras.layers.Flatten(),
     #                              ])
 
+    pwd = os.path.abspath(os.path.abspath(__file__))
+    father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+
     win_width = 10
     model_decoder = tf.keras.Sequential([keras.layers.InputLayer(input_shape=(1,int(4*win_width))),
                                          keras.layers.Dense(64,activation='relu'),
@@ -63,12 +67,15 @@ if __name__ == "__main__":
 
 
     # model_decoder.summary()
-    model_decoder.load_weights("./Record_data/server/encoder/Encoder")
-    data = np.loadtxt("./Record_data/server/data.txt")
+    model_decoder.load_weights(father_path + os.path.sep + "ServerFiles" + os.path.sep + "checkpoints_decoder" + os.path.sep + "decoder")
+    # model_decoder.load_weights("./Record_data/server/encoder/Encoder")
+    data_path = os.path.abspath(father_path + os.path.sep + "data" + os.path.sep + "data.txt")
+    data = np.loadtxt(data_path)
     # print(data.shape)
-    for k in range(1000,1500):
+    for k in range(100):
         leg = data[k,768*10:data.shape[1]].reshape(1,1,40)
         print(leg)
+        # b = leg
         # leg = np.ones((1,1,40))
         # leg = leg/2
         b = model_decoder(leg)
@@ -94,7 +101,9 @@ if __name__ == "__main__":
             im = im.resize((32 * scope, 24 * scope), Image.BILINEAR)
             if im.mode != "RGB":
                 im = im.convert('RGB')
-            path = './Record_data/img/img' + str(k*10+i + 1) + '.jpg'
+            path = os.path.abspath(father_path + os.path.sep + "data" + os.path.sep + "img" + os.path.sep +
+                                   str(k*10+i+1) + '.jpg')
+
             im.save(path)
     # model_decoder.compile(optimizer='adam',loss=tf.keras.losses.MeanSquaredError())
     # concatenate_data_path = "/data/cyzhao/data.txt"
