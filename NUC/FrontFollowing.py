@@ -53,12 +53,12 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
         backward_boundry = -8
         center_left_boundry = 0.2   #change gwz
         center_right_boundry = 0.2
-        left_boundry = 9   #change gwz
+        left_boundry = 10   #change gwz
         right_boundry = -7
         if backward_boundry > current_position[4] > -40:
             CD.speed = -0.1
-            CD.omega = 0
-            CD.radius = 0
+            CD.omega = 2
+            CD.radius = 2
             str1 = "backward"
         elif current_position[4] > forward_boundry:
             if current_position[5] > center_left_boundry \
