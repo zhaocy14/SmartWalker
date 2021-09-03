@@ -67,12 +67,12 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.speed = 0
                 # CD.omega = 0.15
                 # CD.radius = 80
-                para_ol = abs((1+(right_boundry-current_position[3] )*0.25))
-                para_rl = abs((1-(right_boundry-current_position[3] )*0.02))
-                # if para_ol > 0.8 :
-                #     para_ol = 0.8
-                # if para_rl > 0.15 :
-                #     para_rl = 0.15
+                para_ol = abs((1+(right_boundry-current_position[3] )*0.35))
+                para_rl = abs((1-(right_boundry-current_position[3] )*0.03))
+                if para_ol > 2 :
+                    para_ol = 2
+                if para_rl < 0.6 :
+                    para_rl = 0.6
                 CD.omega = 0.15 * para_ol
                 CD.radius= 75 * para_rl
                 str1 = "left"
@@ -83,12 +83,12 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.speed = 0
                 # CD.omega = -0.15
                 # CD.radius = 80
-                para_or = abs((1+(right_boundry-current_position[3] )*0.25))
+                para_or = abs((1+(right_boundry-current_position[3] )*0.2))
                 para_rr = abs((1-(right_boundry-current_position[3] )*0.02))
-                # if para_or > 0.8 :
-                #     para_or = 0.8
-                # if para_rr > 0.15 :
-                #     para_rr = 0.15
+                if para_or > 2 :
+                    para_or = 2
+                if para_rr < 0.6 :
+                    para_rr = 0.6
                 CD.omega = -0.15 * para_or
                 CD.radius = 75 * para_rr
                 str1 = "right"
@@ -103,7 +103,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
             CD.omega = 0
             CD.radius = 0
             str1 = "stop"
-        print("\rleft leg:%.2f,%.2f  right:%.2f,%.2f  human:%.2f,%.2f choice:%s,%.2f,%.2f,%2f"
+        print("\rleft leg:%.2f,%.2f  right:%.2f,%.2f  human:%.2f,%.2f choice:%s,%.2f,%.2f,%.2f "
              %(current_position[0], current_position[1], current_position[2],
                current_position[3], current_position[4], current_position[5],str1,CD.speed,CD.omega,CD.radius),end="")
 
