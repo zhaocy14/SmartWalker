@@ -14,7 +14,7 @@ sys.path.append(father_path)
 
 class Leg_detector(object):
 
-    def __init__(self, portal: str = '/dev/ttyUSB1', is_show:bool=False):
+    def __init__(self, portal: str = '/dev/ttyUSB2', is_show:bool=False):
         self.rplidar = RPLidar(portal)  # '/dev/ttyUSB1'
         self.kmeans = KMeans(n_clusters=2)
         self.left_leg = np.zeros((1, 2))
@@ -76,8 +76,8 @@ class Leg_detector(object):
             center_2 = np.around(kmeans.cluster_centers_[1]).astype(int)
             if show:
                 # im = np.copy(img)
-                im[center_1[0] - 2: center_1[0] + 2, center_1[1] - 2:center_1[1] + 2] = 1
-                im[center_2[0] - 2:center_2[0] + 2, center_2[1] - 2:center_2[1] + 2] = 1
+                im[center_1[0] - 3: center_1[0] + 3, center_1[1] - 3:center_1[1] + 3] = 1
+                im[center_2[0] - 3:center_2[0] + 3, center_2[1] - 3:center_2[1] + 3] = 1
                 im[self.half_size - 1:self.half_size + 1, self.half_size - 1:self.half_size + 1] = 1
                 # im_show = im + img
                 im_show = im

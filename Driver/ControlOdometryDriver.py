@@ -29,8 +29,6 @@ import math
 import os
 import sys
 
-
-
 resource = os.path.abspath(
     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." )
 # def singleton(cls, *args, **kw):
@@ -144,7 +142,7 @@ class ControlDriver(Thread):
         else:
             vl = -(self.radius - (56 / 2)) / 100 * self.omega
             vr = -(self.radius + (56 / 2)) / 100 * self.omega
-
+        # print(vl,vr)
         return vl, vr
 
     def control_part(self):
@@ -283,10 +281,12 @@ class ControlDriver(Thread):
 
 if __name__ == '__main__':
 
-    cd = ControlDriver(record_mode=False)
+    cd = ControlDriver(record_mode=False,left_right=0)
     cd.start()
-    cd.omega = -0.3
-    cd.radius = 2
+
+    cd.speed = 0
+    cd.omega = 0.15
+    cd.radius = 80
     # while True:
     #     print("X=%.3fm,  Y=%.3fm,  THETA=%.2f" % (cd.position[0], cd.position[1], cd.position[2]/math.pi*180))
     #     time.sleep(0.1)
