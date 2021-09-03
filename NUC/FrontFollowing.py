@@ -8,8 +8,8 @@ from Driver import ControlOdometryDriver as cd
 
 """portal num"""
 camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB2'
-IMU_walker_portal = '/dev/ttyUSB1'
+lidar_portal = '/dev/ttyUSB1'
+IMU_walker_portal = '/dev/ttyUSB4'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
