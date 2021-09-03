@@ -67,8 +67,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.speed = 0
                 # CD.omega = 0.15
                 # CD.radius = 80
-                para_ol = abs((1+(right_boundry-current_position[3] )*0.35))
-                para_rl = abs((1-(right_boundry-current_position[3] )*0.03))
+                para_ol = abs((1+(current_position[1]-left_boundry )*0.35))
+                para_rl = abs((1-(current_position[1]-left_boundry )*0.03))
                 if para_ol > 2 :
                     para_ol = 2
                 if para_rl < 0.6 :
