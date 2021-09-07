@@ -11,7 +11,11 @@ class Conv_part(keras.Model):
 
     def __init__(self):
         super().__init__()
-        self.layer1  = keras.layers.Conv2D(filters=3, kernel_size=3, strides=1, activation="relu",
+        self.layer1  = keras.layers.Conv2D(filters=10, kernel_size=3, strides=1, activation="relu",
+                                padding="SAME")
+        self.layer1  = keras.layers.Conv2D(filters=10, kernel_size=3, strides=1, activation="relu",
+                                padding="SAME")
+        self.layer1  = keras.layers.Conv2D(filters=10, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
         self.layer2 = keras.layers.MaxPool2D(pool_size=3,strides=2)
 
@@ -139,12 +143,10 @@ class FrontFollowing_Model(object):
             output_combine)
 
         # LSTM part
-        output_LSTM = keras.layers.LSTM(32, activation='tanh')(output_reshape)
-        output_final = keras.layers.Dropout(0.5)(output_LSTM)
+        keras.layers.LSTM()
+        output_final = keras.layers.LSTM(32, activation='tanh')(output_reshape)
         output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
         output_final = keras.layers.Dense(64, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(7, activation='softmax')(output_final)
             model = keras.Model(inputs=input_all, outputs=output_final)
