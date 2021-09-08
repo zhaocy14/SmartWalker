@@ -43,7 +43,7 @@ if seperately_recording:
     thread_skin = threading.Thread(target=Skin.read_and_record, args=(True,))
     thread_camera = threading.Thread(target=Camera.record_write, args=(True, True, True))
     # thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
-    thread_IMU_walker = threading.Thread(target=IMU_walker.read_record, args=(resource,))
+    thread_IMU_walker = threading.Thread(target=IMU_walker.read_record, args=())
     thread_cd = threading.Thread(target=Cd.control_part, args=())
     thread_leg = threading.Thread(target=Ld.scan_procedure, args=(False, True))
 
