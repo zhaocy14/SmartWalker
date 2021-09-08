@@ -10,8 +10,8 @@ def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False):
     if len(num_list) != 0:
         if not is_o and not is_s:
             for i, number in enumerate(num_list):
-                data_path = os.path.abspath(father_path + os.path.sep + str(number) + "data.txt")
-                label_path = os.path.abspath(father_path + os.path.sep + str(number) + "label.txt")
+                data_path = os.path.abspath(father_path + os.path.sep + str(number) + "t_data.txt")
+                label_path = os.path.abspath(father_path + os.path.sep + str(number) + "t_label.txt")
                 data = np.loadtxt(data_path)
                 label = np.loadtxt(label_path)
                 if i == 0:
@@ -22,8 +22,8 @@ def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False):
                     final_label = np.concatenate([label, final_label], 0)
             print(final_data.shape)
 
-            final_data_path = os.path.abspath(father_path + os.path.sep + "data.txt")
-            final_label_path = os.path.abspath(father_path + os.path.sep + "label.txt")
+            final_data_path = os.path.abspath(father_path + os.path.sep + "t_data.txt")
+            final_label_path = os.path.abspath(father_path + os.path.sep + "t_label.txt")
             """Calculate the number/proportion of different movements"""
             number = np.zeros((2, 7))
             for i in range(final_label.shape[0]):

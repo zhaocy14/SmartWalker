@@ -229,9 +229,9 @@ if __name__ == "__main__":
         FFL_Model.current_net.save_weights('./checkpoints_o_current/Current')
 
     else:
-        tendency_data_path = "/data/cyzhao/data.txt"
+        tendency_data_path = "/data/cyzhao/t_data.txt"
         tendency_data = np.loadtxt(tendency_data_path)
-        tendency_label_path = "/data/cyzhao/label.txt"
+        tendency_label_path = "/data/cyzhao/t_label.txt"
         tendency_label = np.loadtxt(tendency_label_path)
         tendency_label = tendency_label.reshape((tendency_label.shape[0],1))
 

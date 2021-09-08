@@ -259,7 +259,7 @@ softskin_width = leg_data_width
 win_width = 10
 win_width = win_width-1
 step_length = 1
-data_num = int((train_data.shape[0] - win_width) / step_length + 1)
+data_num = int((train_data.shape[0] - win_width-1) / step_length + 1)
 concatenate_data = np.zeros((data_num, original_data.shape[1] * win_width))
 
 for i in range(data_num):
@@ -294,10 +294,10 @@ for i in range(concatenate_label.shape[0]):
     concatenate_label[i, 0] = original_label[i + win_width]
 
 
-concatenate_data_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"data.txt")
+concatenate_data_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"t_data.txt")
 np.savetxt(concatenate_data_path,concatenate_data,fmt="%.3f")
 
-concatenate_label_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"label.txt")
+concatenate_label_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"t_label.txt")
 np.savetxt(concatenate_label_path,concatenate_label,fmt="%d")
 print("data shape:",concatenate_data.shape)
 print("label shape:",concatenate_label.shape)
