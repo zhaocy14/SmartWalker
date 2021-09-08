@@ -1,3 +1,4 @@
+from os import readlink
 import numpy as np
 import time
 import threading
@@ -48,7 +49,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
         current_right_leg = LD.right_leg
         current_position, position_buffer = position_calculation(current_left_leg, current_right_leg,
                                                                  position_buffer, weight_array)
-
+        max_boundary=40   #left max value
+        min_boundary=-30   #right max value
         forward_boundry = 10
         backward_boundry = -5
         center_left_boundry = 1   #change gwz
@@ -57,40 +59,37 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
         right_boundry = -7
         if backward_boundry > current_position[4] > -40:
             CD.speed = -0.1
-            CD.omega = 2
-            CD.radius = 2
+            CD.omega = 0
+            CD.radius = 0
             str1 = "backward"
         elif current_position[4] > forward_boundry:
             if current_position[5] > center_left_boundry \
                     and current_position[0] > current_position[2] \
                     and current_position[1] > left_boundry:
-                CD.speed = 0
-                # CD.omega = 0.15
-                # CD.radius = 80
-                para_ol = abs((1+(current_position[1]-left_boundry )*0.35))
-                para_rl = abs((1-(current_position[1]-left_boundry )*0.03))
-                if para_ol > 2 :
-                    para_ol = 2
-                if para_rl < 0.6 :
-                    para_rl = 0.6
-                CD.omega = 0.15 * para_ol
-                CD.radius= 75 * para_rl
+                CD.speed = 0.2
+                # para_rl = abs((1-(current_position[1]-left_boundry )*0.03))
+                # if para_rl < 0.6 :
+                #     para_rl = 0.6
+                # CD.omega = 0
+                # CD.radius= 75 * para_rl
+                radius = 56+56*(max_boundary-current_position[1])/(max_boundary-left_boundry)
+                if radius < 56 :
+                    radius = 56
+                CD.omega = 0
+                CD.radius = radius
                 str1 = "left"
                 time.sleep(0.2)
             elif current_position[5] < center_right_boundry \
                     and current_position[2] > current_position[0] \
                     and current_position[3] < right_boundry:
-                CD.speed = 0
+                CD.speed = 0.2
                 # CD.omega = -0.15
                 # CD.radius = 80
-                para_or = abs((1+(right_boundry-current_position[3] )*0.2))
-                para_rr = abs((1-(right_boundry-current_position[3] )*0.02))
-                if para_or > 2 :
-                    para_or = 2
-                if para_rr < 0.6 :
-                    para_rr = 0.6
-                CD.omega = -0.15 * para_or
-                CD.radius = 75 * para_rr
+                radius = -56-56*(current_position[3]-min_boundary)/(right_boundry-min_boundary)
+                if radius > -56 :
+                    radius = -56
+                CD.omega = 0
+                CD.radius = radius
                 str1 = "right"
                 time.sleep(0.2)
             else:
