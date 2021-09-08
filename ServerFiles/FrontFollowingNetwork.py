@@ -237,10 +237,10 @@ if __name__ == "__main__":
         FFL_Model.current_net.compile(optimizer=optimizer,
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
-        test_acc = FFL_Model.current_net.evaluate(test_data,test_label,verbose=1)
+
         FFL_Model.current_net.fit(current_o_data, current_o_label, batch_size=128, epochs=200, verbose=1)
         FFL_Model.current_net.save_weights('./checkpoints_o_current/Current')
-
+        test_acc = FFL_Model.current_net.evaluate(test_data, test_label, verbose=1)
 
 
     else:
