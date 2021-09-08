@@ -207,7 +207,7 @@ class IMU(object):
             angle_z -= 2 * k_angle
         return angle_x, angle_y, angle_z
 
-    def read_record(self, file_path=data_path, time_delay=0,show=False):
+    def read_record(self, time_delay=0,show=False, file_path=data_path):
         IMU_data_path = file_path + os.path.sep + "IMU.txt"
         file_IMU = open(IMU_data_path, "w")
         while True:
