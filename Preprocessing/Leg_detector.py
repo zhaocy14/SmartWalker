@@ -14,13 +14,13 @@ sys.path.append(father_path)
 
 class Leg_detector(object):
 
-    def __init__(self, portal: str = '/dev/ttyUSB2', is_show:bool=False):
+    def __init__(self, portal: str = '/dev/ttyUSB2', is_show:bool=False): #COM3
         self.rplidar = RPLidar(portal)  # '/dev/ttyUSB1'
         self.kmeans = KMeans(n_clusters=2)
         self.left_leg = np.zeros((1, 2))
         self.right_leg = np.zeros((1, 2))
 
-        self.scope = 1
+        self.scope = 2
         self.size = 300
         self.half_size = int(self.size / 2)
         self.column_boundry = self.half_size-20
@@ -30,7 +30,7 @@ class Leg_detector(object):
         self.center_point = np.array([self.half_size+45,self.half_size])
         self.is_show = is_show
 
-    def turn_to_img(self, original_list: list, show: bool = False):
+    def turn_to_img(self, original_list: list, show: bool = True):
         """turn the scan data list into a ndarray"""
         img = np.zeros((self.size, self.size))
         for i in range(len(original_list)):
@@ -76,8 +76,8 @@ class Leg_detector(object):
             center_2 = np.around(kmeans.cluster_centers_[1]).astype(int)
             if show:
                 # im = np.copy(img)
-                im[center_1[0] - 3: center_1[0] + 3, center_1[1] - 3:center_1[1] + 3] = 1
-                im[center_2[0] - 3:center_2[0] + 3, center_2[1] - 3:center_2[1] + 3] = 1
+                im[center_1[0] - 1: center_1[0] + 1, center_1[1] - 1:center_1[1] + 1] = 1
+                im[center_2[0] - 1: center_2[0] + 1, center_2[1] - 1:center_2[1] + 1] = 1
                 im[self.half_size - 1:self.half_size + 1, self.half_size - 1:self.half_size + 1] = 1
                 # im_show = im + img
                 im_show = im
@@ -130,5 +130,5 @@ class Leg_detector(object):
 
 
 if __name__ == "__main__":
-    lidar = Leg_detector()
+    lidar = Leg_detector(portal="COM3")
     lidar.scan_procedure(show=True)
