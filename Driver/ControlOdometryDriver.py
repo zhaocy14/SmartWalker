@@ -148,7 +148,7 @@ class ControlDriver(Thread):
         # print(vl,vr)
         return vl, vr
 
-    def control_part(self,file_path=data_path):
+    def control_part(self):
         print("\n===================================== Start control part! =====================================")
         start = [0x00, 0x00, 0x01, 0x01]
         pc_mode = [0x02, 0x00, 0xc4, 0xc6]
@@ -165,7 +165,7 @@ class ControlDriver(Thread):
         # 如果 record_mode 是 True，则停掉电机，只记录数据
         if self.record_mode:
             self.stopMotor()
-            Odo_data_path = file_path + os.path.sep + "Driver.txt"
+            Odo_data_path = data_path + os.path.sep + "Driver.txt"
             file_odo = open(Odo_data_path, "w")
 
         while True:
