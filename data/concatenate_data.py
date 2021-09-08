@@ -67,6 +67,8 @@ def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False):
             print(final_data.shape)
             final_data_path = os.path.abspath(father_path + os.path.sep + "s_data.txt")
             final_label_path = os.path.abspath(father_path + os.path.sep + "s_label.txt")
+
+
         # print(final_data)
         np.savetxt(final_data_path, final_data, fmt="%.3f")
         np.savetxt(final_label_path, final_label, fmt="%d")
@@ -74,13 +76,21 @@ def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False):
 
 
 if __name__ == "__main__":
-    num_list = [875, 1043, 1190, 1516, 1754, 1909]
+    num_list = [875, 1027, 1043, 1190, 1514, 1516, 1909]
     concatenate_data(num_list)
 
-    num_list = [884, 1052, 1199, 1525, 1763, 1918]
+    num_list = [884, 1036, 1052, 1199, 1523, 1525, 1918]
     concatenate_data(num_list,is_o=True)
+
 
     num_list = [11, 14, 17, 24, 32, 53,65,68,80,93,95,99,102,122,128]
     concatenate_data(num_list,is_s=True)
+
+    # num_list = [1754]
+    # concatenate_data(num_list)
+    #
+    # num_list = [1763]
+    # concatenate_data(num_list,is_o=True)
+
     # num_list = [1456]
     # concatenate_data(num_list,istestdata=True)

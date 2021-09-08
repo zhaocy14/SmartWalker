@@ -201,7 +201,7 @@ if __name__ == "__main__":
         tf.config.experimental.set_memory_growth(gpu, True)
     os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
-    FFL_Model = FrontFollowing_Model(win_width=9)
+    FFL_Model = FrontFollowing_Model(win_width=10)
 
     train_current = True
     if train_current:
@@ -285,16 +285,22 @@ if __name__ == "__main__":
         # FFL_Model.model.load_weights("./checkpoints34/FFL34")
         #FFL_Model.model.fit(train_data, train_label, batch_size=128, epochs=100, validation_data=(validation_data, validation_label), verbose=1)
         #FFL_Model.model.save_weights("./checkpoints34/FFL34")
+        epochs_num = 0
         while True:
             #break
+            print("epoch now: %d"%epochs_num)
             test_loss, test_acc = FFL_Model.tendency_net.evaluate(test_data, test_label, verbose=1)
             if test_acc < 0.5:
                 FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=50, validation_data=(validation_data, validation_label),verbose=1)
                 FFL_Model.tendency_net.save_weights('./checkpoints_tendency/Tendency')
+                epochs_num += 50
             elif test_acc < 0.88:
                 FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=10,validation_data=(validation_data,validation_label),verbose=1)
                 FFL_Model.tendency_net.save_weights('./checkpoints_tendency/Tendency')
+                epochs_num += 10
             else:
+                break
+            if epochs_num >= 350:
                 break
 
 
