@@ -9,13 +9,13 @@ father_path = os.path.abspath(os.path.dirname(pwd)+os.path.sep+"..")
 
 class Conv_part(keras.Model):
 
-    def __init__(self):
+    def __init__(self,filter_unit:int=10):
         super().__init__()
-        self.layer1  = keras.layers.Conv2D(filters=10, kernel_size=3, strides=1, activation="relu",
+        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
-        self.layer1  = keras.layers.Conv2D(filters=10, kernel_size=3, strides=1, activation="relu",
+        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
-        self.layer1  = keras.layers.Conv2D(filters=10, kernel_size=3, strides=1, activation="relu",
+        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
         self.layer2 = keras.layers.MaxPool2D(pool_size=3,strides=2)
 
@@ -28,7 +28,7 @@ class Skin_part(keras.Model):
 
     def __init__(self,input_shape):
         super().__init__()
-        self.softskin_width = 32
+        self.softskin_width = 128
         self.layer_r = keras.layers.Reshape(input_shape=(input_shape), target_shape=(1, self.softskin_width))
         self.layer_1 = keras.layers.Dense(self.dense_unit, activation="relu")
         self.layer_2 = keras.layers.Dense(self.dense_unit, activation="relu")
@@ -45,23 +45,24 @@ class FrontFollowing_Model(object):
     def __init__(self, win_width: int = 10, is_skin_input:bool=False, is_multiple_output:bool=False):
         super().__init__()
         """data shape part"""
-        self.win_width = win_width
+        self.win_width = win_width-1
         self.ir_data_width = 768
         self.softskin_width = 32
         self.leg_width = 4
         """network parameter"""
-        self.filter_num = 3
-        self.kernel_size = 3
         self.dense_unit = 10
+        self.CNN_filter_unit = 10
         self.show_summary = False
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
 
         """network building"""
-        self.ir_part_0 = Conv_part()
-        self.ir_part = resnet.get_model("resnet34")
+        self.tendency_ir_part = Conv_part(self.CNN_filter_unit)
+        self.current_ir_part = Conv_part(self.CNN_filter_unit)
+        # self.ir_part = resnet.get_model("resnet34")
         # self.skin_part = Skin_part()
-        self.model = self.create_model_dynamic()
+        self.tendency_net = self.create_tendency_net()
+        self.current_net = self.create_current_net()
 
     def call(self, inputs: np.ndarray) -> tf.Tensor:
         return self.model(inputs)
@@ -83,7 +84,7 @@ class FrontFollowing_Model(object):
 
                 # ir image feature abstraction
                 output_ir = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))(ir_one_frame)
-                output_ir = self.ir_part(output_ir)
+                output_ir = self.tendency_ir_part(output_ir)
                 output_ir = keras.layers.Flatten()(output_ir)
 
                 # soft skin feature abstraction
@@ -109,7 +110,7 @@ class FrontFollowing_Model(object):
 
                 # ir image feature abstraction
                 output_ir = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))(ir_one_frame)
-                output_ir = self.ir_part(output_ir)
+                output_ir = self.tendency_ir_part(output_ir)
                 output_ir = keras.layers.Flatten()(output_ir)
 
                 # leg feature just shortcut
@@ -120,8 +121,7 @@ class FrontFollowing_Model(object):
                     output_feature = keras.layers.concatenate([output_feature, output_ir, output_leg])
             return output_feature
 
-
-    def create_model_dynamic(self) -> tf.keras.Model:
+    def create_tendency_net(self) -> tf.keras.Model:
         if self.is_skin_input:
             input_all = keras.Input(shape=((self.ir_data_width + self.softskin_width + self.leg_width) * self.win_width, 1))
 
@@ -143,18 +143,18 @@ class FrontFollowing_Model(object):
             output_combine)
 
         # LSTM part
-        keras.layers.LSTM()
         output_final = keras.layers.LSTM(32, activation='tanh')(output_reshape)
         output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dense(64, activation='relu')(output_final)
+        output_final = keras.layers.Dense(128, activation='relu')(output_final)
+        output_final = keras.layers.Dense(128, activation='relu')(output_final)
         if not self.is_multiple_output:
-            output_final = keras.layers.Dense(7, activation='softmax')(output_final)
+            output_final = keras.layers.Dense(6, activation='softmax')(output_final)
             model = keras.Model(inputs=input_all, outputs=output_final)
             if self.show_summary:
                 model.summary()
             return model
         else:
-            actor = keras.layers.Dense(7, activation='relu')(output_final)
+            actor = keras.layers.Dense(6, activation='relu')(output_final)
             critic = keras.layers.Dense(1)(output_final)
             model = keras.Model(inputs=input_all,outputs=[actor, critic])
             if self.show_summary:
@@ -164,10 +164,31 @@ class FrontFollowing_Model(object):
                           metrics=['accuracy'])
             return model
 
-
-
-
-
+    def create_current_net(self) -> tf.keras.Model:
+        input_figure = keras.Input(shape=(self.ir_data_width, 1))
+        output_ir = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))(input_figure)
+        output_ir = self.current_ir_part(output_ir)
+        # LSTM part
+        output_ir = keras.layers.Flatten()(output_ir)
+        output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
+        output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
+        output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
+        if not self.is_multiple_output:
+            output_final = keras.layers.Dense(6, activation='softmax')(output_ir)
+            model = keras.Model(inputs=input_figure, outputs=output_final)
+            if self.show_summary:
+                model.summary()
+            return model
+        else:
+            actor = keras.layers.Dense(6, activation='relu')(output_ir)
+            critic = keras.layers.Dense(1)(output_ir)
+            model = keras.Model(inputs=input_figure, outputs=[actor, critic])
+            if self.show_summary:
+                model.summary()
+            model.compile(optimizer='RMSprop',
+                          loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                          metrics=['accuracy'])
+            return model
 
 if __name__ == "__main__":
     gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
@@ -175,22 +196,23 @@ if __name__ == "__main__":
         tf.config.experimental.set_memory_growth(gpu, True)
     os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
-    model = FrontFollowing_Model(win_width=10,is_skin_input=False,is_multiple_output=False)
-    # model.model.summary()
-    model.model.compile(optimizer='RMSprop',
-                                loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                                metrics=['accuracy'])
-    check_point_path = os.path.abspath(father_path+os.path.sep+"ServerFiles"+os.path.sep+"checkpoints_saved"
-                                        + os.path.sep + "res34" + os.path.sep + "FFL34")
-    model.model.load_weights(check_point_path)
-    #
-    test_data_path = os.path.abspath(father_path+os.path.sep+"data"+os.path.sep+"test_data.txt")
-    test_data = np.loadtxt(test_data_path)
-    test_label_path = os.path.abspath(father_path+os.path.sep+"data"+os.path.sep+"test_label.txt")
-    test_label = np.loadtxt(test_label_path)
-    test_label = test_label.reshape((test_label.shape[0], 1))
-    test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
-    model.model.evaluate(test_data,test_label)
+    model = FrontFollowing_Model(win_width=9,is_skin_input=False,is_multiple_output=False)
+    # model.tendency_net.summary()
+    # model.current_net.summary()
+    # model.model.compile(optimizer='RMSprop',
+    #                             loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    #                             metrics=['accuracy'])
+    # check_point_path = os.path.abspath(father_path+os.path.sep+"ServerFiles"+os.path.sep+"checkpoints_saved"
+    #                                     + os.path.sep + "res34" + os.path.sep + "FFL34")
+    # model.model.load_weights(check_point_path)
+    # #
+    # test_data_path = os.path.abspath(father_path+os.path.sep+"data"+os.path.sep+"test_data.txt")
+    # test_data = np.loadtxt(test_data_path)
+    # test_label_path = os.path.abspath(father_path+os.path.sep+"data"+os.path.sep+"test_label.txt")
+    # test_label = np.loadtxt(test_label_path)
+    # test_label = test_label.reshape((test_label.shape[0], 1))
+    # test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
+    # model.model.evaluate(test_data,test_label)
     # #
     # # concatenate_data_path = "./Record_data/data.txt"
     # concatenate_data = np.loadtxt(concatenate_data_path)

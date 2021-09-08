@@ -54,8 +54,6 @@ direction_leg  = os.path.abspath(father_path + os.path.sep + "leg.txt")
 leg_data = get_data(direction_leg)
 print("leg",leg_data.shape)
 
-
-
 """以最低更新频率的irdata为基准，用时间帧对准其它数据"""
 def select_data(ir_data, target_data):
     remain_data = np.zeros((ir_data.shape[0],target_data.shape[1]-1))
@@ -102,32 +100,37 @@ right_wheel = driver[:,4]
 walker_orientation = walker_IMU[:,-1]
 
 
-def binarization(img):
+def normalization(img,binarizaion:bool=False):
     """according to an average value of the image to decide the threshold"""
     new_img = np.copy(img)
     if len(new_img.shape) != 0:
-        threshold = max(new_img.mean() + 1.4, 23)
-        new_img[new_img < threshold] = 0
-        new_img[new_img >= threshold] = 1
+        if binarizaion:
+            threshold = max(new_img.mean() + 1.4, 23)
+            new_img[new_img < threshold] = 0
+            new_img[new_img >= threshold] = 1
+        else:
+            new_img = (new_img-10)/(40-10)
     return new_img
 
-def filter(img):
+def filter(img,binarization:bool=False):
     img_new = np.copy(img)
-    img_new = img_new.reshape((24,32))
-    filter_kernel = np.ones((2, 2)) / 4
-    """other filters"""
-    # filter_kernel = np.array([[1,1,1],[1,1,1],[1,1,1]])/10
-    # filter_kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
-    for j in range(1):
-        img_new = cv.filter2D(img_new, -1, filter_kernel)
-    img_new = img_new.flatten()
+    if binarization:
+        img_new = img_new.reshape((24,32))
+        filter_kernel = np.ones((2, 2)) / 4
+        """other filters"""
+        # filter_kernel = np.array([[1,1,1],[1,1,1],[1,1,1]])/10
+        # filter_kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
+        for j in range(1):
+            img_new = cv.filter2D(img_new, -1, filter_kernel)
+        img_new = img_new.flatten()
+    else:
+        pass
     return img_new
 
+sum_max = 0
+sum_min = 0
 for i in range(ir_data.shape[0]):
-    ir_data[i,0:ir_data.shape[1]] = filter(binarization(ir_data[i,0:ir_data.shape[1]]))
-
-
-
+    ir_data[i,0:ir_data.shape[1]] = filter(normalization(ir_data[i,0:ir_data.shape[1]]))
 
 
 """Adjust the orientation: 所有角度减去最初的角度，这样后面所有的角度都是相对起点的角度而不是地磁角度"""
@@ -215,7 +218,11 @@ def filter_label(label,width):
 label_gradient = filter_label(label_gradient,1)
 label_gradient = filter_label(label_gradient,2)
 
-
+# print(ir_data.shape,label_gradient.shape)
+o_train_data_path = os.path.abspath(father_path + os.path.sep + str(ir_data.shape[0])+"o_data.txt")
+np.savetxt(o_train_data_path,ir_data,fmt="%.3f")
+o_train_label_path = os.path.abspath(father_path + os.path.sep + str(label_gradient.shape[0])+"o_label.txt")
+np.savetxt(o_train_label_path,label_gradient,fmt="%d")
 
 """Calculate the number/proportion of different movements"""
 number = np.zeros((2,7))
@@ -250,6 +257,7 @@ softskin_width = leg_data_width
 """计算合并后的尺寸，用作确定LSTM的数据量"""
 """win_width确定模型的帧数"""
 win_width = 10
+win_width = win_width-1
 step_length = 1
 data_num = int((train_data.shape[0] - win_width) / step_length + 1)
 concatenate_data = np.zeros((data_num, original_data.shape[1] * win_width))
@@ -270,14 +278,6 @@ max_sk = 100
 
 # concatenate_data[:, 0:win_width * ir_data_width] = (concatenate_data[:, 0:win_width * ir_data_width]-min_ir) / (max_ir-min_ir)
 
-# threshold = 23
-# preset_irdata = concatenate_data[:, 0:win_width * ir_data_width]
-# idx_low = preset_irdata < threshold
-# preset_irdata[idx_low] = 0
-# idx_high = preset_irdata >= threshold
-# preset_irdata[idx_high] = 1
-# concatenate_data[:, 0:win_width * ir_data_width] = preset_irdata
-
 """normalize with skin max pressure"""
 # concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]] = concatenate_data[:,
 #                                                                            win_width * ir_data_width:
@@ -285,13 +285,13 @@ max_sk = 100
 
 """把softskin的数据置0，表示手离开"""
 concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]] = (concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]])/40+0.4
-print(concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]].max())
-print(concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]].min())
+# print(concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]].max())
+# print(concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]].min())
 
 """打上label"""
 concatenate_label = np.zeros((concatenate_data.shape[0], 1))
 for i in range(concatenate_label.shape[0]):
-    concatenate_label[i, 0] = original_label[i + win_width - 3]
+    concatenate_label[i, 0] = original_label[i + win_width]
 
 
 concatenate_data_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"data.txt")
