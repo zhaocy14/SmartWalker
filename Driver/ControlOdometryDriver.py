@@ -31,6 +31,9 @@ import sys
 
 resource = os.path.abspath(
     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." )
+data_path = os.path.abspath(
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
+    os.path.sep + "data")
 # def singleton(cls, *args, **kw):
 #     instances = {}
 #
@@ -145,7 +148,7 @@ class ControlDriver(Thread):
         # print(vl,vr)
         return vl, vr
 
-    def control_part(self,file_path=resource):
+    def control_part(self,file_path=data_path):
         print("\n===================================== Start control part! =====================================")
         start = [0x00, 0x00, 0x01, 0x01]
         pc_mode = [0x02, 0x00, 0xc4, 0xc6]
