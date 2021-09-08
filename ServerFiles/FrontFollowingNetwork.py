@@ -218,7 +218,7 @@ if __name__ == "__main__":
         current_s_label = current_s_label.reshape((current_s_label.shape[0],1))
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
-        FFL_Model.tendency_net.compile(optimizer=optimizer,
+        FFL_Model.current_net.compile(optimizer=optimizer,
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
 
