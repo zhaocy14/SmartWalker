@@ -103,7 +103,7 @@ class SoftSkin(object):
         print("base line data: ", self.base_data)
         pass
 
-    def read_and_record(self, record=False, show=False, plot=False, plot_num=30, data_path=""):
+    def read_and_record(self, record=False,  data_path="", show=False, plot=False, plot_num=30):
         file_path = data_path + os.path.sep + "Softskin.txt"
         plot_array = np.zeros((plot_num, self.port_num))
         if record:

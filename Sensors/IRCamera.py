@@ -174,7 +174,7 @@ class IRCamera(object):
             self.demonstrate_data()
         return temperature
 
-    def record_write(self, write = False, time_index=False, demo=False, file_path=data_path):
+    def record_write(self, write = False, time_index=True, file_path=data_path, demo=False, ):
         head = []
         data = []
         rest_num = 5
