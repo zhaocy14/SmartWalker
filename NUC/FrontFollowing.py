@@ -14,7 +14,7 @@ IMU_walker_portal = '/dev/ttyUSB4'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
-CD = cd.ControlDriver(record_mode=False, left_right=0)
+CD = cd.ControlDriver(record_mode=True, left_right=0)
 
 
 def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
