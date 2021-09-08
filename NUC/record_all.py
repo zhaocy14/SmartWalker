@@ -42,12 +42,12 @@ Skin.build_base_line_data()
 seperately_recording = True
 
 if seperately_recording:
-    thread_skin = threading.Thread(target=Skin.read_and_record, args=(True))
+    thread_skin = threading.Thread(target=Skin.read_and_record, args=(True,))
     thread_camera = threading.Thread(target=Camera.record_write, args=(True, True, data_path, True))
     # thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
     thread_IMU_walker = threading.Thread(target=IMU_walker.read_record, args=(0,False,data_path))
-    thread_cd = threading.Thread(target=Cd.control_part, args=(data_path))
-    thread_leg = threading.Thread(target=Ld.scan_procedure, args=(False, True, data_path))
+    thread_cd = threading.Thread(target=Cd.control_part, args=())
+    thread_leg = threading.Thread(target=Ld.scan_procedure, args=(False, True,))
 
     thread_skin.start()
     thread_camera.start()
