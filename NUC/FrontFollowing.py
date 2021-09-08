@@ -49,13 +49,13 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
         current_right_leg = LD.right_leg
         current_position, position_buffer = position_calculation(current_left_leg, current_right_leg,
                                                                  position_buffer, weight_array)
-        max_boundary=40   #left max value
-        min_boundary=-30   #right max value
+        max_boundary=14.5   #left max value
+        min_boundary=-14   #right max value
         forward_boundry = 10
         backward_boundry = -5
         center_left_boundry = 1   #change gwz
         center_right_boundry = 0.3
-        left_boundry = 9   #change gwz
+        left_boundry = 8   #change gwz
         right_boundry = -7
         if backward_boundry > current_position[4] > -40:
             CD.speed = -0.1
