@@ -100,7 +100,7 @@ class Leg_detector(object):
             self.right_leg = infinite_far
             return infinite_far, infinite_far
 
-    def scan_procedure(self, file_path: str = "", show: bool = False, is_record: bool = False):
+    def scan_procedure(self,show: bool = False, is_record: bool = False, file_path: str = ""):
         info = self.rplidar.get_info()
         print(info)
         health = self.rplidar.get_health()

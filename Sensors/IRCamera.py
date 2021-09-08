@@ -15,9 +15,12 @@ import time
 import numpy as np
 import cv2
 from PIL import Image
-resource = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."
-    )
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
+data_path = os.path.abspath(
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
+    os.path.sep + "data")
 # resource_video = resource + os.path.sep + "output.avi"
 # resource_img = resource + os.path.sep + "output_npdata"
 
@@ -171,11 +174,11 @@ class IRCamera(object):
             self.demonstrate_data()
         return temperature
 
-    def record_write(self, write = False, time_index=False, demo=False):
+    def record_write(self, write = False, time_index=False, demo=False, file_path=data_path):
         head = []
         data = []
         rest_num = 5
-        ir_data_path = resource + os.path.sep + "ir_data.txt"
+        ir_data_path = file_path + os.path.sep + "ir_data.txt"
         if write:
             file_ir = open(ir_data_path, "w")
         # time_previous = time.time()
@@ -237,17 +240,15 @@ class IRCamera(object):
             if len(self.temperature) == 769:
                 """leave time stamp"""
                 temperature.pop(0)
-            # maxtemp = max(temperature)
-            # mintemp = min(temperature)
-            # maxtemp = 36
-            # mintemp = 15
-            # for i in range(len(temperature)):
-                # temperature[i] = (temperature[i] - mintemp) / (maxtemp - mintemp)
+            maxtemp = max(temperature)
+            mintemp = min(temperature)
             for i in range(len(temperature)):
-                if temperature[i] <= 25:
-                    temperature[i] = 0
-                else:
-                    temperature[i] = 1
+                temperature[i] = (temperature[i] - mintemp) / (maxtemp - mintemp)
+            # for i in range(len(temperature)):
+            #     if temperature[i] <= 25:
+            #         temperature[i] = 0
+            #     else:
+            #         temperature[i] = 1
             # npdata = np.array(self.temperature).reshape(24, 32)
             # threshold0 = 28
             # threshold1 = 27

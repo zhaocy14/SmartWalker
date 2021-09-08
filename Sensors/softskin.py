@@ -12,7 +12,9 @@ import matplotlib.pyplot as plt
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
-
+data_path = os.path.abspath(
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
+    os.path.sep + "data")
 
 def print_serial(port):
     print("---------------[ %s ]---------------" % port.name)
@@ -101,13 +103,12 @@ class SoftSkin(object):
         print("base line data: ", self.base_data)
         pass
 
-    def read_and_record(self, record=False, show=False, plot=False, plot_num=30):
-        data_path = self.father_path + os.path.sep + \
-                    "data"+os.path.sep + "softskin.txt"
+    def read_and_record(self, record=False, show=False, plot=False, plot_num=30, data_path=""):
+        file_path = data_path + os.path.sep + "Softskin.txt"
         plot_array = np.zeros((plot_num, self.port_num))
         if record:
 
-            with open(data_path, 'w') as file:
+            with open(file_path, 'w') as file:
                 while True:
                     # self.serial.flushInput()
                     self.read_data(0)

@@ -8,8 +8,8 @@ from Preprocessing import Leg_detector
 from Driver import ControlOdometryDriver as cd
 
 """portal num"""
-camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB1'
+camera_portal = '/dev/ttyUSB1'
+lidar_portal = '/dev/ttyUSB0'
 IMU_walker_portal = '/dev/ttyUSB4'
 
 Camera = IRCamera.IRCamera()
@@ -78,7 +78,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.omega = 0
                 CD.radius = radius
                 str1 = "left"
-                time.sleep(0.2)
+                time.sleep(0.1)
             elif current_position[5] < center_right_boundry \
                     and current_position[2] > current_position[0] \
                     and current_position[3] < right_boundry:
@@ -91,7 +91,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.omega = 0
                 CD.radius = radius
                 str1 = "right"
-                time.sleep(0.2)
+                time.sleep(0.1)
             else:
                 CD.speed = 0.1
                 CD.omega = 0
