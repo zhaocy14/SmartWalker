@@ -243,7 +243,7 @@ class IRCamera(object):
             maxtemp = max(temperature)
             mintemp = min(temperature)
             for i in range(len(temperature)):
-                temperature[i] = (temperature[i] - mintemp) / (maxtemp - mintemp) * 256
+                temperature[i] = (temperature[i] - mintemp) / (maxtemp - mintemp)
             # for i in range(len(temperature)):
             #     if temperature[i] <= 25:
             #         temperature[i] = 0
