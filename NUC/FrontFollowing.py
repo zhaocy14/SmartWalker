@@ -55,7 +55,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
         backward_boundry = -5
         center_left_boundry = 1   #change gwz
         center_right_boundry = 0.3
-        left_boundry = 8   #change gwz
+        left_boundry = 8.2   #change gwz
         right_boundry = -7.5
         if backward_boundry > current_position[4] > -40:
             CD.speed = -0.1
@@ -106,7 +106,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
              %(current_position[0], current_position[1], current_position[2],
                current_position[3], current_position[4], current_position[5],str1,CD.speed,CD.omega,CD.radius),end="")
 
-thread_leg = threading.Thread(target=LD.scan_procedure, args=())
+thread_leg = threading.Thread(target=LD.scan_procedure, args=(False,True,))
 thread_cd = threading.Thread(target=CD.control_part, args=())
 thread_main = threading.Thread(target=main_FFL, args=(CD, LD))
 
