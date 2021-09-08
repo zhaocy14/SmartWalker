@@ -10,7 +10,9 @@ import os, sys
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
-
+data_path = os.path.abspath(
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
+    os.path.sep + "data")
 
 class Leg_detector(object):
 
@@ -100,7 +102,7 @@ class Leg_detector(object):
             self.right_leg = infinite_far
             return infinite_far, infinite_far
 
-    def scan_procedure(self,show: bool = False, is_record: bool = False, file_path: str = ""):
+    def scan_procedure(self,show: bool = False, is_record: bool = False, file_path:str=data_path):
         info = self.rplidar.get_info()
         print(info)
         health = self.rplidar.get_health()
