@@ -3,7 +3,7 @@ import numpy as np
 import time
 import threading
 
-from Sensors import IRCamera
+from Sensors import IRCamera, IMU
 from Preprocessing import Leg_detector
 from Driver import ControlOdometryDriver as cd
 
@@ -11,10 +11,17 @@ from Driver import ControlOdometryDriver as cd
 camera_portal = '/dev/ttyUSB1'
 lidar_portal = '/dev/ttyUSB0'
 IMU_walker_portal = '/dev/ttyUSB4'
+IMU_human_portal = '/dev/ttyUSB5'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
 CD = cd.ControlDriver(record_mode=True, left_right=0)
+
+IMU_walker = IMU.IMU()
+IMU_walker.open_serial(IMU_walker_portal)
+
+IMU_human = IMU.IMU()
+IMU_human.open_serial(IMU_walker_portal)
 
 
 def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,

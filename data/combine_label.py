@@ -194,8 +194,8 @@ def create_label(gradient, walker_omega, omega_flag, positive_gradient_flag, neg
                 # 前行
                 label[i] = 1
             else:
-                # 后退
-                label[i] = 6
+                # 后退 新的数据没有收集后退，如果录到相关的，改为原地
+                label[i] = 0
     return label
 
 walker_omega = walker_IMU[:,3:6]
