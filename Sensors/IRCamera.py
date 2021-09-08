@@ -240,17 +240,15 @@ class IRCamera(object):
             if len(self.temperature) == 769:
                 """leave time stamp"""
                 temperature.pop(0)
-            # maxtemp = max(temperature)
-            # mintemp = min(temperature)
-            # maxtemp = 36
-            # mintemp = 15
-            # for i in range(len(temperature)):
-                # temperature[i] = (temperature[i] - mintemp) / (maxtemp - mintemp)
+            maxtemp = max(temperature)
+            mintemp = min(temperature)
             for i in range(len(temperature)):
-                if temperature[i] <= 25:
-                    temperature[i] = 0
-                else:
-                    temperature[i] = 1
+                temperature[i] = (temperature[i] - mintemp) / (maxtemp - mintemp) * 256
+            # for i in range(len(temperature)):
+            #     if temperature[i] <= 25:
+            #         temperature[i] = 0
+            #     else:
+            #         temperature[i] = 1
             # npdata = np.array(self.temperature).reshape(24, 32)
             # threshold0 = 28
             # threshold1 = 27
