@@ -205,11 +205,10 @@ class IMU(object):
             angle_z -= 2 * k_angle
         return angle_x, angle_y, angle_z
 
-    def read_record(self,time_delay=0,show=False):
-        portnameprint = str(self.port_name)
-        portnameprint = portnameprint[-4:len(portnameprint)]
-        IMU_data_path = resource +os.path.sep+"data"+ os.path.sep + "IMU.txt"
-        print(IMU_data_path)
+    def read_record(self,file_path="",time_delay=0,show=False):
+        # portnameprint = str(self.port_name)
+        # portnameprint = portnameprint[-4:len(portnameprint)]
+        IMU_data_path = file_path + os.path.sep + "IMU.txt"
         file_IMU = open(IMU_data_path, "w")
         while True:
             self.collect_all(show)
