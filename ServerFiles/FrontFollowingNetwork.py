@@ -217,6 +217,12 @@ if __name__ == "__main__":
         current_s_label = np.loadtxt(current_s_label_path)
         current_s_label = current_s_label.reshape((current_s_label.shape[0],1))
 
+        test_data_path = "/data/cyzhao/test_o_data.txt"
+        test_data = np.loadtxt(test_data_path)
+        test_label_path = "/data/cyzhao/test_o_label.txt"
+        test_label = np.loadtxt(test_label_path)
+        test_label = test_label.reshape((test_label.shape[0],1))
+
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
         FFL_Model.current_net.compile(optimizer=optimizer,
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -225,13 +231,17 @@ if __name__ == "__main__":
         FFL_Model.current_net.fit(current_s_data,current_s_label,batch_size=128,epochs=100,verbose=1)
         FFL_Model.current_net.save_weights('./checkpoints_s_current/Current')
 
+        test_acc = FFL_Model.current_net.evaluate(test_data,test_label,verbose=1)
+
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
         FFL_Model.current_net.compile(optimizer=optimizer,
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
-
+        test_acc = FFL_Model.current_net.evaluate(test_data,test_label,verbose=1)
         FFL_Model.current_net.fit(current_o_data, current_o_label, batch_size=128, epochs=200, verbose=1)
         FFL_Model.current_net.save_weights('./checkpoints_o_current/Current')
+
+
 
     else:
         tendency_data_path = "/data/cyzhao/t_data.txt"
@@ -255,27 +265,41 @@ if __name__ == "__main__":
         tendency_label = tendency_dataset[:, 0]
         tendency_data = tendency_dataset[:, 1:tendency_dataset.shape[1]]
 
-        portion_train = int(tendency_data.shape[0] * 0.8)
+        """old way of dividing train data, validation data, test data"""
+        # portion_train = int(tendency_data.shape[0] * 0.8)
+        # portion_validation = int(tendency_data.shape[0] * 0.9)
+        #
+        # train_data = tendency_data[0:portion_train,:]
+        # train_label = tendency_label[0:portion_train]
+        # train_data = np.reshape(train_data, (train_data.shape[0], train_data.shape[1], 1))
+        #
+        # validation_data = tendency_data[portion_train:portion_validation, :]
+        # validation_label = tendency_label[portion_train:portion_validation]
+        # validation_data = np.reshape(validation_data, (validation_data.shape[0], validation_data.shape[1], 1))
+        #
+        # test_data = tendency_data[portion_validation:tendency_data.shape[0], :]
+        # test_label = tendency_label[portion_validation:tendency_data.shape[0]]
+        # test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
+
+
+        """train data and test data are from different dataset"""
+
         portion_validation = int(tendency_data.shape[0] * 0.9)
 
-        train_data = tendency_data[0:portion_train,:]
-        train_label = tendency_label[0:portion_train]
+        train_data = tendency_data[0:portion_validation,:]
+        train_label = tendency_label[0:portion_validation]
         train_data = np.reshape(train_data, (train_data.shape[0], train_data.shape[1], 1))
 
-        validation_data = tendency_data[portion_train:portion_validation, :]
-        validation_label = tendency_label[portion_train:portion_validation]
+        validation_data = tendency_data[portion_validation:tendency_data.shape[0], :]
+        validation_label = tendency_label[portion_validation:tendency_data.shape[0]]
         validation_data = np.reshape(validation_data, (validation_data.shape[0], validation_data.shape[1], 1))
 
-        test_data = tendency_data[portion_validation:tendency_data.shape[0], :]
-        test_label = tendency_label[portion_validation:tendency_data.shape[0]]
+        test_data_path = "/data/cyzhao/test_t_data.txt"
+        test_data = np.loadtxt(test_data_path)
+        test_label_path = "/data/cyzhao/test_t_label.txt"
+        test_label = np.loadtxt(test_label_path)
+        test_label = test_label.reshape((test_label.shape[0], 1))
         test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
-
-        #test_data_path = "/data/cyzhao/test_data.txt"
-        #test_data = np.loadtxt(test_data_path)
-        #test_label_path = "/data/cyzhao/test_label.txt"
-        #test_label = np.loadtxt(test_label_path)
-        #test_label = test_label.reshape((test_label.shape[0], 1))
-        #test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
         FFL_Model.tendency_net.compile(optimizer=optimizer,
