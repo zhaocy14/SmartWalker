@@ -16,8 +16,8 @@ resource = os.path.abspath(
     os.path.sep + "data")
 print(resource)
 """portal num"""
-camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB1'
+camera_portal = '/dev/ttyUSB1'
+lidar_portal = '/dev/ttyUSB0'
 IMU_walker_portal = '/dev/ttyUSB2'
 
 """IMU part"""
