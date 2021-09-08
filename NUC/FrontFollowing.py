@@ -14,7 +14,7 @@ IMU_walker_portal = '/dev/ttyUSB4'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
-CD = cd.ControlDriver(record_mode=False, left_right=0)
+CD = cd.ControlDriver(record_mode=True, left_right=0)
 
 
 def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
@@ -73,8 +73,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 # CD.omega = 0
                 # CD.radius= 75 * para_rl
                 radius = 40+60*(max_boundary-current_position[1])/(max_boundary-left_boundry)
-                if radius < 56 :
-                    radius = 56
+                if radius < 50 :
+                    radius = 50
                 CD.omega = 0
                 CD.radius = radius
                 str1 = "left"
@@ -86,8 +86,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 # CD.omega = -0.15
                 # CD.radius = 80
                 radius = -40-60*(current_position[3]-min_boundary)/(right_boundry-min_boundary)
-                if radius > -56 :
-                    radius = -56
+                if radius > -50 :
+                    radius = -50
                 CD.omega = 0
                 CD.radius = radius
                 str1 = "right"
