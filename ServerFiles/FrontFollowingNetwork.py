@@ -205,11 +205,11 @@ if __name__ == "__main__":
 
     train_current = True
     if train_current:
-        current_o_data_path = "/data/cyzhao/o_data.txt"
-        current_o_data = np.loadtxt(current_o_data_path)
-        current_o_label_path = "/data/cyzhao/o_label.txt"
-        current_o_label = np.loadtxt(current_o_label_path)
-        current_o_label = current_o_label.reshape((current_o_label.shape[0],1))
+        current_os_data_path = "/data/cyzhao/os_data.txt"
+        current_os_data = np.loadtxt(current_os_data_path)
+        current_os_label_path = "/data/cyzhao/os_label.txt"
+        current_os_label = np.loadtxt(current_os_label_path)
+        current_os_label = current_os_label.reshape((current_os_label.shape[0],1))
 
         current_s_data_path = "/data/cyzhao/s_data.txt"
         current_s_data = np.loadtxt(current_s_data_path)
@@ -238,7 +238,7 @@ if __name__ == "__main__":
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
 
-        FFL_Model.current_net.fit(current_o_data, current_o_label, batch_size=128, epochs=200, verbose=1)
+        FFL_Model.current_net.fit(current_os_data, current_os_label, batch_size=128, epochs=200, verbose=1)
         FFL_Model.current_net.save_weights('./checkpoints_o_current/Current')
         test_acc = FFL_Model.current_net.evaluate(test_data, test_label, verbose=1)
 
