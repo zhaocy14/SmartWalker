@@ -219,6 +219,7 @@ if __name__ == "__main__":
 
     FFL_Model = FrontFollowing_Model(win_width=10)
 
+
     train_current = False
 
     if train_current:
@@ -315,6 +316,9 @@ if __name__ == "__main__":
         epochs_num = 0
         max_test_acc = 0
         max_acc_epoch = 0
+
+        file_curve_path = "./curve.txt"
+        file_curve = open(file_curve_path,'w')
         while True:
             tendency_dataset = np.concatenate([tendency_label, tendency_data], axis=1)
             np.random.shuffle(tendency_dataset)
@@ -325,8 +329,13 @@ if __name__ == "__main__":
                 break
             print("epoch now: %d" % epochs_num)
             # FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
-            FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1, verbose=1)
-            test_loss, test_acc = FFL_Model.tendency_net.evaluate(test_data, test_label, verbose=1)
+            history = FFL_Model.tendency_net.fit(train_data, train_label, validation_data=(test_data,test_label), batch_size=128, epochs=1, verbose=1)
+            test_loss = history.history['val_loss']
+            test_acc = history.history['val_acc']
+            train_loss = history.history['loss']
+            train_acc = history.history['accuracy']
+            file_curve.write(str([train_loss,train_acc,test_loss,test_acc])+"\n")
+            file_curve.flush()
             epochs_num += 1
             if test_acc >= max_test_acc:
                 FFL_Model.tendency_net.save_weights('./checkpoints_tendency/Tendency')

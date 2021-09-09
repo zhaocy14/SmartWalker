@@ -60,15 +60,16 @@ class FrontFollowing_Model(object):
         self.leg_width = 4
         """network parameter"""
         self.dense_unit = 10
-        self.CNN_filter_unit = 100
+        self.CNN_filter_unit = 256
         self.show_summary = False
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
 
         """network building"""
-        self.tendency_ir_part = Conv_part(self.CNN_filter_unit)
-        self.current_ir_part = Conv_part(self.CNN_filter_unit)
-        # self.ir_part = resnet.get_model("resnet34")
+        # self.tendency_ir_part = Conv_part(self.CNN_filter_unit)
+        # self.current_ir_part = Conv_part(self.CNN_filter_unit)
+        self.tendency_ir_part = resnet.get_model("resnet34")
+        self.current_ir_part = resnet.get_model("resnet34")
         # self.skin_part = Skin_part()
         self.tendency_net = self.create_tendency_net()
         self.current_net = self.create_current_net()
@@ -152,10 +153,13 @@ class FrontFollowing_Model(object):
             output_combine)
 
         # LSTM part
-        output_final = keras.layers.LSTM(32, activation='tanh')(output_reshape)
+        output_final = keras.layers.LSTM(64, activation='tanh')(output_reshape)
         output_final = keras.layers.Dense(128, activation='relu')(output_final)
+        output_final = keras.layers.Dropout(0.5)(output_final)
+        output_final = keras.layers.Dense(256, activation='relu')(output_final)
+        output_final = keras.layers.Dropout(0.5)(output_final)
         output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dense(128, activation='relu')(output_final)
+        output_final = keras.layers.Dropout(0.5)(output_final)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(6, activation='softmax')(output_final)
             model = keras.Model(inputs=input_all, outputs=output_final)
@@ -177,11 +181,14 @@ class FrontFollowing_Model(object):
         input_figure = keras.Input(shape=(self.ir_data_width, 1))
         output_ir = keras.layers.Reshape(input_shape=(self.ir_data_width, 1), target_shape=(32, 24, 1))(input_figure)
         output_ir = self.current_ir_part(output_ir)
-        # LSTM part
+
         output_ir = keras.layers.Flatten()(output_ir)
         output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
-        output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
-        output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
+        output_ir = keras.layers.Dropout(0.5)(output_ir)
+        output_ir = keras.layers.Dense(256, activation='relu')(output_ir)
+        output_ir = keras.layers.Dropout(0.5)(output_ir)
+        output_ir = keras.layers.Dense(64, activation='relu')(output_ir)
+        output_ir = keras.layers.Dropout(0.5)(output_ir)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(6, activation='softmax')(output_ir)
             model = keras.Model(inputs=input_figure, outputs=output_final)
@@ -209,7 +216,7 @@ if __name__ == "__main__":
 
     model = FrontFollowing_Model(win_width=9,is_skin_input=False,is_multiple_output=False)
     model.tendency_net.summary()
-    model.current_net.summary()
+    # model.current_net.summary()
     # model.model.compile(optimizer='RMSprop',
     #                             loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     #                             metrics=['accuracy'])
