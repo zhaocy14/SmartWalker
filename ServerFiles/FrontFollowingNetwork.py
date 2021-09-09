@@ -71,8 +71,8 @@ class FrontFollowing_Model(object):
         """network building"""
         # self.tendency_ir_part = Conv_part(self.CNN_filter_unit)
         # self.current_ir_part = Conv_part(self.CNN_filter_unit)
-        self.tendency_ir_part = resnet.get_model("resnet18")
-        self.current_ir_part = resnet.get_model("resnet18")
+        self.tendency_ir_part = resnet.get_model("resnet34")
+        self.current_ir_part = resnet.get_model("resnet34")
         # self.skin_part = Skin_part()
         self.tendency_net = self.create_tendency_net()
         self.current_net = self.create_current_net()
@@ -161,7 +161,7 @@ class FrontFollowing_Model(object):
         output_final = keras.layers.Dropout(0.5)(output_final)
         output_final = keras.layers.Dense(256, activation='relu')(output_final)
         output_final = keras.layers.Dropout(0.5)(output_final)
-        output_final = keras.layers.Dense(64, activation='relu')(output_final)
+        output_final = keras.layers.Dense(128, activation='relu')(output_final)
         output_final = keras.layers.Dropout(0.5)(output_final)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(6, activation='softmax')(output_final)
