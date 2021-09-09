@@ -6,7 +6,7 @@ father_path = os.path.abspath(os.path.dirname(pwd))
 
 
 
-def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False):
+def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False,istest:bool=False):
     if len(num_list) != 0:
         if not is_o and not is_s:
             for i, number in enumerate(num_list):
@@ -21,9 +21,12 @@ def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False):
                     final_data = np.concatenate([data, final_data], 0)
                     final_label = np.concatenate([label, final_label], 0)
             print(final_data.shape)
-
-            final_data_path = os.path.abspath(father_path + os.path.sep + "t_data.txt")
-            final_label_path = os.path.abspath(father_path + os.path.sep + "t_label.txt")
+            if istest:
+                final_data_path = os.path.abspath(father_path + os.path.sep + "test_t_data.txt")
+                final_label_path = os.path.abspath(father_path + os.path.sep + "test_t_label.txt")
+            else:
+                final_data_path = os.path.abspath(father_path + os.path.sep + "t_data.txt")
+                final_label_path = os.path.abspath(father_path + os.path.sep + "t_label.txt")
             """Calculate the number/proportion of different movements"""
             number = np.zeros((2, 7))
             for i in range(final_label.shape[0]):
@@ -50,8 +53,14 @@ def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False):
                     final_data = np.concatenate([data, final_data], 0)
                     final_label = np.concatenate([label, final_label], 0)
             print(final_data.shape)
-            final_data_path = os.path.abspath(father_path + os.path.sep + "o_data.txt")
-            final_label_path = os.path.abspath(father_path + os.path.sep + "o_label.txt")
+            if istest:
+                final_data_path = os.path.abspath(father_path + os.path.sep + "test_o_data.txt")
+                final_label_path = os.path.abspath(father_path + os.path.sep + "test_o_label.txt")
+            else:
+                final_data_path = os.path.abspath(father_path + os.path.sep + "o_data.txt")
+                final_label_path = os.path.abspath(father_path + os.path.sep + "o_label.txt")
+
+
         elif is_s:
             for i, number in enumerate(num_list):
                 data_path = os.path.abspath(father_path + os.path.sep + str(number) + "s_data.txt")
@@ -72,25 +81,33 @@ def concatenate_data(num_list: list = [], is_o:bool=False, is_s:bool=False):
         # print(final_data)
         np.savetxt(final_data_path, final_data, fmt="%.3f")
         np.savetxt(final_label_path, final_label, fmt="%d")
+        return final_data,final_label
 
-
+def concatenate_o_s(o_data,o_label,s_data,s_label):
+    final_data = np.concatenate([o_data, s_data], 0)
+    final_label = np.concatenate([o_label, s_label], 0)
+    final_data_path = os.path.abspath(father_path + os.path.sep + "os_data.txt")
+    final_label_path = os.path.abspath(father_path + os.path.sep + "os_label.txt")
+    np.savetxt(final_data_path, final_data, fmt="%.3f")
+    np.savetxt(final_label_path, final_label, fmt="%d")
+    return final_data,final_label
 
 if __name__ == "__main__":
-    num_list = [875, 1027, 1043, 1190, 1514, 1516, 1909]
-    concatenate_data(num_list)
+    num_list = [507, 618, 875, 1027, 1043, 1190, 1514, 1516, 1754,1909,3020]
+    t_data,t_label = concatenate_data(num_list)
 
-    num_list = [884, 1036, 1052, 1199, 1523, 1525, 1918]
-    concatenate_data(num_list,is_o=True)
+    num_list = [516, 627, 884, 1036, 1052, 1199, 1523, 1525, 1763,1918,3029]
+    o_data,o_label=concatenate_data(num_list,is_o=True)
 
 
-    num_list = [11, 14, 17, 24, 32, 53,65,68,80,93,95,99,102,122,128]
-    concatenate_data(num_list,is_s=True)
+    num_list = [11, 14, 17, 24, 32, 53,65,68,80,93,95,99,102,122,128,209,237,267,278,327]
+    s_data,s_label=concatenate_data(num_list,is_s=True)
 
-    # num_list = [1754]
-    # concatenate_data(num_list)
-    #
-    # num_list = [1763]
-    # concatenate_data(num_list,is_o=True)
+    concatenate_o_s(o_data,o_label,s_data,s_label)
 
-    # num_list = [1456]
-    # concatenate_data(num_list,istestdata=True)
+    num_list = [808]
+    concatenate_data(num_list,istest=True)
+
+    num_list = [817]
+    concatenate_data(num_list,is_o=True,istest=True)
+

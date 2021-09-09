@@ -12,7 +12,7 @@ from Network import resnet
 
 class Conv_part(keras.Model):
 
-    def __init__(self,filter_unit:int=10):
+    def __init__(self,filter_unit:int=100):
         super().__init__()
         self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
