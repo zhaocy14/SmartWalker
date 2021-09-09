@@ -28,9 +28,9 @@ class Conv_part(keras.Model):
 
     def call(self,inputs):
         y = self.layer1(inputs)
-        # y = self.layer1_bn(y)
+        y = self.layer1_bn(y)
         y = self.layer2(y)
-        # y = self.layer2_bn(y)
+        y = self.layer2_bn(y)
         y = self.layer3(y)
         y = self.layer3_bn(y)
         y = self.layer4(y)
@@ -157,6 +157,7 @@ class FrontFollowing_Model(object):
         # LSTM part
         output_final = keras.layers.LSTM(64, activation='tanh')(output_reshape)
         output_final = keras.layers.Dense(128, activation='relu')(output_final)
+        output_final = keras.layers.Dropout(0.5)(output_final)
         output_final = keras.layers.Dense(256, activation='relu')(output_final)
         output_final = keras.layers.Dropout(0.5)(output_final)
         output_final = keras.layers.Dense(64, activation='relu')(output_final)
@@ -185,7 +186,9 @@ class FrontFollowing_Model(object):
 
         output_ir = keras.layers.Flatten()(output_ir)
         output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
+        output_ir = keras.layers.Dropout(0.5)(output_ir)
         output_ir = keras.layers.Dense(256, activation='relu')(output_ir)
+        output_ir = keras.layers.Dropout(0.5)(output_ir)
         output_ir = keras.layers.Dense(64, activation='relu')(output_ir)
         output_ir = keras.layers.Dropout(0.5)(output_ir)
         if not self.is_multiple_output:
@@ -290,12 +293,6 @@ if __name__ == "__main__":
         # other_data = tendency_dataset[other_data_idx]
         # tendency_dataset = np.concatenate([still_data[0:int(still_data.shape[0]/2),:], other_data],axis=0)
 
-        # shuffle the original data
-        np.random.shuffle(tendency_dataset)
-        tendency_label = tendency_dataset[:, 0]
-        tendency_label = tendency_label.reshape((tendency_label.shape[0], 1))
-        tendency_data = tendency_dataset[:, 1:tendency_dataset.shape[1]]
-
         """train data and test data are from different dataset"""
 
         train_data = tendency_data
@@ -323,10 +320,9 @@ if __name__ == "__main__":
             tendency_label = tendency_dataset[:, 0]
             tendency_data = tendency_dataset[:, 1:tendency_dataset.shape[1]]
             tendency_label = tendency_label.reshape((tendency_label.shape[0], 1))
-            #break
-            if epochs_num >= 350:
+            if epochs_num >= 500:
                 break
-            print("epoch now: %d"%epochs_num)
+            print("epoch now: %d" % epochs_num)
             # FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
             FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1, verbose=1)
             test_loss, test_acc = FFL_Model.tendency_net.evaluate(test_data, test_label, verbose=1)
