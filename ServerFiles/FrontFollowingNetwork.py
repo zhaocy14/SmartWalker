@@ -155,9 +155,10 @@ class FrontFollowing_Model(object):
             output_combine)
 
         # LSTM part
-        output_final = keras.layers.LSTM(32, activation='tanh')(output_reshape)
+        output_final = keras.layers.LSTM(64, activation='tanh')(output_reshape)
         output_final = keras.layers.Dense(128, activation='relu')(output_final)
         output_final = keras.layers.Dense(256, activation='relu')(output_final)
+        output_final = keras.layers.Dropout(0.5)(output_final)
         output_final = keras.layers.Dense(64, activation='relu')(output_final)
         output_final = keras.layers.Dropout(0.5)(output_final)
         if not self.is_multiple_output:
@@ -282,12 +283,12 @@ if __name__ == "__main__":
         tendency_dataset = np.concatenate([tendency_label, tendency_data], axis=1)
 
         # reduce the amount of still data
-        still_data_idx = tendency_dataset[:,0] == 0
-        still_data = tendency_dataset[still_data_idx]
-        np.random.shuffle(still_data)
-        other_data_idx = tendency_dataset[:,0] != 0
-        other_data = tendency_dataset[other_data_idx]
-        tendency_dataset = np.concatenate([still_data[0:int(still_data.shape[0]/2),:], other_data],axis=0)
+        # still_data_idx = tendency_dataset[:,0] == 0
+        # still_data = tendency_dataset[still_data_idx]
+        # np.random.shuffle(still_data)
+        # other_data_idx = tendency_dataset[:,0] != 0
+        # other_data = tendency_dataset[other_data_idx]
+        # tendency_dataset = np.concatenate([still_data[0:int(still_data.shape[0]/2),:], other_data],axis=0)
 
         # shuffle the original data
         np.random.shuffle(tendency_dataset)
@@ -339,13 +340,14 @@ if __name__ == "__main__":
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
 
-        # FFL_Model.model.load_weights("./checkpoints34/FFL34")
-        #FFL_Model.model.fit(train_data, train_label, batch_size=128, epochs=100, validation_data=(validation_data, validation_label), verbose=1)
-        #FFL_Model.model.save_weights("./checkpoints34/FFL34")
         epochs_num = 0
         max_test_acc = 0
         max_acc_epoch = 0
         while True:
+            tendency_dataset = np.concatenate([tendency_label, tendency_data], axis=1)
+            np.random.shuffle(tendency_dataset)
+            tendency_label = tendency_dataset[:, 0]
+            tendency_data = tendency_dataset[:, 1:tendency_dataset.shape[1]]
             #break
             if epochs_num >= 350:
                 break
