@@ -205,6 +205,7 @@ if __name__ == "__main__":
 
     train_current = True
     if train_current:
+        """data loading"""
         current_os_data_path = "/data/cyzhao/os_data.txt"
         current_os_data = np.loadtxt(current_os_data_path)
         current_os_label_path = "/data/cyzhao/os_label.txt"
@@ -228,7 +229,7 @@ if __name__ == "__main__":
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
 
-        FFL_Model.current_net.fit(current_s_data,current_s_label,batch_size=128,epochs=70,verbose=1)
+        FFL_Model.current_net.fit(current_s_data,current_s_label,batch_size=128,epochs=50,verbose=1)
         FFL_Model.current_net.save_weights('./checkpoints_s_current/Current')
 
         FFL_Model.current_net.evaluate(test_data,test_label,verbose=1)
@@ -240,18 +241,21 @@ if __name__ == "__main__":
 
         epochs_num = 0
         max_test_acc = 0
+        max_acc_epoch = 0
         while True:
             if epochs_num >= 100:
                 break
             else:
-                FFL_Model.current_net.fit(current_os_data, current_os_label, batch_size=128, epochs=10, verbose=1)
-                epochs_num += 10
+                FFL_Model.current_net.fit(current_os_data, current_os_label, batch_size=128, epochs=1, verbose=1)
+                epochs_num += 1
                 test_loss, test_acc = FFL_Model.current_net.evaluate(test_data, test_label, verbose=1)
                 if test_acc >= max_test_acc:
                     max_test_acc = test_acc
-                    FFL_Model.current_net.save_weights('./checkpoints_o_current/Current')
+                    max_acc_epoch = epochs_num
+                    FFL_Model.current_net.save_weights('./checkpoints_os_current/Current')
                 if test_acc > 0.8:
                     break
+        print("The maximum test accuracy is:%.3f, at epochs:%d"%(max_test_acc,max_acc_epoch))
 
 
 
@@ -324,28 +328,23 @@ if __name__ == "__main__":
         #FFL_Model.model.save_weights("./checkpoints34/FFL34")
         epochs_num = 0
         max_test_acc = 0
+        max_acc_epoch = 0
         while True:
             #break
             if epochs_num >= 350:
                 break
             print("epoch now: %d"%epochs_num)
             test_loss, test_acc = FFL_Model.tendency_net.evaluate(test_data, test_label, verbose=1)
-            if test_acc < 0.5:
-                FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=50, validation_data=(validation_data, validation_label),verbose=1)
-                epochs_num += 50
+            if test_acc < 0.88:
+                FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
+                epochs_num += 1
                 if test_acc >= max_test_acc:
                     FFL_Model.tendency_net.save_weights('./checkpoints_tendency/Tendency')
                     max_test_acc = test_acc
-            elif test_acc < 0.88:
-                FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=10,validation_data=(validation_data,validation_label),verbose=1)
-                epochs_num += 10
-                if test_acc >= max_test_acc:
-                    FFL_Model.tendency_net.save_weights('./checkpoints_tendency/Tendency')
-                    max_test_acc = test_acc
+                    max_acc_epoch = 0
             else:
                 break
-
-
+        print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
 
 
 
