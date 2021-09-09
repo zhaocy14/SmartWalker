@@ -54,7 +54,7 @@ class FrontFollowing_Model(object):
         self.leg_width = 4
         """network parameter"""
         self.dense_unit = 10
-        self.CNN_filter_unit = 10
+        self.CNN_filter_unit = 100
         self.show_summary = False
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
