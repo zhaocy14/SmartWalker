@@ -93,10 +93,10 @@ def concatenate_o_s(o_data,o_label,s_data,s_label):
     return final_data,final_label
 
 if __name__ == "__main__":
-    num_list = [507, 618, 875, 1027, 1043, 1190, 1514, 1516, 1754,1909,3020]
+    num_list = [395, 507, 618, 875, 1027, 1043, 1190, 1514, 1516, 1754,1909,3020]
     t_data,t_label = concatenate_data(num_list)
 
-    num_list = [516, 627, 884, 1036, 1052, 1199, 1523, 1525, 1763,1918,3029]
+    num_list = [404, 516, 627, 884, 1036, 1052, 1199, 1523, 1525, 1763,1918,3029]
     o_data,o_label=concatenate_data(num_list,is_o=True)
 
 

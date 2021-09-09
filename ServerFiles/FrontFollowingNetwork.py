@@ -301,15 +301,19 @@ if __name__ == "__main__":
 
         """train data and test data are from different dataset"""
 
-        portion_validation = int(tendency_data.shape[0] * 0.9)
-
-        train_data = tendency_data[0:portion_validation,:]
-        train_label = tendency_label[0:portion_validation]
+        train_data = tendency_data
+        train_label = tendency_label
         train_data = np.reshape(train_data, (train_data.shape[0], train_data.shape[1], 1))
 
-        validation_data = tendency_data[portion_validation:tendency_data.shape[0], :]
-        validation_label = tendency_label[portion_validation:tendency_data.shape[0]]
-        validation_data = np.reshape(validation_data, (validation_data.shape[0], validation_data.shape[1], 1))
+        # portion_validation = int(tendency_data.shape[0] * 0.9)
+        #
+        # train_data = tendency_data[0:portion_validation,:]
+        # train_label = tendency_label[0:portion_validation]
+        # train_data = np.reshape(train_data, (train_data.shape[0], train_data.shape[1], 1))
+        #
+        # validation_data = tendency_data[portion_validation:tendency_data.shape[0], :]
+        # validation_label = tendency_label[portion_validation:tendency_data.shape[0]]
+        # validation_data = np.reshape(validation_data, (validation_data.shape[0], validation_data.shape[1], 1))
 
         test_data_path = "/data/cyzhao/test_t_data.txt"
         test_data = np.loadtxt(test_data_path)
@@ -318,7 +322,7 @@ if __name__ == "__main__":
         test_label = test_label.reshape((test_label.shape[0], 1))
         test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
 
-        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
         FFL_Model.tendency_net.compile(optimizer=optimizer,
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
@@ -334,15 +338,15 @@ if __name__ == "__main__":
             if epochs_num >= 350:
                 break
             print("epoch now: %d"%epochs_num)
+            # FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
+            FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1, verbose=1)
             test_loss, test_acc = FFL_Model.tendency_net.evaluate(test_data, test_label, verbose=1)
-            if test_acc < 0.88:
-                FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
-                epochs_num += 1
-                if test_acc >= max_test_acc:
-                    FFL_Model.tendency_net.save_weights('./checkpoints_tendency/Tendency')
-                    max_test_acc = test_acc
-                    max_acc_epoch = 0
-            else:
+            epochs_num += 1
+            if test_acc >= max_test_acc:
+                FFL_Model.tendency_net.save_weights('./checkpoints_tendency/Tendency')
+                max_test_acc = test_acc
+                max_acc_epoch = epochs_num
+            if test_acc >= 0.88:
                 break
         print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
 
