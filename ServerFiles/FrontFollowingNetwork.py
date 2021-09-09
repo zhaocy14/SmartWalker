@@ -331,7 +331,7 @@ if __name__ == "__main__":
             # FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
             history = FFL_Model.tendency_net.fit(train_data, train_label, validation_data=(test_data,test_label), batch_size=128, epochs=1, verbose=1)
             test_loss = history.history['val_loss']
-            test_acc = history.history['val_acc']
+            test_acc = history.history['val_accuracy']
             train_loss = history.history['loss']
             train_acc = history.history['accuracy']
             file_curve.write(str([train_loss,train_acc,test_loss,test_acc])+"\n")
@@ -344,6 +344,7 @@ if __name__ == "__main__":
             if test_acc >= 0.88:
                 break
             print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
+        file_curve.close()
 
 
 
