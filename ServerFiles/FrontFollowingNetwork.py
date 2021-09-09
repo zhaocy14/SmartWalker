@@ -293,40 +293,14 @@ if __name__ == "__main__":
         # shuffle the original data
         np.random.shuffle(tendency_dataset)
         tendency_label = tendency_dataset[:, 0]
+        tendency_label = tendency_label.reshape((tendency_label.shape[0], 1))
         tendency_data = tendency_dataset[:, 1:tendency_dataset.shape[1]]
-
-        """old way of dividing train data, validation data, test data"""
-        # portion_train = int(tendency_data.shape[0] * 0.8)
-        # portion_validation = int(tendency_data.shape[0] * 0.9)
-        #
-        # train_data = tendency_data[0:portion_train,:]
-        # train_label = tendency_label[0:portion_train]
-        # train_data = np.reshape(train_data, (train_data.shape[0], train_data.shape[1], 1))
-        #
-        # validation_data = tendency_data[portion_train:portion_validation, :]
-        # validation_label = tendency_label[portion_train:portion_validation]
-        # validation_data = np.reshape(validation_data, (validation_data.shape[0], validation_data.shape[1], 1))
-        #
-        # test_data = tendency_data[portion_validation:tendency_data.shape[0], :]
-        # test_label = tendency_label[portion_validation:tendency_data.shape[0]]
-        # test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
-
 
         """train data and test data are from different dataset"""
 
         train_data = tendency_data
         train_label = tendency_label
         train_data = np.reshape(train_data, (train_data.shape[0], train_data.shape[1], 1))
-
-        # portion_validation = int(tendency_data.shape[0] * 0.9)
-        #
-        # train_data = tendency_data[0:portion_validation,:]
-        # train_label = tendency_label[0:portion_validation]
-        # train_data = np.reshape(train_data, (train_data.shape[0], train_data.shape[1], 1))
-        #
-        # validation_data = tendency_data[portion_validation:tendency_data.shape[0], :]
-        # validation_label = tendency_label[portion_validation:tendency_data.shape[0]]
-        # validation_data = np.reshape(validation_data, (validation_data.shape[0], validation_data.shape[1], 1))
 
         test_data_path = "/data/cyzhao/test_t_data.txt"
         test_data = np.loadtxt(test_data_path)
@@ -348,6 +322,7 @@ if __name__ == "__main__":
             np.random.shuffle(tendency_dataset)
             tendency_label = tendency_dataset[:, 0]
             tendency_data = tendency_dataset[:, 1:tendency_dataset.shape[1]]
+            tendency_label = tendency_label.reshape((tendency_label.shape[0], 1))
             #break
             if epochs_num >= 350:
                 break
