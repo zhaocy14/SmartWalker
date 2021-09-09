@@ -63,16 +63,16 @@ class FrontFollowing_Model(object):
         self.leg_width = 4
         """network parameter"""
         self.dense_unit = 10
-        self.CNN_filter_unit = 100
+        self.CNN_filter_unit = 256
         self.show_summary = False
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
 
         """network building"""
-        # self.tendency_ir_part = Conv_part(self.CNN_filter_unit)
-        # self.current_ir_part = Conv_part(self.CNN_filter_unit)
-        self.tendency_ir_part = resnet.get_model("resnet34")
-        self.current_ir_part = resnet.get_model("resnet34")
+        self.tendency_ir_part = Conv_part(self.CNN_filter_unit)
+        self.current_ir_part = Conv_part(self.CNN_filter_unit)
+        # self.tendency_ir_part = resnet.get_model("resnet34")
+        # self.current_ir_part = resnet.get_model("resnet34")
         # self.skin_part = Skin_part()
         self.tendency_net = self.create_tendency_net()
         self.current_net = self.create_current_net()
