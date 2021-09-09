@@ -157,9 +157,7 @@ class FrontFollowing_Model(object):
         # LSTM part
         output_final = keras.layers.LSTM(32, activation='tanh')(output_reshape)
         output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
         output_final = keras.layers.Dense(256, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
         output_final = keras.layers.Dense(64, activation='relu')(output_final)
         output_final = keras.layers.Dropout(0.5)(output_final)
         if not self.is_multiple_output:
@@ -186,9 +184,7 @@ class FrontFollowing_Model(object):
 
         output_ir = keras.layers.Flatten()(output_ir)
         output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
-        output_ir = keras.layers.Dropout(0.5)(output_ir)
         output_ir = keras.layers.Dense(256, activation='relu')(output_ir)
-        output_ir = keras.layers.Dropout(0.5)(output_ir)
         output_ir = keras.layers.Dense(64, activation='relu')(output_ir)
         output_ir = keras.layers.Dropout(0.5)(output_ir)
         if not self.is_multiple_output:
