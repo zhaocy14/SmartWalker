@@ -14,17 +14,26 @@ class Conv_part(keras.Model):
 
     def __init__(self,filter_unit:int=100):
         super().__init__()
-        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
+        self.layer1 = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
-        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
+        self.layer1_bn = keras.layers.BatchNormalization()
+        self.layer2 = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
-        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
+        self.layer2_bn = keras.layers.BatchNormalization()
+        self.layer3 = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
-        self.layer2 = keras.layers.MaxPool2D(pool_size=3,strides=2)
+        self.layer3_bn = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
+                                padding="SAME")
+        self.layer4 = keras.layers.MaxPool2D(pool_size=3,strides=2)
 
     def call(self,inputs):
         y = self.layer1(inputs)
+        y = self.layer1_bn(y)
         y = self.layer2(y)
+        y = self.layer2_bn(y)
+        y = self.layer3(y)
+        y = self.layer3_bn(y)
+        y = self.layer4(y)
         return y
 
 class Skin_part(keras.Model):
@@ -203,7 +212,8 @@ if __name__ == "__main__":
 
     FFL_Model = FrontFollowing_Model(win_width=10)
 
-    train_current = True
+    train_current = False
+
     if train_current:
         """data loading"""
         current_os_data_path = "/data/cyzhao/os_data.txt"

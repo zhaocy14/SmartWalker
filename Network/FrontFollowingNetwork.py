@@ -9,19 +9,28 @@ father_path = os.path.abspath(os.path.dirname(pwd)+os.path.sep+"..")
 
 class Conv_part(keras.Model):
 
-    def __init__(self,filter_unit:int=10):
+    def __init__(self,filter_unit:int=100):
         super().__init__()
-        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
+        self.layer1 = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
-        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
+        self.layer1_bn = keras.layers.BatchNormalization()
+        self.layer2 = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
-        self.layer1  = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
+        self.layer2_bn = keras.layers.BatchNormalization()
+        self.layer3 = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
                                 padding="SAME")
-        self.layer2 = keras.layers.MaxPool2D(pool_size=3,strides=2)
+        self.layer3_bn = keras.layers.Conv2D(filters=filter_unit, kernel_size=3, strides=1, activation="relu",
+                                padding="SAME")
+        self.layer4 = keras.layers.MaxPool2D(pool_size=3,strides=2)
 
     def call(self,inputs):
         y = self.layer1(inputs)
+        y = self.layer1_bn(y)
         y = self.layer2(y)
+        y = self.layer2_bn(y)
+        y = self.layer3(y)
+        y = self.layer3_bn(y)
+        y = self.layer4(y)
         return y
 
 class Skin_part(keras.Model):
@@ -51,7 +60,7 @@ class FrontFollowing_Model(object):
         self.leg_width = 4
         """network parameter"""
         self.dense_unit = 10
-        self.CNN_filter_unit = 10
+        self.CNN_filter_unit = 100
         self.show_summary = False
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
@@ -190,6 +199,8 @@ class FrontFollowing_Model(object):
                           metrics=['accuracy'])
             return model
 
+
+
 if __name__ == "__main__":
     gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
     for gpu in gpus:
@@ -197,8 +208,8 @@ if __name__ == "__main__":
     os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
     model = FrontFollowing_Model(win_width=9,is_skin_input=False,is_multiple_output=False)
-    # model.tendency_net.summary()
-    # model.current_net.summary()
+    model.tendency_net.summary()
+    model.current_net.summary()
     # model.model.compile(optimizer='RMSprop',
     #                             loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     #                             metrics=['accuracy'])
