@@ -16,7 +16,7 @@ data_path = os.path.abspath(
 
 class Leg_detector(object):
 
-    def __init__(self, portal: str = '/dev/ttyUSB2', is_show:bool=False):
+    def __init__(self, portal: str = '/dev/ttyUSB4', is_show:bool=False):
         self.rplidar = RPLidar(portal)  # '/dev/ttyUSB1'
         self.kmeans = KMeans(n_clusters=2)
         self.left_leg = np.zeros((1, 2))

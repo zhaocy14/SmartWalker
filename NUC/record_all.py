@@ -15,12 +15,13 @@ from Driver import ControlOdometryDriver as CD
 data_path = os.path.abspath(
     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
     os.path.sep + "data")
+
 print(data_path)
 
 """portal num"""
-camera_portal = '/dev/ttyUSB1'
-lidar_portal = '/dev/ttyUSB0'
-IMU_walker_portal = '/dev/ttyUSB2'
+camera_portal = '/dev/ttyUSB0'
+lidar_portal = '/dev/ttyUSB4'
+IMU_walker_portal = '/dev/ttyUSB1'
 
 """IMU part"""
 # IMU_human = IMU.IMU()

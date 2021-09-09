@@ -164,7 +164,7 @@ class ControlDriver(Thread):
 
         # 如果 record_mode 是 True，则停掉电机，只记录数据
         if self.record_mode:
-            # self.stopMotor()
+            self.stopMotor()
             Odo_data_path = data_path + os.path.sep + "Driver.txt"
             file_odo = open(Odo_data_path, "w")
 
@@ -287,9 +287,13 @@ if __name__ == '__main__':
     cd = ControlDriver(record_mode=False,left_right=0)
     cd.start()
 
+    cd.speed = -0.1
+    time.sleep(5)
+    # cd.omega = 0.15
+    # cd.radius = 80
     cd.speed = 0
-    cd.omega = 0.15
-    cd.radius = 80
+    cd.omega = 0
+    cd.radius = 0
     # while True:
     #     print("X=%.3fm,  Y=%.3fm,  THETA=%.2f" % (cd.position[0], cd.position[1], cd.position[2]/math.pi*180))
     #     time.sleep(0.1)

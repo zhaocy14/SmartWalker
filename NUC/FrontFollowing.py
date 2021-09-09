@@ -119,5 +119,5 @@ thread_main = threading.Thread(target=main_FFL, args=(CD, LD))
 
 thread_leg.start()
 time.sleep(1)
-# thread_cd.start()
+thread_cd.start()
 thread_main.start()
