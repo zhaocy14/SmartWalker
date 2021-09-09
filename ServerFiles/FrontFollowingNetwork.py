@@ -69,9 +69,10 @@ class FrontFollowing_Model(object):
         self.is_skin_input = is_skin_input
 
         """network building"""
-        self.tendency_ir_part = Conv_part(self.CNN_filter_unit)
-        self.current_ir_part = Conv_part(self.CNN_filter_unit)
-        # self.ir_part = resnet.get_model("resnet34")
+        # self.tendency_ir_part = Conv_part(self.CNN_filter_unit)
+        # self.current_ir_part = Conv_part(self.CNN_filter_unit)
+        self.tendency_ir_part = resnet.get_model("resnet18")
+        self.current_ir_part = resnet.get_model("resnet18")
         # self.skin_part = Skin_part()
         self.tendency_net = self.create_tendency_net()
         self.current_net = self.create_current_net()
