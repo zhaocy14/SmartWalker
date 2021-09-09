@@ -20,13 +20,13 @@ print(data_path)
 
 """portal num"""
 camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB4'
+lidar_portal = '/dev/ttyUSB2'
 IMU_walker_portal = '/dev/ttyUSB1'
 
 """IMU part"""
 # IMU_human = IMU.IMU()
 # IMU_human.open_serial("/dev/ttyUSB1")
-IMU_walker = IMU.IMU()
+IMU_walker = IMU.IMU(name="walker")
 IMU_walker.open_serial(IMU_walker_portal)
 """Camera part"""
 Camera = IRCamera.IRCamera()
