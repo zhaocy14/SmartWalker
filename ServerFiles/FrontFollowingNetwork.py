@@ -28,9 +28,9 @@ class Conv_part(keras.Model):
 
     def call(self,inputs):
         y = self.layer1(inputs)
-        y = self.layer1_bn(y)
+        # y = self.layer1_bn(y)
         y = self.layer2(y)
-        y = self.layer2_bn(y)
+        # y = self.layer2_bn(y)
         y = self.layer3(y)
         y = self.layer3_bn(y)
         y = self.layer4(y)
