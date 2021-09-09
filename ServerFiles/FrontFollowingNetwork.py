@@ -231,7 +231,7 @@ if __name__ == "__main__":
         FFL_Model.current_net.fit(current_s_data,current_s_label,batch_size=128,epochs=70,verbose=1)
         FFL_Model.current_net.save_weights('./checkpoints_s_current/Current')
 
-        test_acc = FFL_Model.current_net.evaluate(test_data,test_label,verbose=1)
+        FFL_Model.current_net.evaluate(test_data,test_label,verbose=1)
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
         FFL_Model.current_net.compile(optimizer=optimizer,
@@ -246,7 +246,7 @@ if __name__ == "__main__":
             else:
                 FFL_Model.current_net.fit(current_os_data, current_os_label, batch_size=128, epochs=10, verbose=1)
                 epochs_num += 10
-                test_acc = FFL_Model.current_net.evaluate(test_data, test_label, verbose=1)
+                test_loss, test_acc = FFL_Model.current_net.evaluate(test_data, test_label, verbose=1)
                 if test_acc >= max_test_acc:
                     max_test_acc = test_acc
                     FFL_Model.current_net.save_weights('./checkpoints_o_current/Current')
