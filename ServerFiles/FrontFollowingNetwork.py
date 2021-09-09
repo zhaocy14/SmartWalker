@@ -348,7 +348,7 @@ if __name__ == "__main__":
                 max_acc_epoch = epochs_num
             if test_acc >= 0.88:
                 break
-        print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
+            print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
 
 
 
