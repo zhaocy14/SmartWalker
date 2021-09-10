@@ -64,7 +64,7 @@ class FrontFollowing_Model(object):
         self.leg_width = 4
         """network parameter"""
         self.dense_unit = 10
-        self.CNN_filter_unit_tendency = 256
+        self.CNN_filter_unit_tendency = 64
         self.CNN_filter_unit_current = 128
         self.show_summary = show
         self.is_multiple_output = is_multiple_output
