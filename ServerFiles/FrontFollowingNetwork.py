@@ -272,7 +272,7 @@ if __name__ == "__main__":
             if epochs_num >= 100:
                 break
             else:
-                history = FFL_Model.current_net.fit(current_os_data, current_os_label, batch_size=128, epochs=1, validation_data=(test_data,test_label), verbose=1)
+                history = FFL_Model.current_net.fit(current_os_data, current_os_label, batch_size=64, epochs=1, validation_data=(test_data,test_label), verbose=1)
                 epochs_num += 1
                 test_loss = history.history['val_loss'][0]
                 test_acc = history.history['val_accuracy'][0]
