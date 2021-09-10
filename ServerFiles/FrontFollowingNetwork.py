@@ -242,17 +242,17 @@ if __name__ == "__main__":
         test_label = np.loadtxt(test_label_path)
         test_label = test_label.reshape((test_label.shape[0],1))
 
-        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.000001)
         FFL_Model.current_net.compile(optimizer=optimizer,
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
 
-        FFL_Model.current_net.fit(current_s_data,current_s_label,batch_size=128,epochs=50,verbose=1)
+        FFL_Model.current_net.fit(current_s_data,current_s_label,batch_size=128,epochs=20,verbose=1)
         FFL_Model.current_net.save_weights('./checkpoints_s_current/Current')
 
         FFL_Model.current_net.evaluate(test_data,test_label,verbose=1)
 
-        optimizer = tf.keras.optimizers.Adam(learning_rate=0.000001)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0000001)
         FFL_Model.current_net.compile(optimizer=optimizer,
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
@@ -287,7 +287,7 @@ if __name__ == "__main__":
                 if test_acc > 0.8:
                     break
                 print("The maximum test accuracy is:%.3f, at epochs:%d"%(max_test_acc,max_acc_epoch))
-            file_curve.close()
+        file_curve.close()
 
 
 
@@ -342,7 +342,7 @@ if __name__ == "__main__":
                 break
             print("epoch now: %d" % epochs_num)
             # FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
-            history = FFL_Model.tendency_net.fit(train_data, train_label, validation_data=(test_data,test_label), batch_size=128, epochs=1, verbose=1)
+            history = FFL_Model.tendency_net.fit(train_data, train_label, validation_data=(test_data,test_label), batch_size=64, epochs=1, verbose=1)
             test_loss = history.history['val_loss'][0]
             test_acc = history.history['val_accuracy'][0]
             train_loss = history.history['loss'][0]
