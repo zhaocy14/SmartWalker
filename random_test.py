@@ -1,7 +1,10 @@
 import numpy as np
+import tensorflow as tf
 
-a = np.ones((3,2))
-b = np.zeros((3,4))
-
-c = np.concatenate([a,b],axis=1)
+a = tf.constant([1,2,3,4])
+b = 10
+c = tf.math.multiply(a,b)
 print(c)
+
+# d = tf.math.scalar_mul(a,b)
+# print(c)

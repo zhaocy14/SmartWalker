@@ -260,7 +260,7 @@ class FrontFollowing_Model(object):
         output_current = keras.layers.Dense(64, activation='relu')(output_current)
         output_current = keras.layers.Dropout(0.5)(output_current)
 
-        print(output_tendency.shape,output_current.shape)
+        # print(output_tendency.shape,output_current.shape)
         output_final = tf.add(output_current, output_tendency)
         output_final = keras.layers.Dense(6, activation='softmax')(output_final)
         model = keras.Model(inputs=input_all, outputs=output_final)
@@ -425,7 +425,7 @@ if __name__ == "__main__":
             test_label = test_label.reshape((test_label.shape[0], 1))
             test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
 
-            optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
+            optimizer = tf.keras.optimizers.Adam(learning_rate=0.000001)
             FFL_Model.combine_net.compile(optimizer=optimizer,
                                            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                                            metrics=['accuracy'])
@@ -446,7 +446,7 @@ if __name__ == "__main__":
                 print("epoch now: %d" % epochs_num)
                 # FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
                 history = FFL_Model.combine_net.fit(tendency_data, tendency_label,
-                                                     validation_data=(test_data, test_label), batch_size=64, epochs=1,
+                                                     validation_data=(test_data, test_label), batch_size=100, epochs=1,
                                                      verbose=1)
                 test_loss = history.history['val_loss'][0]
                 test_acc = history.history['val_accuracy'][0]
