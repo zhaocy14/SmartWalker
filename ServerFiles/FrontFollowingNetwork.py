@@ -252,7 +252,7 @@ if __name__ == "__main__":
 
         FFL_Model.current_net.evaluate(test_data,test_label,verbose=1)
 
-        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.000001)
         FFL_Model.current_net.compile(optimizer=optimizer,
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
@@ -260,21 +260,34 @@ if __name__ == "__main__":
         epochs_num = 0
         max_test_acc = 0
         max_acc_epoch = 0
+        file_curve_path = "./current_curve.txt"
+        file_curve = open(file_curve_path,'w')
         while True:
+            current_os_dataset = np.concatenate([current_os_label, current_os_data], axis=1)
+            np.random.shuffle(current_os_dataset)
+            current_os_label = current_os_dataset[:, 0]
+            current_os_data = current_os_dataset[:, 1:current_os_dataset.shape[1]]
+            current_os_label = current_os_label.reshape((current_os_label.shape[0], 1))
+            print("epoch now: %d" % epochs_num)
             if epochs_num >= 100:
                 break
             else:
-                FFL_Model.current_net.fit(current_os_data, current_os_label, batch_size=128, epochs=1, verbose=1)
+                history = FFL_Model.current_net.fit(current_os_data, current_os_label, batch_size=128, epochs=1, validation_data=(test_data,test_label), verbose=1)
                 epochs_num += 1
-                test_loss, test_acc = FFL_Model.current_net.evaluate(test_data, test_label, verbose=1)
+                test_loss = history.history['val_loss'][0]
+                test_acc = history.history['val_accuracy'][0]
+                train_loss = history.history['loss'][0]
+                train_acc = history.history['accuracy'][0]
+                file_curve.write(str([train_loss, train_acc, test_loss, test_acc]) + "\n")
+                file_curve.flush()
                 if test_acc >= max_test_acc:
                     max_test_acc = test_acc
                     max_acc_epoch = epochs_num
                     FFL_Model.current_net.save_weights('./checkpoints_os_current/Current')
                 if test_acc > 0.8:
                     break
-        print("The maximum test accuracy is:%.3f, at epochs:%d"%(max_test_acc,max_acc_epoch))
-
+                print("The maximum test accuracy is:%.3f, at epochs:%d"%(max_test_acc,max_acc_epoch))
+            file_curve.close()
 
 
 
@@ -317,7 +330,7 @@ if __name__ == "__main__":
         max_test_acc = 0
         max_acc_epoch = 0
 
-        file_curve_path = "./curve.txt"
+        file_curve_path = "./tendency_curve.txt"
         file_curve = open(file_curve_path,'w')
         while True:
             tendency_dataset = np.concatenate([tendency_label, tendency_data], axis=1)
