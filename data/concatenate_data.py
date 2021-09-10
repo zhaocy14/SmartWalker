@@ -94,11 +94,11 @@ def concatenate_o_s(o_data,o_label,s_data,s_label):
 
 if __name__ == "__main__":
     print("start concatenate t data")
-    num_list = [77, 394, 506, 617, 874, 1026, 1042, 1189, 1513, 1515, 1753, 1908, 1932, 2256, 3019]
+    num_list = [77, 394, 506, 617, 874, 1026, 1042, 1189, 1513, 1515, 1753, 1908, 1932, 2256, 2796, 3019]
     t_data,t_label = concatenate_data(num_list)
 
     print("start concatenate o data")
-    num_list = [87, 404, 516, 627, 884, 1036, 1052, 1199, 1523, 1525, 1763, 1918, 1942, 2266, 3029]
+    num_list = [87, 404, 516, 627, 884, 1036, 1052, 1199, 1523, 1525, 1763, 1918, 1942, 2266, 2806, 3029]
     o_data,o_label=concatenate_data(num_list,is_o=True)
 
     print("start concatenate s data")
@@ -109,10 +109,10 @@ if __name__ == "__main__":
     concatenate_o_s(o_data,o_label,s_data,s_label)
 
     print("start concatenate test_t data")
-    num_list = [807,1899]
+    num_list = [807, 1206,1899]
     concatenate_data(num_list,istest=True)
 
     print("start concatenate test_o data")
-    num_list = [817,1909]
+    num_list = [817,1216,1909]
     concatenate_data(num_list,is_o=True,istest=True)
 

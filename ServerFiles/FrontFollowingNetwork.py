@@ -239,12 +239,12 @@ class FrontFollowing_Model(object):
                                                 target_shape=(self.win_width-1,
                                                               int(tendency_feture_combine.shape[1] / (self.win_width-1))))(
             tendency_feture_combine)
-        output_tendency = keras.layers.LSTM(64, activation='tanh')(tendency_feature)
-        output_tendency = keras.layers.Dense(128, activation='relu')(output_tendency)
+        output_tendency = keras.layers.LSTM(64, activation='tanh',kernel_regularizer=keras.regularizers.l2(0.001))(tendency_feature)
+        output_tendency = keras.layers.Dense(128, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
         output_tendency = keras.layers.Dropout(0.5)(output_tendency)
-        output_tendency = keras.layers.Dense(256, activation='relu')(output_tendency)
+        output_tendency = keras.layers.Dense(256, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
         output_tendency = keras.layers.Dropout(0.5)(output_tendency)
-        output_tendency = keras.layers.Dense(64, activation='relu')(output_tendency)
+        output_tendency = keras.layers.Dense(64, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
         output_tendency = keras.layers.Dropout(0.5)(output_tendency)
 
         # current part
@@ -253,11 +253,11 @@ class FrontFollowing_Model(object):
         output_current = self.current_ir_part(output_current)
 
         output_current = keras.layers.Flatten()(output_current)
-        output_current = keras.layers.Dense(128, activation='relu')(output_current)
+        output_current = keras.layers.Dense(128, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_current)
         output_current = keras.layers.Dropout(0.5)(output_current)
-        output_current = keras.layers.Dense(256, activation='relu')(output_current)
+        output_current = keras.layers.Dense(256, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_current)
         output_current = keras.layers.Dropout(0.5)(output_current)
-        output_current = keras.layers.Dense(64, activation='relu')(output_current)
+        output_current = keras.layers.Dense(64, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_current)
         output_current = keras.layers.Dropout(0.5)(output_current)
 
         # print(output_tendency.shape,output_current.shape)
