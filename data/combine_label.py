@@ -219,9 +219,9 @@ label_gradient = filter_label(label_gradient,1)
 label_gradient = filter_label(label_gradient,2)
 
 # print(ir_data.shape,label_gradient.shape)
-o_train_data_path = os.path.abspath(father_path + os.path.sep + str(ir_data.shape[0])+"o_data.txt")
+o_train_data_path = os.path.abspath(father_path + os.path.sep + "o" + str(ir_data.shape[0])+"_data.txt")
 np.savetxt(o_train_data_path,ir_data,fmt="%.3f")
-o_train_label_path = os.path.abspath(father_path + os.path.sep + str(label_gradient.shape[0])+"o_label.txt")
+o_train_label_path = os.path.abspath(father_path + os.path.sep + "o" + str(label_gradient.shape[0])+"_label.txt")
 np.savetxt(o_train_label_path,label_gradient,fmt="%d")
 
 """Calculate the number/proportion of different movements"""
@@ -257,7 +257,7 @@ softskin_width = leg_data_width
 """计算合并后的尺寸，用作确定LSTM的数据量"""
 """win_width确定模型的帧数"""
 win_width = 10
-win_width = win_width-1
+win_width = win_width
 step_length = 1
 data_num = int((train_data.shape[0] - win_width-1) / step_length + 1)
 concatenate_data = np.zeros((data_num, original_data.shape[1] * win_width))
@@ -291,13 +291,13 @@ concatenate_data[:, win_width * ir_data_width:concatenate_data.shape[1]] = (conc
 """打上label"""
 concatenate_label = np.zeros((concatenate_data.shape[0], 1))
 for i in range(concatenate_label.shape[0]):
-    concatenate_label[i, 0] = original_label[i + win_width]
+    concatenate_label[i, 0] = original_label[i + win_width-1]
 
 
-concatenate_data_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"t_data.txt")
+concatenate_data_path = os.path.abspath(father_path + os.path.sep + "t" + str(concatenate_data.shape[0])+"_data.txt")
 np.savetxt(concatenate_data_path,concatenate_data,fmt="%.3f")
 
-concatenate_label_path = os.path.abspath(father_path + os.path.sep + str(concatenate_data.shape[0])+"t_label.txt")
+concatenate_label_path = os.path.abspath(father_path + os.path.sep + "t" + str(concatenate_data.shape[0])+"_label.txt")
 np.savetxt(concatenate_label_path,concatenate_label,fmt="%d")
 print("data shape:",concatenate_data.shape)
 print("label shape:",concatenate_label.shape)

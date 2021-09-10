@@ -76,7 +76,7 @@ intention_class = 5
 label = label*intention_class
 
 
-s_train_data_path = os.path.abspath(father_path + os.path.sep + str(ir_data.shape[0])+"s_data.txt")
+s_train_data_path = os.path.abspath(father_path + os.path.sep + "s"+str(ir_data.shape[0])+"_data.txt")
 np.savetxt(s_train_data_path,ir_data,fmt="%.3f")
-s_train_label_path = os.path.abspath(father_path + os.path.sep + str(ir_data.shape[0])+"s_label.txt")
+s_train_label_path = os.path.abspath(father_path + os.path.sep + "s"+str(ir_data.shape[0])+"_label.txt")
 np.savetxt(s_train_label_path,label,fmt="%d")
