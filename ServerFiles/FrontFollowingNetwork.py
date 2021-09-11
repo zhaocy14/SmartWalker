@@ -261,7 +261,7 @@ class FrontFollowing_Model(object):
         output_current = keras.layers.Dropout(0.5)(output_current)
 
         # print(output_tendency.shape,output_current.shape)
-        Lambda = 0.3
+        Lambda = 0.8
         output_current = tf.math.multiply(output_current,Lambda)
         output_tendency = tf.math.multiply(output_tendency,1-Lambda)
         output_final = tf.add(output_current, output_tendency)

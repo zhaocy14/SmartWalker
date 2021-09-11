@@ -7,7 +7,6 @@ from Network import resnet
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd)+os.path.sep+"..")
 
-
 class Conv_part(keras.Model):
 
     def __init__(self, filter_unit: int = 100):
@@ -62,8 +61,8 @@ class FrontFollowing_Model(object):
         self.leg_width = 4
         """network parameter"""
         self.dense_unit = 10
-        self.CNN_filter_unit_tendency = 256
-        self.CNN_filter_unit_current = 128
+        self.CNN_filter_unit_tendency = 20
+        self.CNN_filter_unit_current = 20
         self.show_summary = show
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
@@ -164,13 +163,13 @@ class FrontFollowing_Model(object):
             output_combine)
 
         # LSTM part
-        output_final = keras.layers.LSTM(64, activation='tanh')(output_reshape)
-        output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
-        output_final = keras.layers.Dense(256, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
-        output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
+        output_tendency = keras.layers.LSTM(64, activation='tanh',kernel_regularizer=keras.regularizers.l2(0.001))(output_reshape)
+        output_tendency = keras.layers.Dense(128, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
+        output_tendency = keras.layers.Dropout(0.5)(output_tendency)
+        output_tendency = keras.layers.Dense(256, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
+        output_tendency = keras.layers.Dropout(0.5)(output_tendency)
+        output_tendency = keras.layers.Dense(64, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
+        output_final = keras.layers.Dropout(0.5)(output_tendency)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(6, activation='softmax')(output_final)
             model = keras.Model(inputs=input_all, outputs=output_final)
@@ -194,11 +193,11 @@ class FrontFollowing_Model(object):
         output_ir = self.current_ir_part(output_ir)
 
         output_ir = keras.layers.Flatten()(output_ir)
-        output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
+        output_ir = keras.layers.Dense(128, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_ir)
         output_ir = keras.layers.Dropout(0.5)(output_ir)
-        output_ir = keras.layers.Dense(256, activation='relu')(output_ir)
+        output_ir = keras.layers.Dense(256, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_ir)
         output_ir = keras.layers.Dropout(0.5)(output_ir)
-        output_ir = keras.layers.Dense(64, activation='relu')(output_ir)
+        output_ir = keras.layers.Dense(64, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_ir)
         output_ir = keras.layers.Dropout(0.5)(output_ir)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(6, activation='softmax')(output_ir)
@@ -237,12 +236,12 @@ class FrontFollowing_Model(object):
                                                 target_shape=(self.win_width-1,
                                                               int(tendency_feture_combine.shape[1] / (self.win_width-1))))(
             tendency_feture_combine)
-        output_tendency = keras.layers.LSTM(64, activation='tanh')(tendency_feature)
-        output_tendency = keras.layers.Dense(128, activation='relu')(output_tendency)
+        output_tendency = keras.layers.LSTM(64, activation='tanh',kernel_regularizer=keras.regularizers.l2(0.001))(tendency_feature)
+        output_tendency = keras.layers.Dense(128, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
         output_tendency = keras.layers.Dropout(0.5)(output_tendency)
-        output_tendency = keras.layers.Dense(256, activation='relu')(output_tendency)
+        output_tendency = keras.layers.Dense(256, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
         output_tendency = keras.layers.Dropout(0.5)(output_tendency)
-        output_tendency = keras.layers.Dense(64, activation='relu')(output_tendency)
+        output_tendency = keras.layers.Dense(64, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
         output_tendency = keras.layers.Dropout(0.5)(output_tendency)
 
         # current part
@@ -251,20 +250,24 @@ class FrontFollowing_Model(object):
         output_current = self.current_ir_part(output_current)
 
         output_current = keras.layers.Flatten()(output_current)
-        output_current = keras.layers.Dense(128, activation='relu')(output_current)
+        output_current = keras.layers.Dense(128, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_current)
         output_current = keras.layers.Dropout(0.5)(output_current)
-        output_current = keras.layers.Dense(256, activation='relu')(output_current)
+        output_current = keras.layers.Dense(256, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_current)
         output_current = keras.layers.Dropout(0.5)(output_current)
-        output_current = keras.layers.Dense(64, activation='relu')(output_current)
+        output_current = keras.layers.Dense(64, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_current)
         output_current = keras.layers.Dropout(0.5)(output_current)
 
-        print(output_tendency.shape,output_current.shape)
+        # print(output_tendency.shape,output_current.shape)
+        Lambda = 0.8
+        output_current = tf.math.multiply(output_current,Lambda)
+        output_tendency = tf.math.multiply(output_tendency,1-Lambda)
         output_final = tf.add(output_current, output_tendency)
         output_final = keras.layers.Dense(6, activation='softmax')(output_final)
         model = keras.Model(inputs=input_all, outputs=output_final)
         if self.show_summary:
             model.summary()
         return model
+
 
 
 if __name__ == "__main__":
