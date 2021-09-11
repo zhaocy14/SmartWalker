@@ -414,6 +414,7 @@ if __name__ == "__main__":
                 print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
             file_curve.close()
         elif train_net_name == "a":
+            FFL_Model.combine_net.summary()
             tendency_data_path = "/data/cyzhao/t_data.txt"
             tendency_data = np.loadtxt(tendency_data_path)
             tendency_label_path = "/data/cyzhao/t_label.txt"
