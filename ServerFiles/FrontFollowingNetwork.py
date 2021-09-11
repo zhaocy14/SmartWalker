@@ -64,8 +64,8 @@ class FrontFollowing_Model(object):
         self.leg_width = 4
         """network parameter"""
         self.dense_unit = 10
-        self.CNN_filter_unit_tendency = 64
-        self.CNN_filter_unit_current = 128
+        self.CNN_filter_unit_tendency = 20
+        self.CNN_filter_unit_current = 20
         self.show_summary = show
         self.is_multiple_output = is_multiple_output
         self.is_skin_input = is_skin_input
@@ -166,13 +166,13 @@ class FrontFollowing_Model(object):
             output_combine)
 
         # LSTM part
-        output_final = keras.layers.LSTM(64, activation='tanh')(output_reshape)
-        output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
-        output_final = keras.layers.Dense(256, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
-        output_final = keras.layers.Dense(128, activation='relu')(output_final)
-        output_final = keras.layers.Dropout(0.5)(output_final)
+        output_tendency = keras.layers.LSTM(64, activation='tanh',kernel_regularizer=keras.regularizers.l2(0.001))(output_reshape)
+        output_tendency = keras.layers.Dense(128, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
+        output_tendency = keras.layers.Dropout(0.5)(output_tendency)
+        output_tendency = keras.layers.Dense(256, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
+        output_tendency = keras.layers.Dropout(0.5)(output_tendency)
+        output_tendency = keras.layers.Dense(64, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_tendency)
+        output_final = keras.layers.Dropout(0.5)(output_tendency)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(6, activation='softmax')(output_final)
             model = keras.Model(inputs=input_all, outputs=output_final)
@@ -196,11 +196,11 @@ class FrontFollowing_Model(object):
         output_ir = self.current_ir_part(output_ir)
 
         output_ir = keras.layers.Flatten()(output_ir)
-        output_ir = keras.layers.Dense(128, activation='relu')(output_ir)
+        output_ir = keras.layers.Dense(128, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_ir)
         output_ir = keras.layers.Dropout(0.5)(output_ir)
-        output_ir = keras.layers.Dense(256, activation='relu')(output_ir)
+        output_ir = keras.layers.Dense(256, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_ir)
         output_ir = keras.layers.Dropout(0.5)(output_ir)
-        output_ir = keras.layers.Dense(64, activation='relu')(output_ir)
+        output_ir = keras.layers.Dense(64, activation='relu',kernel_regularizer=keras.regularizers.l2(0.001))(output_ir)
         output_ir = keras.layers.Dropout(0.5)(output_ir)
         if not self.is_multiple_output:
             output_final = keras.layers.Dense(6, activation='softmax')(output_ir)
@@ -261,6 +261,9 @@ class FrontFollowing_Model(object):
         output_current = keras.layers.Dropout(0.5)(output_current)
 
         # print(output_tendency.shape,output_current.shape)
+        Lambda = 0.3
+        output_current = tf.math.multiply(output_current,Lambda)
+        output_tendency = tf.math.multiply(output_tendency,1-Lambda)
         output_final = tf.add(output_current, output_tendency)
         output_final = keras.layers.Dense(6, activation='softmax')(output_final)
         model = keras.Model(inputs=input_all, outputs=output_final)
@@ -425,7 +428,7 @@ if __name__ == "__main__":
             test_label = test_label.reshape((test_label.shape[0], 1))
             test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
 
-            optimizer = tf.keras.optimizers.Adam(learning_rate=0.000001)
+            optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
             FFL_Model.combine_net.compile(optimizer=optimizer,
                                            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                                            metrics=['accuracy'])
@@ -433,8 +436,9 @@ if __name__ == "__main__":
             epochs_num = 0
             max_test_acc = 0
             max_acc_epoch = 0
-            file_curve_path = "./tendency_curve.txt"
+            file_curve_path = "./combine_curve.txt"
             file_curve = open(file_curve_path, 'w')
+
             while True:
                 tendency_dataset = np.concatenate([tendency_label, tendency_data], axis=1)
                 np.random.shuffle(tendency_dataset)
@@ -462,6 +466,11 @@ if __name__ == "__main__":
                 if test_acc >= 0.88:
                     break
                 print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
+                if epochs_num == 10:
+                    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0000001)
+                    FFL_Model.combine_net.compile(optimizer=optimizer,
+                                                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                                                  metrics=['accuracy'])
             file_curve.close()
 
     training("a",max_epochs=1000)
