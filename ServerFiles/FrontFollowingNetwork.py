@@ -8,6 +8,7 @@ from tensorflow import keras
 import numpy as np
 import os
 from typing import Tuple
+import random
 from Network import resnet
 
 class Conv_part(keras.Model):
@@ -261,7 +262,7 @@ class FrontFollowing_Model(object):
         output_current = keras.layers.Dropout(0.5)(output_current)
 
         # print(output_tendency.shape,output_current.shape)
-        Lambda = 0.8
+        Lambda = 0.1
         output_current = tf.math.multiply(output_current,Lambda)
         output_tendency = tf.math.multiply(output_tendency,1-Lambda)
         output_final = tf.add(output_current, output_tendency)
@@ -271,7 +272,11 @@ class FrontFollowing_Model(object):
             model.summary()
         return model
 
-
+def setup_seed(seed):
+    tf.random.set_seed(seed)
+    random.seed(seed)  # 为python设置随机种子
+    np.random.seed(seed)  # 为numpy设置随机种子
+    tf.random.set_seed(seed)  # tf cpu fix seed
 
 if __name__ == "__main__":
 
@@ -281,9 +286,8 @@ if __name__ == "__main__":
     os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
     FFL_Model = FrontFollowing_Model(win_width=10)
-
-
     train_current = False
+    setup_seed(20)
 
 
     def training(train_net_name:str="t", max_epochs:int=1000):
@@ -370,7 +374,7 @@ if __name__ == "__main__":
             test_data = np.loadtxt(test_data_path)
             test_label_path = "/data/cyzhao/test_t_label.txt"
             test_label = np.loadtxt(test_label_path)
-            frames = int(tendency_data.shape[1] / (768 + 4))
+            frames = tendency_data.shape[1] / (768 + 4)
             ir_data = test_data[:, 0:(frames - 1) * 768]
             leg_data = test_data[:, frames * 768:frames * 768 + (frames - 1) * 4]
             test_data = np.concatenate([ir_data, leg_data], axis=1)
@@ -414,13 +418,12 @@ if __name__ == "__main__":
                 print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
             file_curve.close()
         elif train_net_name == "a":
-            FFL_Model.combine_net.summary()
             tendency_data_path = "/data/cyzhao/t_data.txt"
             tendency_data = np.loadtxt(tendency_data_path)
             tendency_label_path = "/data/cyzhao/t_label.txt"
             tendency_label = np.loadtxt(tendency_label_path)
             tendency_label = tendency_label.reshape((tendency_label.shape[0], 1))
-
+            print(tendency_data.shape)
             """train data and test data are from different dataset"""
             test_data_path = "/data/cyzhao/test_t_data.txt"
             test_data = np.loadtxt(test_data_path)
@@ -428,8 +431,8 @@ if __name__ == "__main__":
             test_label = np.loadtxt(test_label_path)
             test_label = test_label.reshape((test_label.shape[0], 1))
             test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
-
-            optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
+            print(test_data.shape)
+            optimizer = tf.keras.optimizers.Adam(learning_rate=0.00005)
             FFL_Model.combine_net.compile(optimizer=optimizer,
                                            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                                            metrics=['accuracy'])
@@ -467,72 +470,11 @@ if __name__ == "__main__":
                 if test_acc >= 0.88:
                     break
                 print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
-                if epochs_num == 10:
-                    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0000001)
+                if epochs_num == 30:
+                    optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
                     FFL_Model.combine_net.compile(optimizer=optimizer,
                                                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                                                   metrics=['accuracy'])
             file_curve.close()
-        elif train_net_name == "three":
-            FFL_Model.combine_net.summary()
-            tendency_data_path = "/data/cyzhao/t_data.txt"
-            tendency_data = np.loadtxt(tendency_data_path)
-            tendency_label_path = "/data/cyzhao/t_label.txt"
-            tendency_label = np.loadtxt(tendency_label_path)
-            tendency_label = tendency_label.reshape((tendency_label.shape[0], 1))
-
-            """train data and test data are from different dataset"""
-            test_data_path = "/data/cyzhao/test_t_data.txt"
-            test_data = np.loadtxt(test_data_path)
-            test_label_path = "/data/cyzhao/test_t_label.txt"
-            test_label = np.loadtxt(test_label_path)
-            test_label = test_label.reshape((test_label.shape[0], 1))
-            test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
-
-            optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
-            FFL_Model.combine_net.compile(optimizer=optimizer,
-                                          loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                                          metrics=['accuracy'])
-
-            epochs_num = 0
-            max_test_acc = 0
-            max_acc_epoch = 0
-            file_curve_path = "./combine_curve.txt"
-            file_curve = open(file_curve_path, 'w')
-
-            while True:
-                tendency_dataset = np.concatenate([tendency_label, tendency_data], axis=1)
-                np.random.shuffle(tendency_dataset)
-                tendency_label = tendency_dataset[:, 0]
-                tendency_data = tendency_dataset[:, 1:tendency_dataset.shape[1]]
-                tendency_label = tendency_label.reshape((tendency_label.shape[0], 1))
-                if epochs_num >= max_epochs:
-                    break
-                print("epoch now: %d" % epochs_num)
-                # FFL_Model.tendency_net.fit(train_data, train_label, batch_size=128, epochs=1,validation_data=(validation_data,validation_label),verbose=1)
-                history = FFL_Model.combine_net.fit(tendency_data, tendency_label,
-                                                    validation_data=(test_data, test_label), batch_size=100, epochs=1,
-                                                    verbose=1)
-                test_loss = history.history['val_loss'][0]
-                test_acc = history.history['val_accuracy'][0]
-                train_loss = history.history['loss'][0]
-                train_acc = history.history['accuracy'][0]
-                file_curve.write(str([train_loss, train_acc, test_loss, test_acc]) + "\n")
-                file_curve.flush()
-                epochs_num += 1
-                if test_acc >= max_test_acc:
-                    FFL_Model.combine_net.save_weights('./checkpoints_combine/Combine')
-                    max_test_acc = test_acc
-                    max_acc_epoch = epochs_num
-                if test_acc >= 0.88:
-                    break
-                print("The maximum test accuracy is:%.3f, at epochs:%d" % (max_test_acc, max_acc_epoch))
-                if epochs_num == 10:
-                    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0000001)
-                    FFL_Model.combine_net.compile(optimizer=optimizer,
-                                                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                                                  metrics=['accuracy'])
-            file_curve.close()
-
 
     training("a",max_epochs=1000)
