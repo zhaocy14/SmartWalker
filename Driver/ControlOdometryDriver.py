@@ -164,7 +164,7 @@ class ControlDriver(Thread):
 
         # 如果 record_mode 是 True，则停掉电机，只记录数据
         if self.record_mode:
-            self.stopMotor()
+            # self.stopMotor()
             Odo_data_path = data_path + os.path.sep + "Driver.txt"
             file_odo = open(Odo_data_path, "w")
 

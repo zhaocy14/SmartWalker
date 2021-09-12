@@ -26,7 +26,7 @@ IMU_walker_portal = '/dev/ttyUSB1'
 """IMU part"""
 # IMU_human = IMU.IMU()
 # IMU_human.open_serial("/dev/ttyUSB1")
-IMU_walker = IMU.IMU(name="walker")
+IMU_walker = IMU.IMU(name="")
 IMU_walker.open_serial(IMU_walker_portal)
 """Camera part"""
 Camera = IRCamera.IRCamera()
@@ -43,14 +43,14 @@ Skin.build_base_line_data()
 seperately_recording = True
 
 if seperately_recording:
-    thread_skin = threading.Thread(target=Skin.read_and_record, args=(True,))
+    # thread_skin = threading.Thread(target=Skin.read_and_record, args=(True,))
     thread_camera = threading.Thread(target=Camera.record_write, args=(True, True, data_path, True))
     # thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
     thread_IMU_walker = threading.Thread(target=IMU_walker.read_record, args=(0,False,data_path))
     thread_cd = threading.Thread(target=Cd.control_part, args=())
     thread_leg = threading.Thread(target=Ld.scan_procedure, args=(False, True,))
 
-    thread_skin.start()
+    # thread_skin.start()
     thread_camera.start()
     # thread_IMU_human.start()
     thread_IMU_walker.start()
