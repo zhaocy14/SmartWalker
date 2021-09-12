@@ -362,7 +362,8 @@ if __name__ == "__main__":
             tendency_data_path = "/data/cyzhao/t_data.txt"
             tendency_data = np.loadtxt(tendency_data_path)
 
-            frames = tendency_data.shape[1]/(768+4)
+            frames = int(tendency_data.shape[1]/(768+4))
+            print(frames)
             ir_data = tendency_data[:,0:(frames-1)*768]
             leg_data = tendency_data[:,frames*768:frames*768+(frames-1)*4]
             tendency_data = np.concatenate([ir_data,leg_data],axis=1)
