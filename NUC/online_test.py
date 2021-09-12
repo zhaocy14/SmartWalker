@@ -7,117 +7,93 @@ import tensorflow as tf
 from Sensors import IRCamera, softskin
 from Network import FrontFollowingNetwork as FFL
 from Driver import ControlOdometryDriver as CD
+from Preprocessing import Leg_detector
 import cv2 as cv
 
+
 if __name__ == "__main__":
+    """portal num"""
+    camera_portal = '/dev/ttyUSB0'
+    lidar_portal = '/dev/ttyUSB2'
+    IRCamera = IRCamera.IRCamera()
+    LD = Leg_detector.Leg_detector(lidar_portal)
+    cd = CD.ControlDriver()
+
+    # initialize the network
     win_width = 10
     tf_model = FFL.FrontFollowing_Model(win_width=win_width)
-    weight_path = "./Network/checkpoints/FrontFollowing"
-    tf_model.model.load_weights(weight_path)
+    weight_path = "./NUC/weight/checkpoints_combine/Combine"
+    tf_model.combine_net.load_weights(weight_path)
 
-    skin = softskin.SoftSkin()
-    IRCamera = IRCamera.IRCamera()
-    skin.build_base_line_data()
-
-    max_ir = 55
+    # data buffer for network input
+    max_ir = 40
     min_ir = 10
-
-
-    def binarization(img):
-        """according to an average value of the image to decide the threshold"""
-        if len(img.shape) == 2:
-            threshold = max(img.mean() + 1.4, 23)
-            img[img < threshold] = 0
-            img[img >= threshold] = 1
-        return img
-
-
-    def filter(img):
-        img_new = np.copy(img)
-        img_new = img_new.reshape((24, 32))
-        filter_kernel = np.ones((2, 2)) / 4
-        """other filters"""
-        # filter_kernel = np.array([[1,1,1],[1,1,1],[1,1,1]])/10
-        # filter_kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
-        for j in range(1):
-            img_new = cv.filter2D(img_new, -1, filter_kernel)
-        img_new = img_new.flatten()
-        return img_new
-
-
-    ir_threshold = 27
+    ir_threshold = 27  # for binarization
     ir_data_width = 768
-    skin_data_width = 32
+    additional_data_width = 4
     buffer_length = win_width
-    buffer = np.zeros((buffer_length * (ir_data_width + skin_data_width), 1))
+    buffer = np.zeros((buffer_length * (ir_data_width + additional_data_width), 1))
 
-    thread_skin = threading.Thread(target=skin.read_and_record, args=())
-    thread_skin.start()
-    cd = CD.ControlDriver()
+    # sensor data reading thread, network output thread and control thread
+    thread_leg = threading.Thread(target=LD.scan_procedure,args=())
+    thread_leg.start()
+
     # thread_control_driver = threading.Thread(target=cd.control_part, args=())
     # thread_control_driver.start()
 
     while True:
-        # present_time = time.time()
+        present_time = time.time()
         IRCamera.get_irdata_once()
         if len(IRCamera.temperature) == 768:
             normalized_temperature = np.array(IRCamera.temperature).reshape((ir_data_width, 1))
-            idx = normalized_temperature < ir_threshold
-            normalized_temperature[idx] = 0
-            idx = normalized_temperature >= ir_threshold
-            normalized_temperature[idx] = 1
-            # normalized_temperature = (normalized_temperature-min_ir)/(max_ir-min_ir)
+            normalized_temperature = (normalized_temperature-min_ir)/(max_ir-min_ir)
             buffer[0:(buffer_length - 1) * ir_data_width, 0] = buffer[ir_data_width:buffer_length * ir_data_width, 0]
             buffer[(buffer_length - 1) * ir_data_width:buffer_length * ir_data_width] = normalized_temperature
+            """additional part start index"""
+            PART2 = buffer_length * ir_data_width
+            additional_data = [LD.left_leg[0],LD.left_leg[1],LD.right_leg[0],LD.right_leg[1]]
+            buffer[PART2:PART2 + (buffer_length - 1) * additional_data_width, 0] = \
+                buffer[PART2 + additional_data_width:PART2 + buffer_length * additional_data_width, 0]
+            buffer[PART2 + (buffer_length - 1) * additional_data_width:PART2 + buffer_length * additional_data_width] = \
+                np.array(additional_data).reshape((additional_data_width, 1))
 
-            """skin part start index"""
-            SSI = buffer_length * ir_data_width
+            buffer[PART2:PART2 + buffer_length * additional_data_width, 0] = buffer[PART2:PART2 + buffer_length * additional_data_width, 0]/40 + 0.4
 
-            buffer[SSI:SSI + (buffer_length - 1) * skin_data_width, 0] = \
-                buffer[SSI + skin_data_width:SSI + buffer_length * skin_data_width, 0]
-            buffer[SSI + (buffer_length - 1) * skin_data_width:SSI + buffer_length * skin_data_width] = \
-                np.array(skin.temp_data).reshape((skin_data_width, 1))
-            # buffer.shape = (4000,1)
-            buffer[SSI:SSI + buffer_length * skin_data_width, 0] = 0
-
-            predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + skin_data_width), 1))
-            result = tf_model.predict(predict_buffer)
+            predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
+            result = tf_model.combine_net.predict(predict_buffer)
             max_result = result.max()
             # print(max_result)
             if max_result == result[0, 0]:
-                print("still!")
+                print("\rstill!",end="")
                 cd.speed = 0
                 cd.omega = 0
                 cd.radius = 0
             elif max_result == result[0, 1]:
-                print("forward!")
+                print("\rforward!",end="")
                 cd.speed = 0.1
                 cd.omega = 0
                 cd.radius = 0
             elif max_result == result[0, 2]:
-                print("turn left!")
+                print("\rturn left!",end="")
                 cd.speed = 0
                 cd.omega = 0.1
                 cd.radius = 2
             elif max_result == result[0, 3]:
-                print("turn right!")
+                print("\rturn right!",end="")
                 cd.speed = 0
                 cd.omega = -0.1
                 cd.radius = 2
             elif max_result == result[0, 4]:
-                print("yuandi left")
+                print("\ryuandi left",end="")
                 cd.speed = 0
                 cd.omega = 0.2
                 cd.radius = 0
             elif max_result == result[0, 5]:
-                print("yuandi right")
+                print("\ryuandi right",end="")
                 cd.speed = 0
                 cd.omega = -0.2
                 cd.radius = 0
-            elif max_result == result[0, 6]:
-                print("backword")
-                cd.speed = -0.1
-                cd.omega = 0
-                cd.radius = 0
-            # print(1/(time.time()-present_time))
-            # present_time = time.time()
+            print(1/(time.time()-present_time))
+            present_time = time.time()
+
+

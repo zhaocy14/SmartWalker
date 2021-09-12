@@ -56,7 +56,8 @@ class Skin_part(keras.Model):
 
 class FrontFollowing_Model(object):
 
-    def __init__(self, win_width: int = 10, is_skin_input: bool = False, is_multiple_output: bool = False,show:bool=False):
+    def __init__(self, win_width: int = 10, tendency_CNN_unit:int = 10, current_CNN_unit:int = 10,
+                 is_skin_input: bool = False, is_multiple_output: bool = False,show:bool=False):
         super().__init__()
         """data shape part"""
         self.win_width = win_width

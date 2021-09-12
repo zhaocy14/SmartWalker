@@ -41,10 +41,11 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
     return current_position, new_buffer
 
 
-def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
-    buffer_length = 3
-    position_buffer = np.zeros((buffer_length, 6))
-    weight_array = np.array((range(1, buffer_length + 1))).reshape((1, 3))
+def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.IRCamera):
+    # weight buffer for lidar detection
+    position_buffer_length = 3
+    position_buffer = np.zeros((position_buffer_length, 6))
+    weight_array = np.array((range(1, position_buffer_length + 1))).reshape((1, 3))
     weight_array = weight_array / weight_array.sum()
     CD.speed = 0
     CD.omega = 0
