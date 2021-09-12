@@ -363,9 +363,8 @@ if __name__ == "__main__":
             tendency_data = np.loadtxt(tendency_data_path)
 
             frames = int(tendency_data.shape[1]/(768+4))
-            print(frames)
-            ir_data = tendency_data[:,0:(frames-1)*768]
-            leg_data = tendency_data[:,frames*768:frames*768+(frames-1)*4]
+            ir_data = tendency_data[:,0:int((frames-1)*768)]
+            leg_data = tendency_data[:,int(frames*768):int(frames*768+(frames-1)*4)]
             tendency_data = np.concatenate([ir_data,leg_data],axis=1)
             tendency_label_path = "/data/cyzhao/t_label.txt"
             tendency_label = np.loadtxt(tendency_label_path)
@@ -376,12 +375,12 @@ if __name__ == "__main__":
             test_data = np.loadtxt(test_data_path)
             test_label_path = "/data/cyzhao/test_t_label.txt"
             test_label = np.loadtxt(test_label_path)
-            frames = tendency_data.shape[1] / (768 + 4)
-            ir_data = test_data[:, 0:(frames - 1) * 768]
-            leg_data = test_data[:, frames * 768:frames * 768 + (frames - 1) * 4]
+            ir_data = test_data[:,0:int((frames-1)*768)]
+            leg_data = test_data[:,int(frames*768):int(frames*768+(frames-1)*4)]
             test_data = np.concatenate([ir_data, leg_data], axis=1)
             test_label = test_label.reshape((test_label.shape[0], 1))
             test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
+            print(frames,tendency_data.shape)
 
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
             FFL_Model.tendency_net.compile(optimizer=optimizer,
@@ -479,4 +478,4 @@ if __name__ == "__main__":
                                                   metrics=['accuracy'])
             file_curve.close()
 
-    training("a",max_epochs=1000)
+    training("t",max_epochs=1000)
