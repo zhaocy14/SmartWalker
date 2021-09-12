@@ -269,7 +269,6 @@ class FrontFollowing_Model(object):
         return model
 
 
-
 if __name__ == "__main__":
     gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
     for gpu in gpus:

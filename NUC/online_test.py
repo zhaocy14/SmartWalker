@@ -64,6 +64,7 @@ if __name__ == "__main__":
             predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
             result = tf_model.combine_net.predict(predict_buffer)
             max_result = result.max()
+            action_label = np.unravel_index(np.argmax(result), result.shape)[1]
             # print(max_result)
             if max_result == result[0, 0]:
                 print("\rstill!",end="")
