@@ -52,13 +52,14 @@ if __name__ == "__main__":
             """additional part start index"""
             PART2 = buffer_length * ir_data_width
             # print(LD.left_leg.shape)
-            additional_data = [LD.left_leg[0,0], LD.left_leg[0,1], LD.right_leg[0,0], LD.right_leg[0,1]]
+            additional_data = np.ndarray([LD.left_leg[0,0], LD.left_leg[0,1], LD.right_leg[0,0], LD.right_leg[0,1]])/40+0.4
+            print(additional_data.shape)
             buffer[PART2:PART2 + (buffer_length - 1) * additional_data_width, 0] = \
                 buffer[PART2 + additional_data_width:PART2 + buffer_length * additional_data_width, 0]
             buffer[PART2 + (buffer_length - 1) * additional_data_width:PART2 + buffer_length * additional_data_width] = \
-                np.array(additional_data).reshape((additional_data_width, 1))
+                additional_data
 
-            buffer[PART2:PART2 + buffer_length * additional_data_width, 0] = buffer[PART2:PART2 + buffer_length * additional_data_width, 0]/40 + 0.4
+            buffer[PART2:PART2 + buffer_length * additional_data_width, 0] = buffer[PART2:PART2 + buffer_length * additional_data_width, 0]
 
             predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
             result = tf_model.combine_net.predict(predict_buffer)
