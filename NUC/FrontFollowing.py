@@ -73,7 +73,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
         IR.get_irdata_once()
         if len(IR.temperature) == 768:
             # update buffer and predict
-            normalized_temperature = np.array(IRCamera.temperature).reshape((ir_data_width, 1))
+            normalized_temperature = np.array(IR.temperature).reshape((ir_data_width, 1))
             normalized_temperature = (normalized_temperature - min_ir) / (max_ir - min_ir)
             buffer[0:(buffer_length - 1) * ir_data_width, 0] = buffer[ir_data_width:buffer_length * ir_data_width, 0]
             buffer[(buffer_length - 1) * ir_data_width:buffer_length * ir_data_width] = normalized_temperature
