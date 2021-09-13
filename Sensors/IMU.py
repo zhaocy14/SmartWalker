@@ -13,7 +13,7 @@ data_path = os.path.abspath(
 
 class IMU(object):
 
-    def __init__(self, baud_rate=115200):
+    def __init__(self, baud_rate=115200,name:str=""):
         """serial information"""
         self.baud_rate = baud_rate
         self.port_name = ""
@@ -33,6 +33,8 @@ class IMU(object):
         self.Angle = [0.0] * 3
 
         self.one_flame_data = []
+        """for txt saving"""
+        self.name = name
     """Print the port information"""
 
     def print_serial(self, port):
@@ -208,7 +210,7 @@ class IMU(object):
         return angle_x, angle_y, angle_z
 
     def read_record(self, time_delay=0,show=False, file_path=data_path):
-        IMU_data_path = file_path + os.path.sep + "IMU.txt"
+        IMU_data_path = file_path + os.path.sep + "IMU" + str(self.name) + ".txt"
         file_IMU = open(IMU_data_path, "w")
         while True:
             self.collect_all(show)

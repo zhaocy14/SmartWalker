@@ -11,23 +11,23 @@ from Sensors import IRCamera
 from Preprocessing import Leg_detector
 
 
-resource = os.path.abspath(
+data_path = os.path.abspath(
     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
     os.path.sep + "data")
-print(resource)
+# print(resource)
 """portal num"""
 camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB1'
+# lidar_portal = '/dev/ttyUSB1'
 
 
 """Camera part"""
 Camera = IRCamera.IRCamera()
 """leg detector part"""
-Ld = Leg_detector.Leg_detector(lidar_portal)
+# Ld = Leg_detector.Leg_detector(lidar_portal)
 
-thread_camera = threading.Thread(target=Camera.record_write, args=(True, True, True))
-thread_leg = threading.Thread(target=Ld.scan_procedure, args=(False, True))
+thread_camera = threading.Thread(target=Camera.record_write, args=(True, True, data_path, True))
+# thread_leg = threading.Thread(target=Ld.scan_procedure, args=(False, True))
 
 
 thread_camera.start()
-thread_leg.start()
+# thread_leg.start()
