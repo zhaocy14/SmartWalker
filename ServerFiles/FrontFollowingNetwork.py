@@ -518,10 +518,14 @@ if __name__ == "__main__":
             FFL_Model.combine_net.compile(optimizer=optimizer,
                                           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                                           metrics=['accuracy'])
+            FFL_Model.current_net.compile(optimizer=optimizer,
+                                          loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                                          metrics=['accuracy'])
+            FFL_Model.tendency_net.compile(optimizer=optimizer,
+                                          loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                                          metrics=['accuracy'])
 
             epochs_num = 0
-            max_test_acc = 0
-            max_acc_epoch = 0
             file_curve_path = "./combine_curve.txt"
             file_curve = open(file_curve_path, 'w')
             file_tendency_path = "./tendency_curve.txt"
@@ -529,18 +533,6 @@ if __name__ == "__main__":
             file_current_path = "./current_curve.txt"
             file_current = open(file_current_path, 'w')
             while True:
-                # all_dataset = np.concatenate([all_label, all_data], axis=1)
-                # np.random.shuffle(all_dataset)
-                # all_label = all_dataset[:, 0]
-                # all_data = all_dataset[:, 1:all_dataset.shape[1]]
-                # all_label = all_label.reshape((all_label.shape[0], 1))
-                #
-                # all_dataset = np.concatenate([all_label, all_data], axis=1)
-                # np.random.shuffle(all_dataset)
-                # all_label = all_dataset[:, 0]
-                # all_data = all_dataset[:, 1:all_dataset.shape[1]]
-                # all_label = all_label.reshape((all_label.shape[0], 1))
-
                 if epochs_num >= max_epochs:
                     break
                 print("epoch now: %d" % epochs_num)
