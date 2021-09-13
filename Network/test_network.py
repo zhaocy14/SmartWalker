@@ -5,6 +5,7 @@ from Network import FrontFollowingNetwork as FFL
 
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
 # combine_path = os.path.abspath(father_path + os.path.sep + "NUC" + os.path.sep + "checkpoints_combine" + os.path.sep +
 #                                "Combine")
 # tendency_path = os.path.abspath(father_path + os.path.sep + "NUC" + os.path.sep + "checkpoints_tendency" + os.path.sep +
