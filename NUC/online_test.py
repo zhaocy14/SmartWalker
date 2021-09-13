@@ -14,7 +14,7 @@ import cv2 as cv
 if __name__ == "__main__":
     """portal num"""
     camera_portal = '/dev/ttyUSB0'
-    lidar_portal = '/dev/ttyUSB4'
+    lidar_portal = '/dev/ttyUSB3'
     IRCamera = IRCamera.IRCamera()
     LD = Leg_detector.Leg_detector(lidar_portal)
     cd = CD.ControlDriver(left_right=0)

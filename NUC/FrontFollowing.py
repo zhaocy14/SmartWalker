@@ -9,12 +9,12 @@ from Driver import ControlOdometryDriver as cd
 from Network import FrontFollowingNetwork as FFL
 
 """portal num"""
-camera_portal = '/dev/ttyUSB1'
-lidar_portal = '/dev/ttyUSB4'
-IMU_walker_portal = '/dev/ttyUSB0'
+camera_portal = '/dev/ttyUSB0'
+lidar_portal = '/dev/ttyUSB3'
+IMU_walker_portal = '/dev/ttyUSB1'
 # IMU_human_portal = '/dev/ttyUSB5'
-IMU_left_leg_portal = '/dev/ttyUSB6'
-IMU_right_leg_portal = '/dev/ttyUSB7'
+IMU_left_leg_portal = '/dev/ttyUSB2'
+IMU_right_leg_portal = '/dev/ttyUSB6'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
@@ -79,8 +79,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             buffer[(buffer_length - 1) * ir_data_width:buffer_length * ir_data_width] = normalized_temperature
             """additional part start index"""
             PART2 = buffer_length * ir_data_width
-            additional_data = np.ndarray(
-                [LD.left_leg[0, 0], LD.left_leg[0, 1], LD.right_leg[0, 0], LD.right_leg[0, 1]]) / 40 + 0.4
+            additional_data = np.array(
+                [LD.left_leg[0], LD.left_leg[1], LD.right_leg[0], LD.right_leg[1]]) / 40 + 0.4
             buffer[PART2:PART2 + (buffer_length - 1) * additional_data_width, 0] = \
                 buffer[PART2 + additional_data_width:PART2 + buffer_length * additional_data_width, 0]
             buffer[PART2 + (buffer_length - 1) * additional_data_width:PART2 + buffer_length * additional_data_width] = \
@@ -176,7 +176,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
 
 thread_leg = threading.Thread(target=LD.scan_procedure, args=(True,True,))
 thread_cd = threading.Thread(target=CD.control_part, args=())
-thread_main = threading.Thread(target=main_FFL, args=(CD, LD))
+thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel))
 thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
 # thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
 thread_IMU_left = threading.Thread(target=IMU_left_leg.read_record,args=())
@@ -185,7 +185,7 @@ thread_IMU_right = threading.Thread(target=IMU_right_leg.read_record,args=())
 
 
 thread_leg.start()
-time.sleep(1)
+time.sleep(3)
 # thread_cd.start()
 thread_main.start()
 # thread_IMU_human.start()
