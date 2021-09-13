@@ -528,6 +528,10 @@ if __name__ == "__main__":
                                           metrics=['accuracy'])
 
             epochs_num = 0
+            max_all_acc = 0
+            max_all_epoch = max_tendency_epoch = max_current_epoch = 0
+            max_tendency_acc = 0
+            max_current_acc = 0
             file_curve_path = "./combine_curve.txt"
             file_curve = open(file_curve_path, 'w')
             file_tendency_path = "./tendency_curve.txt"
@@ -554,6 +558,10 @@ if __name__ == "__main__":
                 train_acc = history.history['accuracy'][0]
                 file_curve.write(str([train_loss, train_acc, test_loss, test_acc]) + "\n")
                 file_curve.flush()
+                if test_acc >= max_all_acc:
+                    FFL_Model.combine_net.save_weights('./checkpoints_combine/Combine')
+                    max_all_acc = test_acc
+                    max_all_epoch = epochs_num
 
                 test_loss = history_t.history['val_loss'][0]
                 test_acc = history_t.history['val_accuracy'][0]
@@ -561,6 +569,10 @@ if __name__ == "__main__":
                 train_acc = history_t.history['accuracy'][0]
                 file_tendency.write(str([train_loss, train_acc, test_loss, test_acc]) + "\n")
                 file_tendency.flush()
+                if test_acc >= max_tendency_acc:
+                    FFL_Model.tendency_net.save_weights('./checkpoints_tendency/Tendency')
+                    max_tendency_acc = test_acc
+                    max_tendency_epoch = epochs_num
 
                 test_loss = history_c.history['val_loss'][0]
                 test_acc = history_c.history['val_accuracy'][0]
@@ -568,8 +580,14 @@ if __name__ == "__main__":
                 train_acc = history_c.history['accuracy'][0]
                 file_current.write(str([train_loss, train_acc, test_loss, test_acc]) + "\n")
                 file_current.flush()
+                if test_acc >= max_current_acc:
+                    FFL_Model.current_net.save_weights('./checkpoints_os_current/Current')
+                    max_current_acc = test_acc
+                    max_current_epoch = epochs_num
 
                 epochs_num += 1
+                print("A:%.3f acc,%d epoch, T:%.3f acc,%d epoch, C:%.3f acc,%d epoch"%(max_all_acc,max_all_epoch,max_tendency_acc,max_tendency_epoch,max_current_acc,max_current_epoch))
+
             file_curve.close()
             file_tendency.flush()
             file_current.flush()
