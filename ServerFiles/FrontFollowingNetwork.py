@@ -492,8 +492,8 @@ if __name__ == "__main__":
             tendency_data = np.concatenate([ir_data, leg_data], axis=1)
             # current part
             ir_data = all_data[:, int((frames - 1) * 768):int(frames*768)]
-            leg_data = all_data[:, int(frames * 768 + (frames - 1) * 4):int(frames*(768+4))]
-            current_data = np.concatenate([ir_data, leg_data], axis=1)
+            # leg_data = all_data[:, int(frames * 768 + (frames - 1) * 4):int(frames*(768+4))]
+            current_data = ir_data
             # label the same
             all_label_path = "/data/cyzhao/t_label.txt"
             all_label = np.loadtxt(all_label_path)
@@ -506,13 +506,15 @@ if __name__ == "__main__":
             leg_data = test_data[:, int(frames * 768):int(frames * 768 + (frames - 1) * 4)]
             test_tendency_data = np.concatenate([ir_data, leg_data], axis=1)
             ir_data = test_data[:, int((frames - 1) * 768):int(frames*768)]
-            leg_data = test_data[:, int(frames * 768 + (frames - 1) * 4):int(frames*(768+4))]
-            test_current_data = np.concatenate([ir_data, leg_data], axis=1)
+            # leg_data = test_data[:, int(frames * 768 + (frames - 1) * 4):int(frames*(768+4))]
+            test_current_data = ir_data
 
             test_label_path = "/data/cyzhao/test_t_label.txt"
             test_label = np.loadtxt(test_label_path)
             test_label = test_label.reshape((test_label.shape[0], 1))
             test_data = np.reshape(test_data, (test_data.shape[0], test_data.shape[1], 1))
+            test_tendency_data = np.reshape(test_tendency_data, (test_tendency_data.shape[0], test_tendency_data.shape[1], 1))
+            test_current_data = np.reshape(test_current_data, (test_current_data.shape[0], test_current_data.shape[1], 1))
             print(test_data.shape)
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
             FFL_Model.combine_net.compile(optimizer=optimizer,
