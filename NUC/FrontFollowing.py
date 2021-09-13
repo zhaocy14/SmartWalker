@@ -12,9 +12,9 @@ from Network import FrontFollowingNetwork as FFL
 camera_portal = '/dev/ttyUSB1'
 lidar_portal = '/dev/ttyUSB4'
 IMU_walker_portal = '/dev/ttyUSB0'
-# IMU_human_portal = '/dev/ttyUSB5'
-IMU_left_leg_portal = '/dev/ttyUSB6'
-IMU_right_leg_portal = '/dev/ttyUSB3'
+IMU_human_portal = '/dev/ttyUSB5'
+# IMU_left_leg_portal = '/dev/ttyUSB6'
+# IMU_right_leg_portal = '/dev/ttyUSB3'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
@@ -24,12 +24,12 @@ FrontFollowingModel = FFL.FrontFollowing_Model(win_width=win_width)
 
 IMU_walker = IMU.IMU(name="walker")
 IMU_walker.open_serial(IMU_walker_portal)
-IMU_right_leg = IMU.IMU(name="right_leg")
-IMU_right_leg.open_serial(IMU_right_leg_portal)
-IMU_left_leg = IMU.IMU(name="left_leg")
-IMU_left_leg.open_serial(IMU_left_leg_portal)
-# IMU_human = IMU.IMU(name="human")
-# IMU_human.open_serial(IMU_human_portal)
+# IMU_right_leg = IMU.IMU(name="right_leg")
+# IMU_right_leg.open_serial(IMU_right_leg_portal)
+# IMU_left_leg = IMU.IMU(name="left_leg")
+# IMU_left_leg.open_serial(IMU_left_leg_portal)
+IMU_human = IMU.IMU(name="human")
+IMU_human.open_serial(IMU_human_portal)
 
 
 def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
@@ -122,11 +122,6 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                         and current_position[1] > left_boundry\
                         and action_label==2 :
                     CD.speed = 0
-                    # para_rl = abs((1-(current_position[1]-left_boundry )*0.03))
-                    # if para_rl < 0.6 :
-                    #     para_rl = 0.6
-                    # CD.omega = 0
-                    # CD.radius= 75 * para_rl
                     radius = 40+abs(60*(max_boundary-current_position[1])/(max_boundary-left_boundry))
                     if radius < 50 :
                         radius = 50
@@ -139,8 +134,6 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                         and current_position[3] < right_boundry\
                         and action_label== 3 :
                     CD.speed = 0
-                    # CD.omega = -0.15
-                    # CD.radius = 80
                     radius = 40+abs(60*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
                     if radius < 50 :
                       radius = 50
@@ -148,8 +141,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     CD.omega = -15/CD.radius
                     str1 = "right"
                     time.sleep(0.1)
-                            #     elif current_position[5] > center_left_boundry :
-                elif current_position[5] < center_right_boundry \
+            #  elif current_position[5] > center_left_boundry :
+                elif current_position[5] > center_left_boundry \
                     and  action_label== 4 :
                     CD.speed = 0
                     radius = abs(40*(max_boundary-current_position[1])/(max_boundary-left_boundry))
@@ -188,9 +181,9 @@ thread_leg = threading.Thread(target=LD.scan_procedure, args=(True,True,))
 thread_cd = threading.Thread(target=CD.control_part, args=())
 thread_main = threading.Thread(target=main_FFL, args=(CD, LD))
 thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
-# thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
-thread_IMU_left = threading.Thread(target=IMU_left_leg.read_record,args=())
-thread_IMU_right = threading.Thread(target=IMU_right_leg.read_record,args=())
+thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
+# thread_IMU_left = threading.Thread(target=IMU_left_leg.read_record,args=())
+# thread_IMU_right = threading.Thread(target=IMU_right_leg.read_record,args=())
 
 
 
@@ -198,7 +191,7 @@ thread_leg.start()
 time.sleep(1)
 # thread_cd.start()
 thread_main.start()
-# thread_IMU_human.start()
+thread_IMU_human.start()
 thread_IMU_walker.start()
-thread_IMU_left.start()
-thread_IMU_right.start()
+# thread_IMU_left.start()
+# thread_IMU_right.start()
