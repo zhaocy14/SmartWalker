@@ -1,3 +1,4 @@
+from NUC.record_all import Cd
 import serial
 import os
 import numpy as np
@@ -43,6 +44,7 @@ if __name__ == "__main__":
     # thread_control_driver.start()
 
     while True:
+
         # present_time = time.time()
         IRCamera.get_irdata_once()
         if len(IRCamera.temperature) == 768:
@@ -100,5 +102,14 @@ if __name__ == "__main__":
                 cd.radius = 0
             # print(1/(time.time()-present_time))
             # present_time = time.time()
+    
+# thread_leg = threading.Thread(target=LD.scan_procedure, args=(True,True,))
+# thread_cd = threading.Thread(target=cd.control_part, args=())
+# thread_main = threading.Thread(target=main_FFL, args=(cd, LD, Camera, FrontFollowingModel))
+
+
+# thread_leg.start()
+# time.sleep(3)
+# thread_main.start()
 
 

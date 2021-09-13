@@ -153,31 +153,29 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     CD.omega = -10/CD.radius
                     str1 = "right"
                     time.sleep(0.1)
-            #  elif current_position[5] > center_left_boundry :
-                elif  action_label== 4 :
-                    CD.speed = 0
-                    radius = abs(20*(center_left_boundry-current_position[1])/(max_boundary-center_left_boundry))
-                    if radius < 10 :
-                       radius = 10
-                    CD.radius = radius
-                    CD.omega = 0.1
-                    str1 = "left in space"
-                    time.sleep(0.1)
-                elif  action_label== 5 :
-                    CD.speed = 0
-                    radius = abs(20*(current_position[3]-min_boundary)/(center_left_boundry-min_boundary))
-                    if radius < 10 :
-                       radius = 10
-                    CD.radius = radius
-                    CD.omega = 0.1
-                    str1 = "right in space"
-                    time.sleep(0.1)
                 else:
-                    CD.speed = 0.11
+                    CD.speed = 0.1
                     CD.omega = 0
                     CD.radius = 0
                     str1 = "forward"
-
+            elif  action_label== 4 :
+                CD.speed = 0
+                radius = abs(20*(center_left_boundry-current_position[1])/(max_boundary-center_left_boundry))
+                if radius < 10 :
+                    radius = 10
+                CD.radius = 0
+                CD.omega = 0.25
+                str1 = "left in space"
+                time.sleep(0.1)
+            elif  action_label== 5 :
+                CD.speed = 0
+                radius = abs(20*(current_position[3]-min_boundary)/(center_left_boundry-min_boundary))
+                if radius < 10 :
+                    radius = 10
+                CD.radius = 0
+                CD.omega = 0.25
+                str1 = "right in space"
+                time.sleep(0.1)
             else:
                 CD.speed = 0
                 CD.omega = 0
