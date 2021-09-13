@@ -173,7 +173,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     str1 = "right in space"
                     time.sleep(0.1)
                 else:
-                    CD.speed = 0.1
+                    CD.speed = 0.11
                     CD.omega = 0
                     CD.radius = 0
                     str1 = "forward"
