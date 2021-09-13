@@ -14,7 +14,7 @@ lidar_portal = '/dev/ttyUSB4'
 IMU_walker_portal = '/dev/ttyUSB0'
 # IMU_human_portal = '/dev/ttyUSB5'
 IMU_left_leg_portal = '/dev/ttyUSB6'
-IMU_right_leg_portal = '/dev/ttyUSB3'
+IMU_right_leg_portal = '/dev/ttyUSB7'
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
@@ -67,6 +67,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
     additional_data_width = 4
     buffer_length = win_width
     buffer = np.zeros((buffer_length * (ir_data_width + additional_data_width), 1))
+
 
     while True:
         IR.get_irdata_once()
