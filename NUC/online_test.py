@@ -17,7 +17,7 @@ if __name__ == "__main__":
     lidar_portal = '/dev/ttyUSB4'
     IRCamera = IRCamera.IRCamera()
     LD = Leg_detector.Leg_detector(lidar_portal)
-    cd = CD.ControlDriver()
+    cd = CD.ControlDriver(left_right=0)
 
     # initialize the network
     win_width = 10
@@ -37,12 +37,13 @@ if __name__ == "__main__":
     # sensor data reading thread, network output thread and control thread
     thread_leg = threading.Thread(target=LD.scan_procedure,args=())
     thread_leg.start()
+    time.sleep(3) # wait for the start of the lidar
 
-    # thread_control_driver = threading.Thread(target=cd.control_part, args=())
-    # thread_control_driver.start()
+    thread_control_driver = threading.Thread(target=cd.control_part, args=())
+    thread_control_driver.start()
 
     while True:
-        present_time = time.time()
+        # present_time = time.time()
         IRCamera.get_irdata_once()
         if len(IRCamera.temperature) == 768:
             normalized_temperature = np.array(IRCamera.temperature).reshape((ir_data_width, 1))
@@ -51,9 +52,9 @@ if __name__ == "__main__":
             buffer[(buffer_length - 1) * ir_data_width:buffer_length * ir_data_width] = normalized_temperature
             """additional part start index"""
             PART2 = buffer_length * ir_data_width
-            # print(LD.left_leg.shape)
-            additional_data = np.ndarray([LD.left_leg[0,0], LD.left_leg[0,1], LD.right_leg[0,0], LD.right_leg[0,1]])/40+0.4
-            print(additional_data.shape)
+            additional_data = [LD.left_leg[0], LD.left_leg[1], LD.right_leg[0], LD.right_leg[1]]
+            additional_data = np.array(additional_data)/40+0.4
+            additional_data = np.reshape(additional_data,(additional_data.shape[0],1))
             buffer[PART2:PART2 + (buffer_length - 1) * additional_data_width, 0] = \
                 buffer[PART2 + additional_data_width:PART2 + buffer_length * additional_data_width, 0]
             buffer[PART2 + (buffer_length - 1) * additional_data_width:PART2 + buffer_length * additional_data_width] = \
@@ -73,30 +74,30 @@ if __name__ == "__main__":
                 cd.radius = 0
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
-                cd.speed = 0.1
+                cd.speed = 0.05
                 cd.omega = 0
                 cd.radius = 0
             elif max_result == result[0, 2]:
                 print("\rturn left!",end="")
                 cd.speed = 0
                 cd.omega = 0.1
-                cd.radius = 2
+                cd.radius = 140
             elif max_result == result[0, 3]:
                 print("\rturn right!",end="")
                 cd.speed = 0
                 cd.omega = -0.1
-                cd.radius = 2
+                cd.radius = 140
             elif max_result == result[0, 4]:
                 print("\ryuandi left",end="")
                 cd.speed = 0
-                cd.omega = 0.2
+                cd.omega = 0.1
                 cd.radius = 0
             elif max_result == result[0, 5]:
                 print("\ryuandi right",end="")
                 cd.speed = 0
-                cd.omega = -0.2
+                cd.omega = -0.1
                 cd.radius = 0
-            print(1/(time.time()-present_time))
-            present_time = time.time()
+            # print(1/(time.time()-present_time))
+            # present_time = time.time()
 
 
