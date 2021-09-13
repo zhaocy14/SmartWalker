@@ -47,13 +47,6 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
     new_buffer[-1, 5] = human_position[1]
     current_position = np.matmul(weight_array, new_buffer)[0]
     return current_position, new_buffer
-<<<<<<< HEAD
-def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
-    buffer_length = 3
-    position_buffer = np.zeros((buffer_length, 6))
-    weight_array = np.array((range(1, buffer_length + 1))).reshape((1, 3))
-=======
-
 
 
 
@@ -65,7 +58,6 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
     position_buffer_length = 3
     position_buffer = np.zeros((position_buffer_length, 6))
     weight_array = np.array((range(1, position_buffer_length + 1))).reshape((1, 3))
->>>>>>> c144900f8b35f2a0a47db952c7acd357179328e8
     weight_array = weight_array / weight_array.sum()
     CD.speed = 0
     CD.omega = 0
@@ -83,78 +75,6 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
     while True:
 
         time.sleep(0.2)
-        # current_left_leg = LD.left_leg
-        # current_right_leg = LD.right_leg
-        # current_position, position_buffer = position_calculation(current_left_leg, current_right_leg,
-        #                                                          position_buffer, weight_array)
-        # max_boundary=14.5   #left max value
-        # min_boundary=-14   #right max value
-        # forward_boundry = 10
-        # backward_boundry = -5
-        # center_left_boundry = 1   #change gwz
-        # center_right_boundry = 0.3
-        # left_boundry = 8.2   #change gwz
-        # right_boundry = -7.5
-        # if backward_boundry > current_position[4] > -40:
-        #     CD.speed = -0.1
-        #     CD.omega = 0
-        #     CD.radius = 0
-        #     str1 = "backward"
-        # elif current_position[4] > forward_boundry:
-        #     if current_position[5] > center_left_boundry \
-        #             and current_position[0] > current_position[2] \
-        #             and current_position[1] > left_boundry:
-        #         CD.speed = 0
-        #         # para_rl = abs((1-(current_position[1]-left_boundry )*0.03))
-        #         # if para_rl < 0.6 :
-        #         #     para_rl = 0.6
-        #         # CD.omega = 0
-        #         # CD.radius= 75 * para_rl
-        #         radius = 40+abs(60*(max_boundary-current_position[1])/(max_boundary-left_boundry))
-        #         if radius < 50 :
-        #             radius = 50
-        #         CD.radius = radius
-        #         CD.omega = 15/CD.radius
-        #         str1 = "left"
-        #         time.sleep(0.1)
-        #     elif current_position[5] < center_right_boundry \
-        #             and current_position[2] > current_position[0] \
-        #             and current_position[3] < right_boundry:
-        #         CD.speed = 0
-        #         # CD.omega = -0.15
-        #         # CD.radius = 80
-        #         radius = 40+abs(60*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
-        #         if radius < 50 :
-        #           radius = 50
-        #         CD.radius = radius
-        #         CD.omega = -15/CD.radius
-        #         str1 = "right"
-        #         time.sleep(0.1)
-        #     elif current_position[5] > center_left_boundry :
-        #         CD.speed = 0
-        #         # para_rl = abs((1-(current_position[1]-left_boundry )*0.03))
-        #         # if para_rl < 0.6 :
-        #         #     para_rl = 0.6
-        #         # CD.omega = 0
-        #         # CD.radius= 75 * para_rl
-        #         radius = 40*(max_boundary-current_position[1])/(max_boundary-left_boundry))
-        #         if radius < 50 :
-        #             radius = 50
-        #         CD.radius = radius
-        #         CD.omega = 15/CD.radius
-        #         str1 = "left in space"
-        #         time.sleep(0.1)
-        #     elif current_position[5] < center_right_boundry :
-        #         CD.speed = 0
-        #         # CD.omega = -0.15
-        #         # CD.radius = 80
-        #         radius = 40+abs(60*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
-        #         if radius < 50 :
-        #           radius = 50
-        #         CD.radius = radius
-        #         CD.omega = -15/CD.radius
-        #         str1 = "right in space"
-        #         time.sleep(0.1)
 
         IR.get_irdata_once()
         if len(IR.temperature) == 768:
@@ -199,7 +119,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             elif current_position[4] > forward_boundry:
                 if current_position[5] > center_left_boundry \
                         and current_position[0] > current_position[2] \
-                        and current_position[1] > left_boundry:
+                        and current_position[1] > left_boundry\
+                        and action_label==2 :
                     CD.speed = 0
                     # para_rl = abs((1-(current_position[1]-left_boundry )*0.03))
                     # if para_rl < 0.6 :
@@ -215,7 +136,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     time.sleep(0.1)
                 elif current_position[5] < center_right_boundry \
                         and current_position[2] > current_position[0] \
-                        and current_position[3] < right_boundry:
+                        and current_position[3] < right_boundry\
+                        and action_label== 3 :
                     CD.speed = 0
                     # CD.omega = -0.15
                     # CD.radius = 80
@@ -227,20 +149,22 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     str1 = "right"
                     time.sleep(0.1)
                             #     elif current_position[5] > center_left_boundry :
-                elif current_position[5] < center_right_boundry :
+                elif current_position[5] < center_right_boundry \
+                    and  action_label== 4 :
                     CD.speed = 0
                     radius = abs(40*(max_boundary-current_position[1])/(max_boundary-left_boundry))
                     if radius < 15 :
-                        radius = 15
+                       radius = 15
                     CD.radius = radius
                     CD.omega = 15/CD.radius
                     str1 = "left in space"
                     time.sleep(0.1)
-                elif current_position[5] < center_right_boundry :
+                elif current_position[5] < center_right_boundry \
+                    and  action_label== 5 :
                     CD.speed = 0
                     radius = abs(40*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
                     if radius < 15 :
-                    radius = 15
+                       radius = 15
                     CD.radius = radius
                     CD.omega = -15/CD.radius
                     str1 = "right in space"
