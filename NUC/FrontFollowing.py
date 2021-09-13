@@ -49,11 +49,6 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
     return current_position, new_buffer
 
 
-
-
-
-
-
 def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.IRCamera, FFL_Model:FFL.FrontFollowing_Model):
     # weight buffer for lidar detection
     position_buffer_length = 3
