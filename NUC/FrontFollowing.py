@@ -156,7 +156,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             #  elif current_position[5] > center_left_boundry :
                 elif  action_label== 4 :
                     CD.speed = 0
-                    radius = abs(20*(max_boundary-current_position[1])/(max_boundary-left_boundry))
+                    radius = abs(20*(center_left_boundry-current_position[1])/(max_boundary-center_left_boundry))
                     if radius < 15 :
                        radius = 15
                     CD.radius = radius
@@ -165,7 +165,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     time.sleep(0.1)
                 elif  action_label== 5 :
                     CD.speed = 0
-                    radius = abs(20*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
+                    radius = abs(20*(current_position[3]-min_boundary)/(center_left_boundry-min_boundary))
                     if radius < 15 :
                        radius = 15
                     CD.radius = radius
