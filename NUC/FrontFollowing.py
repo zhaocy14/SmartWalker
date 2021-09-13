@@ -47,12 +47,6 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
     new_buffer[-1, 5] = human_position[1]
     current_position = np.matmul(weight_array, new_buffer)[0]
     return current_position, new_buffer
-<<<<<<< HEAD
-def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
-    buffer_length = 3
-    position_buffer = np.zeros((buffer_length, 6))
-    weight_array = np.array((range(1, buffer_length + 1))).reshape((1, 3))
-=======
 
 
 def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.IRCamera, FFL_Model:FFL.FrontFollowing_Model):
@@ -60,7 +54,6 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
     position_buffer_length = 3
     position_buffer = np.zeros((position_buffer_length, 6))
     weight_array = np.array((range(1, position_buffer_length + 1))).reshape((1, 3))
->>>>>>> c144900f8b35f2a0a47db952c7acd357179328e8
     weight_array = weight_array / weight_array.sum()
     CD.speed = 0
     CD.omega = 0
@@ -236,11 +229,11 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     CD.speed = 0
                     radius = abs(40*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
                     if radius < 15 :
-                    radius = 15
-                    CD.radius = radius
-                    CD.omega = -15/CD.radius
-                    str1 = "right in space"
-                    time.sleep(0.1)
+                        radius = 15
+                        CD.radius = radius
+                        CD.omega = -15/CD.radius
+                        str1 = "right in space"
+                        time.sleep(0.1)
                 else:
                     CD.speed = 0.1
                     CD.omega = 0
