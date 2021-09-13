@@ -70,9 +70,9 @@ def get_evaluation(lambda_network:float,FFL:FFL.FrontFollowing_Model,tendency_da
             final_correct_num += 1
     return final_correct_num/data_num
 
-record = np.zeros((101,2))
-for i in range(101):
-    lambda_network = i/100
+record = np.zeros((21,2))
+for i in range(21):
+    lambda_network = i*5/100
     accuracy = get_evaluation(lambda_network, FFLNet, test_tendency_data, test_current_data, test_label)
     record[i,0] = lambda_network
     record[i,1] = accuracy
