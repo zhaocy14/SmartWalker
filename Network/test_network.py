@@ -30,7 +30,7 @@ test_label_path = "/data/cyzhao/test_t_label.txt"
 test_label = np.loadtxt(test_label_path)
 test_data = np.loadtxt(test_data_path)
 
-
+print(test_data.shape)
 
 ir_data = test_data[:, 0:int((win_width - 1) * 768)]
 leg_data = test_data[:, int(win_width * 768):int(win_width * 768 + (win_width - 1) * 4)]
