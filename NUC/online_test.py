@@ -14,7 +14,7 @@ import cv2 as cv
 if __name__ == "__main__":
     """portal num"""
     camera_portal = '/dev/ttyUSB0'
-    lidar_portal = '/dev/ttyUSB4'
+    lidar_portal = '/dev/ttyUSB3'
     IRCamera = IRCamera.IRCamera()
     LD = Leg_detector.Leg_detector(lidar_portal)
     cd = CD.ControlDriver(left_right=0)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     time.sleep(3) # wait for the start of the lidar
 
     thread_control_driver = threading.Thread(target=cd.control_part, args=())
-    thread_control_driver.start()
+    # thread_control_driver.start()
 
     while True:
         # present_time = time.time()
@@ -66,6 +66,7 @@ if __name__ == "__main__":
             result = tf_model.combine_net.predict(predict_buffer)
             max_result = result.max()
             action_label = np.unravel_index(np.argmax(result), result.shape)[1]
+            print(action_label)
             # print(max_result)
             if max_result == result[0, 0]:
                 print("\rstill!",end="")

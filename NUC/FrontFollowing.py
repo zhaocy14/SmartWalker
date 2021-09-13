@@ -9,6 +9,7 @@ from Driver import ControlOdometryDriver as cd
 from Network import FrontFollowingNetwork as FFL
 
 """portal num"""
+<<<<<<< HEAD
 camera_portal = '/dev/ttyUSB1'
 lidar_portal = '/dev/ttyUSB4'
 IMU_walker_portal = '/dev/ttyUSB0'
@@ -21,12 +22,22 @@ IMU_human_portal = '/dev/ttyUSB5'
 IMU_left_leg_portal = '/dev/ttyUSB6'
 IMU_right_leg_portal = '/dev/ttyUSB7'
 >>>>>>> e059d0529b29510e48ddffcc4e55414134801f14
+=======
+camera_portal = '/dev/ttyUSB0'
+lidar_portal = '/dev/ttyUSB3'
+IMU_walker_portal = '/dev/ttyUSB1'
+# IMU_human_portal = '/dev/ttyUSB5'
+IMU_left_leg_portal = '/dev/ttyUSB2'
+IMU_right_leg_portal = '/dev/ttyUSB6'
+>>>>>>> c8a02ca59eb94b10b2bb096db193384e8df14793
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
 CD = cd.ControlDriver(record_mode=True, left_right=0)
 win_width = 10
 FrontFollowingModel = FFL.FrontFollowing_Model(win_width=win_width)
+weight_path = "./checkpoints_combine/Combine"
+FrontFollowingModel.combine_net.load_weights(weight_path)
 
 IMU_walker = IMU.IMU(name="walker")
 IMU_walker.open_serial(IMU_walker_portal)
@@ -34,8 +45,13 @@ IMU_walker.open_serial(IMU_walker_portal)
 # IMU_right_leg.open_serial(IMU_right_leg_portal)
 # IMU_left_leg = IMU.IMU(name="left_leg")
 # IMU_left_leg.open_serial(IMU_left_leg_portal)
+<<<<<<< HEAD
 IMU_human = IMU.IMU(name="human")
 IMU_human.open_serial(IMU_human_portal)
+=======
+# IMU_human = IMU.IMU(name="human")
+# IMU_human.open_serial(IMU_human_portal)
+>>>>>>> c8a02ca59eb94b10b2bb096db193384e8df14793
 
 
 def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
@@ -93,20 +109,24 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             buffer[(buffer_length - 1) * ir_data_width:buffer_length * ir_data_width] = normalized_temperature
             """additional part start index"""
             PART2 = buffer_length * ir_data_width
-            additional_data = np.ndarray(
-                [LD.left_leg[0, 0], LD.left_leg[0, 1], LD.right_leg[0, 0], LD.right_leg[0, 1]]) / 40 + 0.4
+            additional_data = [LD.left_leg[0], LD.left_leg[1], LD.right_leg[0], LD.right_leg[1]]
+            additional_data = np.array(additional_data) / 40 + 0.4
+            additional_data = np.reshape(additional_data, (additional_data.shape[0], 1))
             buffer[PART2:PART2 + (buffer_length - 1) * additional_data_width, 0] = \
                 buffer[PART2 + additional_data_width:PART2 + buffer_length * additional_data_width, 0]
             buffer[PART2 + (buffer_length - 1) * additional_data_width:PART2 + buffer_length * additional_data_width] = \
                 additional_data
+
             buffer[PART2:PART2 + buffer_length * additional_data_width, 0] = buffer[
                                                                              PART2:PART2 + buffer_length * additional_data_width,
                                                                              0]
             predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
             result = FFL_Model.combine_net.predict(predict_buffer)
-            max_possibility = result.max()
-            action_label = np.unravel_index(np.argmax(max_possibility), max_possibility.shape)[1]
 
+            max_possibility = result.max()
+            print(max_possibility)
+            action_label = np.unravel_index(np.argmax(max_possibility), max_possibility.shape)
+            print(action_label)
             current_left_leg = LD.left_leg
             current_right_leg = LD.right_leg
             current_position, position_buffer = position_calculation(current_left_leg, current_right_leg,
@@ -187,19 +207,28 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
 
 thread_leg = threading.Thread(target=LD.scan_procedure, args=(True,True,))
 thread_cd = threading.Thread(target=CD.control_part, args=())
-thread_main = threading.Thread(target=main_FFL, args=(CD, LD))
+thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel))
 thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
+<<<<<<< HEAD
 thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
+=======
+# thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
+>>>>>>> c8a02ca59eb94b10b2bb096db193384e8df14793
 # thread_IMU_left = threading.Thread(target=IMU_left_leg.read_record,args=())
 # thread_IMU_right = threading.Thread(target=IMU_right_leg.read_record,args=())
 
 
 
 thread_leg.start()
-time.sleep(1)
+time.sleep(3)
 # thread_cd.start()
 thread_main.start()
+<<<<<<< HEAD
 thread_IMU_human.start()
 thread_IMU_walker.start()
+=======
+# thread_IMU_human.start()
+# thread_IMU_walker.start()
+>>>>>>> c8a02ca59eb94b10b2bb096db193384e8df14793
 # thread_IMU_left.start()
 # thread_IMU_right.start()
