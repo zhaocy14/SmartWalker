@@ -32,8 +32,6 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
     new_buffer[-1, 5] = human_position[1]
     current_position = np.matmul(weight_array, new_buffer)[0]
     return current_position, new_buffer
-
-
 def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
     buffer_length = 3
     position_buffer = np.zeros((buffer_length, 6))
@@ -91,6 +89,31 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector):
                 CD.radius = radius
                 CD.omega = -15/CD.radius
                 str1 = "right"
+                time.sleep(0.1)
+            elif current_position[5] > center_left_boundry :
+                CD.speed = 0
+                # para_rl = abs((1-(current_position[1]-left_boundry )*0.03))
+                # if para_rl < 0.6 :
+                #     para_rl = 0.6
+                # CD.omega = 0
+                # CD.radius= 75 * para_rl
+                radius = 40*(max_boundary-current_position[1])/(max_boundary-left_boundry))
+                if radius < 50 :
+                    radius = 50
+                CD.radius = radius
+                CD.omega = 15/CD.radius
+                str1 = "left in space"
+                time.sleep(0.1)
+            elif current_position[5] < center_right_boundry :
+                CD.speed = 0
+                # CD.omega = -0.15
+                # CD.radius = 80
+                radius = 40+abs(60*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
+                if radius < 50 :
+                  radius = 50
+                CD.radius = radius
+                CD.omega = -15/CD.radius
+                str1 = "right in space"
                 time.sleep(0.1)
             else:
                 CD.speed = 0.1
