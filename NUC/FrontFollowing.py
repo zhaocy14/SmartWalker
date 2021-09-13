@@ -72,7 +72,9 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
 
 
     while True:
+        print(1)
         IR.get_irdata_once()
+        print(IR.temperature)
         if len(IR.temperature) == 768:
             # update buffer and predict
             # normalized_temperature = np.array(IR.temperature).reshape((ir_data_width, 1))
@@ -195,6 +197,6 @@ time.sleep(3)
 # thread_cd.start()
 thread_main.start()
 # thread_IMU_human.start()
-thread_IMU_walker.start()
+# thread_IMU_walker.start()
 # thread_IMU_left.start()
 # thread_IMU_right.start()
