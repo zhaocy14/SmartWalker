@@ -9,27 +9,17 @@ from Driver import ControlOdometryDriver as cd
 from Network import FrontFollowingNetwork as FFL
 
 """portal num"""
-<<<<<<< HEAD
+
 camera_portal = '/dev/ttyUSB1'
-lidar_portal = '/dev/ttyUSB4'
-IMU_walker_portal = '/dev/ttyUSB0'
-<<<<<<< HEAD
-IMU_human_portal = '/dev/ttyUSB5'
+lidar_portal = '/dev/ttyUSB6'
+# IMU_walker_portal = '/dev/ttyUSB0'
+# IMU_human_portal = '/dev/ttyUSB5'
 # IMU_left_leg_portal = '/dev/ttyUSB6'
 # IMU_right_leg_portal = '/dev/ttyUSB3'
-=======
 # IMU_human_portal = '/dev/ttyUSB5'
-IMU_left_leg_portal = '/dev/ttyUSB6'
-IMU_right_leg_portal = '/dev/ttyUSB7'
->>>>>>> e059d0529b29510e48ddffcc4e55414134801f14
-=======
-camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB3'
-IMU_walker_portal = '/dev/ttyUSB1'
-# IMU_human_portal = '/dev/ttyUSB5'
-IMU_left_leg_portal = '/dev/ttyUSB2'
-IMU_right_leg_portal = '/dev/ttyUSB6'
->>>>>>> c8a02ca59eb94b10b2bb096db193384e8df14793
+# IMU_left_leg_portal = '/dev/ttyUSB6'
+# IMU_right_leg_portal = '/dev/ttyUSB7'
+
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
@@ -39,15 +29,15 @@ FrontFollowingModel = FFL.FrontFollowing_Model(win_width=win_width)
 weight_path = "./checkpoints_combine/Combine"
 FrontFollowingModel.combine_net.load_weights(weight_path)
 
-IMU_walker = IMU.IMU(name="walker")
-IMU_walker.open_serial(IMU_walker_portal)
+# IMU_walker = IMU.IMU(name="walker")
+# IMU_walker.open_serial(IMU_walker_portal)
 # IMU_right_leg = IMU.IMU(name="right_leg")
 # IMU_right_leg.open_serial(IMU_right_leg_portal)
 # IMU_left_leg = IMU.IMU(name="left_leg")
 # IMU_left_leg.open_serial(IMU_left_leg_portal)
 
-IMU_human = IMU.IMU(name="human")
-IMU_human.open_serial(IMU_human_portal)
+# IMU_human = IMU.IMU(name="human")
+# IMU_human.open_serial(IMU_human_portal)
 
 # IMU_human = IMU.IMU(name="human")
 # IMU_human.open_serial(IMU_human_portal)
@@ -141,8 +131,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             elif current_position[4] > forward_boundry:
                 if current_position[5] > center_left_boundry \
                         and current_position[0] > current_position[2] \
-                        and current_position[1] > left_boundry\
-                        and action_label==2 :
+                        and current_position[1] > left_boundry :
+                        # and action_label==2 :
                     CD.speed = 0
                     radius = 40+abs(60*(max_boundary-current_position[1])/(max_boundary-left_boundry))
                     if radius < 50 :
@@ -153,8 +143,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     time.sleep(0.1)
                 elif current_position[5] < center_right_boundry \
                         and current_position[2] > current_position[0] \
-                        and current_position[3] < right_boundry\
-                        and action_label== 3 :
+                        and current_position[3] < right_boundry :
+                        # and action_label== 3 :
                     CD.speed = 0
                     radius = 40+abs(60*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
                     if radius < 50 :
@@ -164,24 +154,22 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     str1 = "right"
                     time.sleep(0.1)
             #  elif current_position[5] > center_left_boundry :
-                elif current_position[5] > center_left_boundry \
-                    and  action_label== 4 :
+                elif  action_label== 4 :
                     CD.speed = 0
                     radius = abs(40*(max_boundary-current_position[1])/(max_boundary-left_boundry))
                     if radius < 15 :
                        radius = 15
                     CD.radius = radius
-                    CD.omega = 15/CD.radius
+                    CD.omega = 10/CD.radius
                     str1 = "left in space"
                     time.sleep(0.1)
-                elif current_position[5] < center_right_boundry \
-                    and  action_label== 5 :
+                elif  action_label== 5 :
                     CD.speed = 0
                     radius = abs(40*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
                     if radius < 15 :
                        radius = 15
                     CD.radius = radius
-                    CD.omega = -15/CD.radius
+                    CD.omega = -10/CD.radius
                     str1 = "right in space"
                     time.sleep(0.1)
                 else:
@@ -202,8 +190,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
 thread_leg = threading.Thread(target=LD.scan_procedure, args=(True,True,))
 thread_cd = threading.Thread(target=CD.control_part, args=())
 thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel))
-thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
-thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
+# thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
+# thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
 
 # thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
 
@@ -216,8 +204,8 @@ thread_leg.start()
 time.sleep(3)
 # thread_cd.start()
 thread_main.start()
-thread_IMU_human.start()
-thread_IMU_walker.start()
+# thread_IMU_human.start()
+# thread_IMU_walker.start()
 # thread_IMU_human.start()
 # thread_IMU_walker.start()
 # thread_IMU_left.start()
