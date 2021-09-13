@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import os, sys
+import time
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
@@ -71,11 +72,14 @@ def get_evaluation(lambda_network:float,FFL:FFL.FrontFollowing_Model,tendency_da
     return final_correct_num/data_num
 
 record = np.zeros((21,2))
+start_time = time.time()
 for i in range(21):
     lambda_network = i*5/100
     accuracy = get_evaluation(lambda_network, FFLNet, test_tendency_data, test_current_data, test_label)
     record[i,0] = lambda_network
     record[i,1] = accuracy
+    print("iteration time:%f"%(time.time()-start_time))
+    start_time = time.time()
 record_path = "/data/cyzhao/lambda_record.txt"
 np.savetxt(record_path,record)
 
