@@ -160,7 +160,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     if radius < 12 :
                        radius = 12
                     CD.radius = radius
-                    CD.omega = 0.15
+                    CD.omega = 0.1
                     str1 = "left in space"
                     time.sleep(0.1)
                 elif  action_label== 5 :
@@ -169,7 +169,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     if radius < 12 :
                        radius = 12
                     CD.radius = radius
-                    CD.omega = 0.15
+                    CD.omega = 0.1
                     str1 = "right in space"
                     time.sleep(0.1)
                 else:
