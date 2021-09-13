@@ -523,6 +523,7 @@ if __name__ == "__main__":
             FFL_Model.current_net.compile(optimizer=optimizer,
                                           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                                           metrics=['accuracy'])
+            optimizer = tf.keras.optimizers.Adam(learning_rate=0.00002)
             FFL_Model.tendency_net.compile(optimizer=optimizer,
                                           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                                           metrics=['accuracy'])
