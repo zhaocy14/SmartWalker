@@ -12,9 +12,15 @@ from Network import FrontFollowingNetwork as FFL
 camera_portal = '/dev/ttyUSB1'
 lidar_portal = '/dev/ttyUSB4'
 IMU_walker_portal = '/dev/ttyUSB0'
+<<<<<<< HEAD
 IMU_human_portal = '/dev/ttyUSB5'
 # IMU_left_leg_portal = '/dev/ttyUSB6'
 # IMU_right_leg_portal = '/dev/ttyUSB3'
+=======
+# IMU_human_portal = '/dev/ttyUSB5'
+IMU_left_leg_portal = '/dev/ttyUSB6'
+IMU_right_leg_portal = '/dev/ttyUSB7'
+>>>>>>> e059d0529b29510e48ddffcc4e55414134801f14
 
 Camera = IRCamera.IRCamera()
 LD = Leg_detector.Leg_detector(lidar_portal)
@@ -47,10 +53,13 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
     new_buffer[-1, 5] = human_position[1]
     current_position = np.matmul(weight_array, new_buffer)[0]
     return current_position, new_buffer
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> e059d0529b29510e48ddffcc4e55414134801f14
 
 
 def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.IRCamera, FFL_Model:FFL.FrontFollowing_Model):
@@ -72,10 +81,9 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
     buffer_length = win_width
     buffer = np.zeros((buffer_length * (ir_data_width + additional_data_width), 1))
 
+
+
     while True:
-
-        time.sleep(0.2)
-
         IR.get_irdata_once()
         if len(IR.temperature) == 768:
             # update buffer and predict

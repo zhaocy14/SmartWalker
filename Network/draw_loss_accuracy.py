@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import os,sys
 
 def get_data(direction):
@@ -24,10 +24,43 @@ def get_data(direction):
     return data
 
 
-file_name = "combine_curve.txt" #   tendency_curve.txt    current_curve.txt
+combine_file = "combine_curve.txt" #   tendency_curve.txt    current_curve.txt
+tendency_file = "tendency_curve.txt" #   tendency_curve.txt    current_curve.txt
+current_file = "current_curve.txt" #   tendency_curve.txt    current_curve.txt
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd))
-curve_path = os.path.abspath(father_path + os.path.sep + file_name)
+combine_path = os.path.abspath(father_path + os.path.sep + combine_file)
+tendency_path = os.path.abspath(father_path + os.path.sep + tendency_file)
+current_path = os.path.abspath(father_path + os.path.sep + current_file)
 
-curve = get_data(curve_path)
-print(curve.shape)
+combine_curve = get_data(combine_path)
+tendency_curve = get_data(tendency_path)
+current_curve = get_data(current_path)
+
+length = 200
+
+# combine_val_loss = combine_curve[0:length,2].tolist()
+# tendency_val_loss = tendency_curve[0:length,2].tolist()
+# current_val_loss = current_curve[0:length,2].tolist()
+# length = range(length)
+# 
+# plt.plot(length,combine_val_loss,color='#2878B5',label="combine Loss")
+# plt.plot(length,tendency_val_loss,color='#C82423',label="tendency Loss")
+# plt.plot(length,current_val_loss,color='#F8AC8C',label="current Loss")
+# plt.legend()
+# plt.xlabel('Iteration')
+# plt.ylabel('Loss')
+# plt.show()
+
+combine_val_accuracy = combine_curve[0:length,3].tolist()
+tendency_val_accuracy = tendency_curve[0:length,3].tolist()
+current_val_accuracy = current_curve[0:length,3].tolist()
+length = range(length)
+
+plt.plot(length,combine_val_accuracy,color='#2878B5',label="combine accuracy")
+plt.plot(length,tendency_val_accuracy,color='#C82423',label="tendency accuracy")
+plt.plot(length,current_val_accuracy,color='#F8AC8C',label="current accuracy")
+plt.legend()
+plt.xlabel('Iteration')
+plt.ylabel('Accuracy')
+plt.show()
