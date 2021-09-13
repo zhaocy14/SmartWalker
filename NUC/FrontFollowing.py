@@ -72,35 +72,33 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
 
 
     while True:
-        print(1)
         IR.get_irdata_once()
-        print(IR.temperature)
         if len(IR.temperature) == 768:
             # update buffer and predict
-            # normalized_temperature = np.array(IR.temperature).reshape((ir_data_width, 1))
-            # normalized_temperature = (normalized_temperature - min_ir) / (max_ir - min_ir)
-            # buffer[0:(buffer_length - 1) * ir_data_width, 0] = buffer[ir_data_width:buffer_length * ir_data_width, 0]
-            # buffer[(buffer_length - 1) * ir_data_width:buffer_length * ir_data_width] = normalized_temperature
-            # """additional part start index"""
-            # PART2 = buffer_length * ir_data_width
-            # additional_data = [LD.left_leg[0], LD.left_leg[1], LD.right_leg[0], LD.right_leg[1]]
-            # additional_data = np.array(additional_data) / 40 + 0.4
-            # additional_data = np.reshape(additional_data, (additional_data.shape[0], 1))
-            # buffer[PART2:PART2 + (buffer_length - 1) * additional_data_width, 0] = \
-            #     buffer[PART2 + additional_data_width:PART2 + buffer_length * additional_data_width, 0]
-            # buffer[PART2 + (buffer_length - 1) * additional_data_width:PART2 + buffer_length * additional_data_width] = \
-            #     additional_data
-            #
-            # buffer[PART2:PART2 + buffer_length * additional_data_width, 0] = buffer[
-            #                                                                  PART2:PART2 + buffer_length * additional_data_width,
-            #                                                                  0]
-            # predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
-            # result = FFL_Model.combine_net.predict(predict_buffer)
-            #
-            # max_possibility = result.max()
-            # print(max_possibility)
-            # action_label = np.unravel_index(np.argmax(max_possibility), max_possibility.shape)
-            # print(action_label)
+            normalized_temperature = np.array(IR.temperature).reshape((ir_data_width, 1))
+            normalized_temperature = (normalized_temperature - min_ir) / (max_ir - min_ir)
+            buffer[0:(buffer_length - 1) * ir_data_width, 0] = buffer[ir_data_width:buffer_length * ir_data_width, 0]
+            buffer[(buffer_length - 1) * ir_data_width:buffer_length * ir_data_width] = normalized_temperature
+            """additional part start index"""
+            PART2 = buffer_length * ir_data_width
+            additional_data = [LD.left_leg[0], LD.left_leg[1], LD.right_leg[0], LD.right_leg[1]]
+            additional_data = np.array(additional_data) / 40 + 0.4
+            additional_data = np.reshape(additional_data, (additional_data.shape[0], 1))
+            buffer[PART2:PART2 + (buffer_length - 1) * additional_data_width, 0] = \
+                buffer[PART2 + additional_data_width:PART2 + buffer_length * additional_data_width, 0]
+            buffer[PART2 + (buffer_length - 1) * additional_data_width:PART2 + buffer_length * additional_data_width] = \
+                additional_data
+
+            buffer[PART2:PART2 + buffer_length * additional_data_width, 0] = buffer[
+                                                                             PART2:PART2 + buffer_length * additional_data_width,
+                                                                             0]
+            predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
+            result = FFL_Model.combine_net.predict(predict_buffer)
+
+            max_possibility = result.max()
+            print(max_possibility)
+            action_label = np.unravel_index(np.argmax(max_possibility), max_possibility.shape)
+            print(action_label)
             current_left_leg = LD.left_leg
             current_right_leg = LD.right_leg
             current_position, position_buffer = position_calculation(current_left_leg, current_right_leg,
