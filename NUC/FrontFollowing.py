@@ -138,7 +138,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     if radius < 50 :
                         radius = 50
                     CD.radius = radius
-                    CD.omega = 15/CD.radius
+                    CD.omega = 10/CD.radius
                     str1 = "left"
                     time.sleep(0.1)
                 elif current_position[5] < center_right_boundry \
@@ -150,26 +150,26 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     if radius < 50 :
                       radius = 50
                     CD.radius = radius
-                    CD.omega = -15/CD.radius
+                    CD.omega = -10/CD.radius
                     str1 = "right"
                     time.sleep(0.1)
             #  elif current_position[5] > center_left_boundry :
                 elif  action_label== 4 :
                     CD.speed = 0
                     radius = abs(20*(center_left_boundry-current_position[1])/(max_boundary-center_left_boundry))
-                    if radius < 15 :
-                       radius = 15
+                    if radius < 12 :
+                       radius = 12
                     CD.radius = radius
-                    CD.omega = 10/CD.radius
+                    CD.omega = 8/CD.radius
                     str1 = "left in space"
                     time.sleep(0.1)
                 elif  action_label== 5 :
                     CD.speed = 0
                     radius = abs(20*(current_position[3]-min_boundary)/(center_left_boundry-min_boundary))
-                    if radius < 15 :
-                       radius = 15
+                    if radius < 12 :
+                       radius = 12
                     CD.radius = radius
-                    CD.omega = -10/CD.radius
+                    CD.omega = -8/CD.radius
                     str1 = "right in space"
                     time.sleep(0.1)
                 else:
