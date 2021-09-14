@@ -1,4 +1,11 @@
 import numpy as np
+import os,sys
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
+data_path = os.path.abspath(
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
+    os.path.sep + "data")
 import time
 import threading
 
@@ -12,7 +19,7 @@ from Network import FrontFollowingNetwork as FFL
 camera_portal = '/dev/ttyUSB1'
 lidar_portal = '/dev/ttyUSB5'
 # IMU_walker_portal = '/dev/ttyUSB0'
-# IMU_human_portal = '/dev/ttyUSB5'
+IMU_human_portal = '/dev/ttyUSB5'
 # IMU_left_leg_portal = '/dev/ttyUSB6'
 # IMU_right_leg_portal = '/dev/ttyUSB3'
 # IMU_human_portal = '/dev/ttyUSB5'
@@ -35,13 +42,14 @@ FrontFollowingModel.combine_net.load_weights(weight_path)
 # IMU_left_leg = IMU.IMU(name="left_leg")
 # IMU_left_leg.open_serial(IMU_left_leg_portal)
 
-# IMU_human = IMU.IMU(name="human")
-# IMU_human.open_serial(IMU_human_portal)
+IMU_human = IMU.IMU(name="human")
+IMU_human.open_serial(IMU_human_portal)
 
 # IMU_human = IMU.IMU(name="human")
 # IMU_human.open_serial(IMU_human_portal)
 
-
+"""recording output"""
+file_path = os.path.abspath(data_path+os.path.sep+"output.txt")
 
 def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
                          position_buffer: np.ndarray, weight_array: np.ndarray):
@@ -61,7 +69,7 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
 
 
 
-def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.IRCamera, FFL_Model:FFL.FrontFollowing_Model):
+def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.IRCamera, FFL_Model:FFL.FrontFollowing_Model, file_path, IMU:IMU.IMU):
     # weight buffer for lidar detection
     position_buffer_length = 3
     position_buffer = np.zeros((position_buffer_length, 6))
@@ -80,7 +88,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
     buffer_length = win_width
     buffer = np.zeros((buffer_length * (ir_data_width + additional_data_width), 1))
 
-
+    file_record = open(file_path)
 
     while True:
         IR.get_irdata_once()
@@ -180,14 +188,17 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             print("\rleft leg:%.2f,%.2f  right:%.2f,%.2f  human:%.2f,%.2f choice:%s,%.2f,%.2f,%.2f "
                  %(current_position[0], current_position[1], current_position[2],
                    current_position[3], current_position[4], current_position[5],str1,CD.speed,CD.omega,CD.radius),end="")
+            file_record.write(str1+str(current_position)+str(list(IMU.a) + list(IMU.w) + list(IMU.Angle))+"\n")
+            file_record.flush()
+
 
 thread_leg = threading.Thread(target=LD.scan_procedure, args=(False,True,))
 thread_cd = threading.Thread(target=CD.control_part, args=())
-thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel))
+thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel,file_path,IMU_human))
 # thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
-# thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
+thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
 
-# thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
+thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
 
 # thread_IMU_left = threading.Thread(target=IMU_left_leg.read_record,args=())
 # thread_IMU_right = threading.Thread(target=IMU_right_leg.read_record,args=())
@@ -200,7 +211,7 @@ thread_cd.start()
 thread_main.start()
 # thread_IMU_human.start()
 # thread_IMU_walker.start()
-# thread_IMU_human.start()
+thread_IMU_human.start()
 # thread_IMU_walker.start()
 # thread_IMU_left.start()
 # thread_IMU_right.start()
