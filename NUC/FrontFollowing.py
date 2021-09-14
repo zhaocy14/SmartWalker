@@ -1,4 +1,3 @@
-from os import readlink
 import numpy as np
 import time
 import threading
@@ -11,7 +10,7 @@ from Network import FrontFollowingNetwork as FFL
 """portal num"""
 
 camera_portal = '/dev/ttyUSB1'
-lidar_portal = '/dev/ttyUSB6'
+lidar_portal = '/dev/ttyUSB5'
 # IMU_walker_portal = '/dev/ttyUSB0'
 # IMU_human_portal = '/dev/ttyUSB5'
 # IMU_left_leg_portal = '/dev/ttyUSB6'
@@ -106,11 +105,8 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                                                                              0]
             predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
             result = FFL_Model.combine_net.predict(predict_buffer)
-
             max_possibility = result.max()
-            print(max_possibility)
-            action_label = np.unravel_index(np.argmax(max_possibility), max_possibility.shape)
-            print(action_label)
+            action_label = np.unravel_index(np.argmax(result), result.shape)
             current_left_leg = LD.left_leg
             current_right_leg = LD.right_leg
             current_position, position_buffer = position_calculation(current_left_leg, current_right_leg,
@@ -153,31 +149,29 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     CD.omega = -10/CD.radius
                     str1 = "right"
                     time.sleep(0.1)
-            #  elif current_position[5] > center_left_boundry :
-                elif  action_label== 4 :
-                    CD.speed = 0
-                    radius = abs(20*(center_left_boundry-current_position[1])/(max_boundary-center_left_boundry))
-                    if radius < 10 :
-                       radius = 10
-                    CD.radius = radius
-                    CD.omega = 0.1
-                    str1 = "left in space"
-                    time.sleep(0.1)
-                elif  action_label== 5 :
-                    CD.speed = 0
-                    radius = abs(20*(current_position[3]-min_boundary)/(center_left_boundry-min_boundary))
-                    if radius < 10 :
-                       radius = 10
-                    CD.radius = radius
-                    CD.omega = 0.1
-                    str1 = "right in space"
-                    time.sleep(0.1)
                 else:
-                    CD.speed = 0.11
+                    CD.speed = 0.1
                     CD.omega = 0
                     CD.radius = 0
                     str1 = "forward"
-
+            elif  action_label== 4 :
+                CD.speed = 0
+                radius = abs(20*(center_left_boundry-current_position[1])/(max_boundary-center_left_boundry))
+                if radius < 10 :
+                    radius = 10
+                CD.radius = 0
+                CD.omega = 0.25
+                str1 = "left in space"
+                time.sleep(0.1)
+            elif  action_label== 5 :
+                CD.speed = 0
+                radius = abs(20*(current_position[3]-min_boundary)/(center_left_boundry-min_boundary))
+                if radius < 10 :
+                    radius = 10
+                CD.radius = 0
+                CD.omega = -0.25
+                str1 = "right in space"
+                time.sleep(0.1)
             else:
                 CD.speed = 0
                 CD.omega = 0
@@ -187,7 +181,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                  %(current_position[0], current_position[1], current_position[2],
                    current_position[3], current_position[4], current_position[5],str1,CD.speed,CD.omega,CD.radius),end="")
 
-thread_leg = threading.Thread(target=LD.scan_procedure, args=(True,True,))
+thread_leg = threading.Thread(target=LD.scan_procedure, args=(False,True,))
 thread_cd = threading.Thread(target=CD.control_part, args=())
 thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel))
 # thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
@@ -202,7 +196,7 @@ thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollo
 
 thread_leg.start()
 time.sleep(3)
-# thread_cd.start()
+thread_cd.start()
 thread_main.start()
 # thread_IMU_human.start()
 # thread_IMU_walker.start()

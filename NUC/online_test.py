@@ -13,8 +13,8 @@ import cv2 as cv
 
 if __name__ == "__main__":
     """portal num"""
-    camera_portal = '/dev/ttyUSB0'
-    lidar_portal = '/dev/ttyUSB3'
+    camera_portal = '/dev/ttyUSB1'
+    lidar_portal = '/dev/ttyUSB5'
     IRCamera = IRCamera.IRCamera()
     LD = Leg_detector.Leg_detector(lidar_portal)
     cd = CD.ControlDriver(left_right=0)
@@ -37,12 +37,13 @@ if __name__ == "__main__":
     # sensor data reading thread, network output thread and control thread
     thread_leg = threading.Thread(target=LD.scan_procedure,args=())
     thread_leg.start()
-    time.sleep(3) # wait for the start of the lidar
+    time.sleep(2) # wait for the start of the lidar
 
     thread_control_driver = threading.Thread(target=cd.control_part, args=())
-    # thread_control_driver.start()
+    thread_control_driver.start()
 
     while True:
+
         # present_time = time.time()
         IRCamera.get_irdata_once()
         if len(IRCamera.temperature) == 768:
@@ -75,30 +76,39 @@ if __name__ == "__main__":
                 cd.radius = 0
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
-                cd.speed = 0.05
+                cd.speed = 0.1
                 cd.omega = 0
                 cd.radius = 0
             elif max_result == result[0, 2]:
                 print("\rturn left!",end="")
                 cd.speed = 0
-                cd.omega = 0.1
-                cd.radius = 140
+                cd.omega = 0.15
+                cd.radius = 80
             elif max_result == result[0, 3]:
                 print("\rturn right!",end="")
                 cd.speed = 0
-                cd.omega = -0.1
-                cd.radius = 140
+                cd.omega = -0.15
+                cd.radius = 80
             elif max_result == result[0, 4]:
                 print("\ryuandi left",end="")
                 cd.speed = 0
-                cd.omega = 0.1
+                cd.omega = 0.25
                 cd.radius = 0
             elif max_result == result[0, 5]:
                 print("\ryuandi right",end="")
                 cd.speed = 0
-                cd.omega = -0.1
+                cd.omega = -0.25
                 cd.radius = 0
             # print(1/(time.time()-present_time))
             # present_time = time.time()
+    
+# thread_leg = threading.Thread(target=LD.scan_procedure, args=(True,True,))
+# thread_cd = threading.Thread(target=cd.control_part, args=())
+# thread_main = threading.Thread(target=main_FFL, args=(cd, LD, Camera, FrontFollowingModel))
+
+
+# thread_leg.start()
+# time.sleep(3)
+# thread_main.start()
 
 
