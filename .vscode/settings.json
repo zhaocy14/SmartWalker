@@ -1,0 +1,6 @@
+{
+  "python.analysis.extraPaths": [
+    "./venv/lib",
+    "./venv/include"
+  ]
+}
