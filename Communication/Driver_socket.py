@@ -35,6 +35,7 @@ init_control = {
   "omega": 0
 }
 send_control(init_control)
+thread_cd.start()
 
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
