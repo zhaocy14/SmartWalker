@@ -18,7 +18,7 @@ import zmq
 import json
 
 from Driver import ControlOdometryDriver as cd
-from Network import FrontFollowingNetwork as FFL
+# from Network import FrontFollowingNetwork as FFL
 
 CD = cd.ControlDriver(record_mode=False, left_right=0)
 thread_cd = threading.Thread(target=CD.control_part, args=())
