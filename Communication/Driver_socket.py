@@ -15,24 +15,43 @@ sys.path.append(father_path)
 import time
 import threading
 import zmq
+import json
 
 from Driver import ControlOdometryDriver as cd
 from Network import FrontFollowingNetwork as FFL
 
+CD = cd.ControlDriver(record_mode=False, left_right=0)
+thread_cd = threading.Thread(target=CD.control_part, args=())
 
-CD = cd.ControlDriver(record_mode=True, left_right=0)
+def send_control(control = None):
+  if control is not None:
+    CD.speed = control['speed']
+    CD.radius = control['radius']
+    CD.omega = control['omega']
+
+init_control = {
+  "speed": 0,
+  "radius": 0,
+  "omega": 0
+}
+send_control(init_control)
 
 context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind("tcp://*:5452")
+socket = context.socket(zmq.SUB)
+socket.connect("tcp://127.0.0.1:5452")
+topicfilter = ""
+socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
 while True:
     #  Wait for next request from client
-    message = socket.recv_json()
-    print("Received request: %s" % message)
+    message = socket.recv()
+    if message:
+      control = json.loads(message)
+      # send_control(control)
+      print("Received request: %s" % control)
 
     #  Do some 'work'
     time.sleep(0)
 
     #  Send reply back to client
-    socket.send(b"World")
+    # socket.send(b"World")
