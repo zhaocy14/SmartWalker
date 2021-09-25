@@ -48,7 +48,7 @@ while True:
     message = socket.recv()
     if message:
       control = json.loads(message)
-      # send_control(control)
+      send_control(control)
       print("Received request: %s" % control)
 
     #  Do some 'work'
