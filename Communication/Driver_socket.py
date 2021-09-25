@@ -52,7 +52,7 @@ while True:
       print("Received request: %s" % control)
 
     #  Do some 'work'
-    time.sleep(0.1)
+    time.sleep(0)
 
     #  Send reply back to client
     # socket.send(b"World")
