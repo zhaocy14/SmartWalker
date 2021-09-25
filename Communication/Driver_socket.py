@@ -24,7 +24,6 @@ CD = cd.ControlDriver(record_mode=False, left_right=0)
 thread_cd = threading.Thread(target=CD.control_part, args=())
 
 def send_control(control = None):
-  if control is not None:
     CD.speed = control['speed']
     CD.radius = control['radius']
     CD.omega = control['omega']
@@ -48,7 +47,8 @@ while True:
     message = socket.recv()
     if message:
       control = json.loads(message)
-      send_control(control)
+      if len(control) > 0:
+        send_control(control)
       print("Received request: %s" % control)
 
     #  Do some 'work'
