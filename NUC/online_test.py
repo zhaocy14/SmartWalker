@@ -14,7 +14,7 @@ import cv2 as cv
 if __name__ == "__main__":
     """portal num"""
     camera_portal = '/dev/ttyUSB1'
-    lidar_portal = '/dev/ttyUSB5'
+    lidar_portal = '/dev/ttyUSB4'
     IRCamera = IRCamera.IRCamera()
     LD = Leg_detector.Leg_detector(lidar_portal)
     cd = CD.ControlDriver(left_right=0)
@@ -67,37 +67,45 @@ if __name__ == "__main__":
             result = tf_model.combine_net.predict(predict_buffer)
             max_result = result.max()
             action_label = np.unravel_index(np.argmax(result), result.shape)[1]
-            print(action_label)
+            # print(action_label)
             # print(max_result)
-            if max_result == result[0, 0]:
+            backward_boundry = -5
+            # print(LD.center_point)
+            human_position = (LD.left_leg+LD.right_leg)/2
+            if backward_boundry>human_position[0]>-40:
+                print("\rbackward!",end="")
+                cd.speed = -0.15
+                cd.omega=0
+                cd.radius=0
+            elif max_result == result[0, 0]:
                 print("\rstill!",end="")
                 cd.speed = 0
                 cd.omega = 0
                 cd.radius = 0
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
-                cd.speed = 0.1
+                cd.speed = 0.15
                 cd.omega = 0
                 cd.radius = 0
             elif max_result == result[0, 2]:
                 print("\rturn left!",end="")
                 cd.speed = 0
-                cd.omega = 0.15
-                cd.radius = 80
+                cd.omega = 0.2
+                cd.radius = 70
             elif max_result == result[0, 3]:
                 print("\rturn right!",end="")
                 cd.speed = 0
-                cd.omega = -0.15
-                cd.radius = 80
+                cd.omega = -0.2
+                cd.radius = 70
             elif max_result == result[0, 4]:
                 print("\ryuandi left",end="")
                 cd.speed = 0
-                cd.omega = 0.25
+                cd.omega = 0.3
                 cd.radius = 0
             elif max_result == result[0, 5]:
                 print("\ryuandi right",end="")
                 cd.speed = 0
-                cd.omega = -0.25
+                cd.omega = -0.3
                 cd.radius = 0
             # print(1/(time.time()-present_time))
             # present_time = time.time()
