@@ -285,12 +285,12 @@ class ControlDriver(Thread):
 if __name__ == '__main__':
 
     cd = ControlDriver(record_mode=False,left_right=0)
-    cd.start()
+    # you can initialize the threading of control driver like:
+    thread_cd = Thread(target=cd.control_part, args=())
+    thread_cd.start()
+    # # or just use:
+    # cd.start()
 
-    cd.speed = 0.1
-    time.sleep(5)
-    # cd.omega = 0.15
-    # cd.radius = 80
     cd.speed = 0
     cd.omega = 0
     cd.radius = 0
