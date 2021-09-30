@@ -287,7 +287,7 @@ if __name__ == '__main__':
     cd = ControlDriver(record_mode=False,left_right=0)
     cd.start()
 
-    cd.speed = -0.1
+    cd.speed = 0.1
     time.sleep(5)
     # cd.omega = 0.15
     # cd.radius = 80

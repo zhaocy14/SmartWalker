@@ -16,10 +16,10 @@ from Network import FrontFollowingNetwork as FFL
 
 """portal num"""
 
-camera_portal = '/dev/ttyUSB1'
-lidar_portal = '/dev/ttyUSB5'
+camera_portal = '/dev/ttyUSB0'
+lidar_portal = '/dev/ttyUSB3'
 # IMU_walker_portal = '/dev/ttyUSB0'
-IMU_human_portal = '/dev/ttyUSB5'
+IMU_human_portal = '/dev/ttyUSB1'
 # IMU_left_leg_portal = '/dev/ttyUSB6'
 # IMU_right_leg_portal = '/dev/ttyUSB3'
 # IMU_human_portal = '/dev/ttyUSB5'
@@ -88,7 +88,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
     buffer_length = win_width
     buffer = np.zeros((buffer_length * (ir_data_width + additional_data_width), 1))
 
-    file_record = open(file_path)
+    file_record = open(file_path,'w')
 
     while True:
         IR.get_irdata_once()
@@ -114,19 +114,19 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
             result = FFL_Model.combine_net.predict(predict_buffer)
             max_possibility = result.max()
-            action_label = np.unravel_index(np.argmax(result), result.shape)
+            action_label = np.unravel_index(np.argmax(result), result.shape)[1]
             current_left_leg = LD.left_leg
             current_right_leg = LD.right_leg
             current_position, position_buffer = position_calculation(current_left_leg, current_right_leg,
                                                                      position_buffer, weight_array)
             max_boundary=14.5   #left max value
             min_boundary=-14   #right max value
-            forward_boundry = 10
+            forward_boundry = 8
             backward_boundry = -5
             center_left_boundry = 1   #change gwz
             center_right_boundry = 0.3
             left_boundry = 8.5   #change gwz
-            right_boundry = -7.5
+            right_boundry = -7
             if backward_boundry > current_position[4] > -40:
                 CD.speed = -0.1
                 CD.omega = 0
@@ -136,9 +136,9 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                 if current_position[5] > center_left_boundry \
                         and current_position[0] > current_position[2] \
                         and current_position[1] > left_boundry :
-                        # and action_label==2 :
+                          # and action_label==2 :
                     CD.speed = 0
-                    radius = 40+abs(60*(max_boundary-current_position[1])/(max_boundary-left_boundry))
+                    radius = 30+abs(50*(max_boundary-current_position[1])/(max_boundary-left_boundry))
                     if radius < 50 :
                         radius = 50
                     CD.radius = radius
@@ -150,7 +150,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                         and current_position[3] < right_boundry :
                         # and action_label== 3 :
                     CD.speed = 0
-                    radius = 40+abs(60*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
+                    radius = 30+abs(50*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
                     if radius < 50 :
                       radius = 50
                     CD.radius = radius
@@ -165,30 +165,34 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             elif  action_label== 4 :
                 CD.speed = 0
                 radius = abs(20*(center_left_boundry-current_position[1])/(max_boundary-center_left_boundry))
-                if radius < 10 :
+                if radius < 10:
                     radius = 10
                 CD.radius = 0
-                CD.omega = 0.25
+                CD.omega = 0.2
                 str1 = "left in space"
                 time.sleep(0.1)
-            elif  action_label== 5 :
+            elif  action_label== 5:
                 CD.speed = 0
                 radius = abs(20*(current_position[3]-min_boundary)/(center_left_boundry-min_boundary))
                 if radius < 10 :
                     radius = 10
                 CD.radius = 0
-                CD.omega = -0.25
+                CD.omega = -0.2
                 str1 = "right in space"
                 time.sleep(0.1)
             else:
-                CD.speed = 0
-                CD.omega = 0
+                CD.speed=0
+                CD.omega=0
                 CD.radius = 0
                 str1 = "stop"
             print("\rleft leg:%.2f,%.2f  right:%.2f,%.2f  human:%.2f,%.2f choice:%s,%.2f,%.2f,%.2f "
                  %(current_position[0], current_position[1], current_position[2],
                    current_position[3], current_position[4], current_position[5],str1,CD.speed,CD.omega,CD.radius),end="")
-            file_record.write(str1+str(current_position)+str(list(IMU.a) + list(IMU.w) + list(IMU.Angle))+"\n")
+
+            # record.append(str1)
+
+            record = [action_label] + current_position.tolist() + list(IMU.a) + list(IMU.w) + list(IMU.Angle)
+            file_record.write(str1+" "+str(record)+"\n")
             file_record.flush()
 
 
