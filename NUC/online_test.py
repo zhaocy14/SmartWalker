@@ -1,13 +1,23 @@
 import serial
-import os
+import os,sys
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
+print(father_path)
+# data_path = os.path.abspath(
+#     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
+#     os.path.sep + "data")
 import numpy as np
 import time
 import threading
 import tensorflow as tf
-from Sensors import IRCamera, softskin
-from FrontFollowing.Network import FrontFollowingNetwork as FFL
-from FrontFollowing.Preprocessing import Leg_detector
+from Sensors import IRCamera, softskin, Infrared_Sensor
 from Driver import ControlOdometryDriver as CD
+from Following.Network import FrontFollowingNetwork as FFL
+from Following.Preprocessing import Leg_detector
+# import FrontFollowing.Preprocessing.Leg_detector
+# import FrontFollowing.Network.FrontFollowingNetwork as FFL
+
 import cv2 as cv
 
 class network_data(object):
@@ -29,8 +39,9 @@ class network_data(object):
 if __name__ == "__main__":
     """portal num"""
     camera_portal = '/dev/ttyUSB1'
-    lidar_portal = '/dev/ttyUSB4'
+    lidar_portal = '/dev/ttyUSB0'
     IRCamera = IRCamera.IRCamera()
+    IRSensor = Infrared_Sensor.Infrared_Sensor(sensor_num=1)
     LD = Leg_detector.Leg_detector(lidar_portal)
     cd = CD.ControlDriver(left_right=0)
 
@@ -89,7 +100,7 @@ if __name__ == "__main__":
             still_security_boundry = -40
             # print(LD.center_point)
             human_position = (LD.left_leg+LD.right_leg)/2
-            if backward_boundry>human_position[0]>-still_security_boundry:
+            if backward_boundry>human_position[0]>still_security_boundry:
                 print("\rbackward!",end="")
                 cd.speed = -0.15
                 cd.omega=0
@@ -102,18 +113,18 @@ if __name__ == "__main__":
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
                 if human_position[0] > forward_security_boundry:
-                    cd.speed = 0.15
+                    cd.speed = 0.18
                     cd.omega = 0
                     cd.radius = 0
             elif max_result == result[0, 2]:
                 print("\rturn left!",end="")
                 cd.speed = 0
-                cd.omega = 0.2
+                cd.omega = 0.15
                 cd.radius = 70
             elif max_result == result[0, 3]:
                 print("\rturn right!",end="")
                 cd.speed = 0
-                cd.omega = -0.2
+                cd.omega = -0.15
                 cd.radius = 70
             elif max_result == result[0, 4]:
                 print("\ryuandi left",end="")
