@@ -73,7 +73,7 @@ class Infrared_Sensor(object):
                     self.distance_data = np.array(one_line_data).reshape(self.distance_data.shape)
                     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
                     if is_shown:
-                        print(self.distance_data.shape)
+                        print(self.distance_data[0])
                     if is_record:
                         write_data = self.distance_data[0].tolist()
                         write_data.insert(0, time.time())
