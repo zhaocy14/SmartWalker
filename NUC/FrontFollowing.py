@@ -10,9 +10,9 @@ import time
 import threading
 
 from Sensors import IRCamera, IMU
-from Preprocessing import Leg_detector
+from FrontFollowing.Preprocessing import Leg_detector
+from FrontFollowing.Network import FrontFollowingNetwork as FFL
 from Driver import ControlOdometryDriver as cd
-from Network import FrontFollowingNetwork as FFL
 
 """portal num"""
 

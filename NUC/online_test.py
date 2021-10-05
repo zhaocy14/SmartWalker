@@ -5,10 +5,25 @@ import time
 import threading
 import tensorflow as tf
 from Sensors import IRCamera, softskin
-from Network import FrontFollowingNetwork as FFL
+from FrontFollowing.Network import FrontFollowingNetwork as FFL
+from FrontFollowing.Preprocessing import Leg_detector
 from Driver import ControlOdometryDriver as CD
-from Preprocessing import Leg_detector
 import cv2 as cv
+
+class network_data(object):
+
+    def __init__(self,buffer_len:int=10,ir_data_width:int=768,leg_data_width:int=4):
+        self.buffer = np.zeros((buffer_len*(ir_data_width+leg_data_width),1))
+        self.buffer_len = buffer_len
+        self.ir_data_width = ir_data_width
+        self.leg_data_width = leg_data_width
+
+    def update(self,ir_data:np.ndarray,leg_data:np.ndarray):
+        self.buffer[0:(self.buffer_len - 1) * self.ir_data_width, 0] = self.buffer[self.ir_data_width:self.buffer_len * self.ir_data_width, 0]
+        self.buffer[(self.buffer_len - 1) * self.ir_data_width:self.buffer_len * self.ir_data_width] = ir_data
+
+
+
 
 
 if __name__ == "__main__":
@@ -70,23 +85,26 @@ if __name__ == "__main__":
             # print(action_label)
             # print(max_result)
             backward_boundry = -5
+            forward_security_boundry = 0
+            still_security_boundry = -40
             # print(LD.center_point)
             human_position = (LD.left_leg+LD.right_leg)/2
-            if backward_boundry>human_position[0]>-40:
+            if backward_boundry>human_position[0]>-still_security_boundry:
                 print("\rbackward!",end="")
                 cd.speed = -0.15
                 cd.omega=0
                 cd.radius=0
-            elif max_result == result[0, 0]:
+            elif max_result == result[0, 0] or human_position[0] < still_security_boundry:
                 print("\rstill!",end="")
                 cd.speed = 0
                 cd.omega = 0
                 cd.radius = 0
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
-                cd.speed = 0.15
-                cd.omega = 0
-                cd.radius = 0
+                if human_position[0] > forward_security_boundry:
+                    cd.speed = 0.15
+                    cd.omega = 0
+                    cd.radius = 0
             elif max_result == result[0, 2]:
                 print("\rturn left!",end="")
                 cd.speed = 0
