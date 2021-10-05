@@ -35,7 +35,6 @@ class network_data(object):
 
 
 
-
 if __name__ == "__main__":
     """portal num"""
     camera_portal = '/dev/ttyUSB1'
@@ -63,13 +62,14 @@ if __name__ == "__main__":
     # sensor data reading thread, network output thread and control thread
     thread_leg = threading.Thread(target=LD.scan_procedure,args=())
     thread_leg.start()
+    thread_infrared = threading.Thread(target=IRSensor.read_data,args=())
+    thread_infrared.start()
     time.sleep(2) # wait for the start of the lidar
 
     thread_control_driver = threading.Thread(target=cd.control_part, args=())
     thread_control_driver.start()
 
     while True:
-
         # present_time = time.time()
         IRCamera.get_irdata_once()
         if len(IRCamera.temperature) == 768:
@@ -98,6 +98,8 @@ if __name__ == "__main__":
             backward_boundry = -5
             forward_security_boundry = 0
             still_security_boundry = -40
+
+            collision_flag = 120
             # print(LD.center_point)
             human_position = (LD.left_leg+LD.right_leg)/2
             if backward_boundry>human_position[0]>still_security_boundry:
@@ -112,6 +114,10 @@ if __name__ == "__main__":
                 cd.radius = 0
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
+                if IRSensor.distance_data[0] > collision_flag:
+                    print("\r obstacle in forward!!!!",end="")
+                    cd.speed = cd.omega = cd.radius = 0
+                    continue
                 if human_position[0] > forward_security_boundry:
                     cd.speed = 0.18
                     cd.omega = 0
@@ -121,11 +127,19 @@ if __name__ == "__main__":
                 cd.speed = 0
                 cd.omega = 0.15
                 cd.radius = 70
+                if IRSensor.distance_data[0] > collision_flag:
+                    print("\r obstacle in turning left!!!!",end="")
+                    cd.radius = max(cd.radius-5,0)
+                    continue
             elif max_result == result[0, 3]:
                 print("\rturn right!",end="")
                 cd.speed = 0
                 cd.omega = -0.15
                 cd.radius = 70
+                if IRSensor.distance_data[0] > collision_flag:
+                    print("\r obstacle in turning right!!!!",end="")
+                    cd.radius = max(cd.radius-5,0)
+                    continue
             elif max_result == result[0, 4]:
                 print("\ryuandi left",end="")
                 cd.speed = 0
