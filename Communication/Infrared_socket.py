@@ -31,7 +31,7 @@ while True:
     #   if message:
     #     control = json.loads(message)
     #     print("Received request: %s" % control)
-    msg = json.dumps(IRSensor.distance_data)
+    msg = json.dumps(IRSensor.distance_data.tolist())
     socket.send_string(msg)
     print("Sending data: %s" % msg)
 
