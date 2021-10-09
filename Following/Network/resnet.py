@@ -1,5 +1,5 @@
 import tensorflow as tf
-from Network.residual_block import make_basic_block_layer, make_bottleneck_layer
+from Following.Network.residual_block import make_basic_block_layer, make_bottleneck_layer
 
 
 class ResNetTypeI(tf.keras.Model):

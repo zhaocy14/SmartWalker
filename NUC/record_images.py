@@ -8,7 +8,7 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 from Sensors import IRCamera
-from Preprocessing import Leg_detector
+from FrontFollowing.Preprocessing import Leg_detector
 
 
 data_path = os.path.abspath(

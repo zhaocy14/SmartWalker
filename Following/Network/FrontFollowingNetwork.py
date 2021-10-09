@@ -3,7 +3,7 @@ from tensorflow import keras
 import numpy as np
 import os
 from typing import Tuple
-from Network import resnet
+from Following.Network import resnet
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd)+os.path.sep+"..")
 

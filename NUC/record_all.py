@@ -9,7 +9,7 @@ father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 
 from Sensors import IMU, IRCamera, softskin
-from Preprocessing import Leg_detector
+from FrontFollowing.Preprocessing import Leg_detector
 from Driver import ControlOdometryDriver as CD
 
 data_path = os.path.abspath(
