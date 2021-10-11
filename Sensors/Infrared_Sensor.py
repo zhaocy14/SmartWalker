@@ -79,6 +79,7 @@ class Infrared_Sensor(object):
         return (x-x1)/(x0-x1)*y0 + (x-x0)/(x1-x0)*y1
 
     def turn_to_distance(self):
+        self.distance_data = self.distance_data / 1024 * 5
         for i in range(self.sensor_num):
             for i in range(self.table.shape[1]):
                 if self.distance_data[j] >= self.table[1,i]:
@@ -120,9 +121,7 @@ class Infrared_Sensor(object):
                     # one_line_data = list(map(int, one_line_data))
                         self.distance_data = self.buffer[-1,:]
                     # change the value into real voltage:
-                    self.distance_data = self.distance_data/1024*5
-
-
+                    self.turn_to_distance()
                     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
                     if is_shown:
                         print(self.distance_data)
