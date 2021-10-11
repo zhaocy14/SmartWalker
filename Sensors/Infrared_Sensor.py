@@ -40,40 +40,48 @@ def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
 
 
 class Infrared_Sensor(object):
-    def __init__(self, sensor_num:int=1, is_windows:bool=False):
+    def __init__(self, sensor_num:int=1, baud_rate:int=9600, is_windows:bool=False):
         if is_windows:
             port_name = detect_serials(description="Arduino Mega 2560")
         else:
             port_name = detect_serials(description="ttyACM0")
-        baud_rate = 9600
         print(port_name, baud_rate)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
         self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
         self.serial = serial.Serial(port_name, baud_rate, timeout=None)
+        # sensor_num is the number of the sensors
         self.sensor_num = sensor_num
         self.distance_data = np.zeros((sensor_num))
+
+        self.buffer_length = 5
+        self.buffer = np.zeros((self.buffer_length,self.sensor_num))
         pass
 
-    def read_data(self, is_shown:bool=False, is_record:bool=False):
+    def read_data(self, is_shown:bool=False, is_record:bool=False, is_average:bool=False):
         while True:
             try:
                 if is_record:
                     file_path = data_path + os.path.sep + "infrared.txt"
                     file = open(file_path,"w")
-                self.serial.flushInput()
+                # self.serial.flushInput()
                 one_line_data = self.serial.readline().decode("utf-8")
-                # print(one_line_data)
+                # print("original:",one_line_data)
                 one_line_data = one_line_data.strip('\n')
                 one_line_data = one_line_data.strip('\r')
                 one_line_data = one_line_data.split('|')
-                # print(one_line_data)
+                # print("strip:",one_line_data)
                 if len(one_line_data) == self.sensor_num:
                     one_line_data = list(map(float, one_line_data))
+                    if is_average:
+                        self.buffer[0:-1,:] = self.buffer[1:self.buffer_length,:]
+                        self.buffer[-1,:] = np.array(one_line_data).reshape(self.distance_data.shape)
+                        # self.distance_data =
+                    else:
                     # one_line_data = list(map(int, one_line_data))
-                    self.distance_data = np.array(one_line_data).reshape(self.distance_data.shape)
+                        self.distance_data = np.array(one_line_data).reshape(self.distance_data.shape)
                     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
                     if is_shown:
-                        print(self.distance_data[0])
+                        print(self.distance_data)
                     if is_record:
                         write_data = self.distance_data[0].tolist()
                         write_data.insert(0, time.time())
@@ -83,6 +91,6 @@ class Infrared_Sensor(object):
 
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=1,is_windows=False)
+    infrared = Infrared_Sensor(sensor_num=2,baud_rate=57600, is_windows=True)
     infrared.read_data(is_shown=True)
     # softskin.record_label()
