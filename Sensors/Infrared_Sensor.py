@@ -96,6 +96,9 @@ class Infrared_Sensor(object):
                     else:
                     # one_line_data = list(map(int, one_line_data))
                         self.distance_data = self.buffer[-1,:]
+                    # change the value into real voltage:
+                    self.distance_data = self.distance_data/1024
+
                     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
                     if is_shown:
                         print(self.distance_data)
