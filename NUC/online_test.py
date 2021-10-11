@@ -99,7 +99,8 @@ if __name__ == "__main__":
             forward_security_boundry = 0
             still_security_boundry = -40
 
-            collision_flag = 120
+            far_flag = 100
+            close_flag = 130
             # print(LD.center_point)
             human_position = (LD.left_leg+LD.right_leg)/2
             if backward_boundry>human_position[0]>still_security_boundry:
@@ -114,7 +115,7 @@ if __name__ == "__main__":
                 cd.radius = 0
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
-                if IRSensor.distance_data[0] > collision_flag:
+                if IRSensor.distance_data[0] > far_flag:
                     print("\r obstacle in forward!!!!",end="")
                     cd.speed = cd.omega = cd.radius = 0
                     continue
@@ -127,16 +128,19 @@ if __name__ == "__main__":
                 cd.speed = 0
                 cd.omega = 0.15
                 cd.radius = 70
-                if IRSensor.distance_data[0] > collision_flag:
+                if close_flag > IRSensor.distance_data[0] > far_flag:
                     print("\r obstacle in turning left!!!!",end="")
-                    cd.radius = max(cd.radius-5,0)
+                    cd.radius = cd.radius * (200-IRSensor.distance_data[0])/100
                     continue
+                elif close_flag<IRSensor.distance_data[0]:
+                    print("\rtoo close",end="")
+                    cd.speed = cd.omega = 0
             elif max_result == result[0, 3]:
                 print("\rturn right!",end="")
                 cd.speed = 0
                 cd.omega = -0.15
                 cd.radius = 70
-                if IRSensor.distance_data[0] > collision_flag:
+                if IRSensor.distance_data[0] > far_flag:
                     print("\r obstacle in turning right!!!!",end="")
                     cd.radius = max(cd.radius-5,0)
                     continue

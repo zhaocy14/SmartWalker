@@ -80,13 +80,13 @@ class Infrared_Sensor(object):
 
     def turn_to_distance(self):
         self.distance_data = self.distance_data / 1024 * 5
-        for i in range(self.sensor_num):
+        for j in range(self.sensor_num):
             for i in range(self.table.shape[1]):
                 if self.distance_data[j] >= self.table[1,i]:
                     break
             if i == 0:
                 self.distance_data[j] = 20
-            elif i == self.table.shape[1]:
+            elif i >= self.table.shape[1]:
                 self.distance_data[j] = 150
             else:
                 self.distance_data[j] = self.my_inter(self.distance_data[j],self.table[1,i-1],self.table[1,i],
@@ -122,6 +122,7 @@ class Infrared_Sensor(object):
                         self.distance_data = self.buffer[-1,:]
                     # change the value into real voltage:
                     self.turn_to_distance()
+                    # self.distance_data = self.distance_data / 1024 * 5
                     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
                     if is_shown:
                         print(self.distance_data)
@@ -137,6 +138,6 @@ class Infrared_Sensor(object):
 
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=True)
-    infrared.read_data(is_shown=True,is_average=True)
+    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
+    infrared.read_data(is_shown=True,is_average=False)
     # softskin.record_label()
