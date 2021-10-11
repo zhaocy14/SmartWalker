@@ -111,6 +111,6 @@ class Infrared_Sensor(object):
 
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=2,baud_rate=115200, is_windows=True)
+    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=True)
     infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()
