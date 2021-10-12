@@ -37,4 +37,4 @@ while True:
     print("Sending data: %s" % msg)
 
     #  Do some 'work'
-    time.sleep(0.5)
+    time.sleep(2)
