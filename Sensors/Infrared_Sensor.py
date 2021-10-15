@@ -54,7 +54,7 @@ class Infrared_Sensor(object):
         self.sensor_num = sensor_num
         self.distance_data = np.zeros((sensor_num))
         # buffer is a time window for filtering data
-        self.buffer_length = 10
+        self.buffer_length = 5
         self.buffer = np.zeros((self.buffer_length,self.sensor_num))
         self.average_weight = np.ones((1,self.buffer_length))/self.buffer_length
         # status: whether the sensor is out of range
@@ -126,7 +126,6 @@ class Infrared_Sensor(object):
                     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
                     if is_shown:
                         print(self.distance_data)
-                        # print(np.array(one_line_data).reshape(self.distance_data.shape)/1024*5)
                     if is_record:
                         write_data = self.distance_data[0].tolist()
                         write_data.insert(0, time.time())
@@ -139,6 +138,6 @@ class Infrared_Sensor(object):
 
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
+    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=True)
     infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()

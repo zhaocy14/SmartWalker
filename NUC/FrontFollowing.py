@@ -10,8 +10,8 @@ import time
 import threading
 
 from Sensors import IRCamera, IMU
-from FrontFollowing.Preprocessing import Leg_detector
-from FrontFollowing.Network import FrontFollowingNetwork as FFL
+from Following.Preprocessing import Leg_detector
+from Following.Network import FrontFollowingNetwork as FFL
 from Driver import ControlOdometryDriver as cd
 
 """portal num"""
@@ -64,7 +64,8 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
     new_buffer[-1, 3] = right_leg[1]
     new_buffer[-1, 4] = human_position[0]
     new_buffer[-1, 5] = human_position[1]
-    current_position = np.matmul(weight_array, new_buffer)[0]
+    # current_position = np.matmul(weight_array, new_buffer)[0]
+    current_position = np.mean(new_buffer, axis=0)
     return current_position, new_buffer
 
 

@@ -1,3 +1,10 @@
+import os, sys
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
+data_path = os.path.abspath(
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
+    os.path.sep + "data")
 import numpy as np
 import math
 import cv2
@@ -5,18 +12,11 @@ from PIL import Image
 from rplidar import RPLidar
 import time
 from sklearn.cluster import KMeans
-import os, sys
 
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-sys.path.append(father_path)
-data_path = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
-    os.path.sep + "data")
 
 class Leg_detector(object):
 
-    def __init__(self, portal: str = '/dev/ttyUSB4', is_show:bool=False):
+    def __init__(self, portal: str = 'COM3', is_show:bool=False):
         self.rplidar = RPLidar(portal)  # '/dev/ttyUSB1'
         self.kmeans = KMeans(n_clusters=2)
         self.left_leg = np.zeros((1, 2))
@@ -103,32 +103,35 @@ class Leg_detector(object):
             return infinite_far, infinite_far
 
     def scan_procedure(self,show: bool = False, is_record: bool = False, file_path:str=data_path):
-        info = self.rplidar.get_info()
-        print(info)
-        health = self.rplidar.get_health()
-        print(health)
-        if is_record:
-            data_path = file_path + os.path.sep + "leg.txt"
-            file_leg = open(data_path, 'w')
-        try:
-            for i, scan in enumerate(self.rplidar.iter_scans(max_buf_meas=5000)):
-                # print('%d: Got %d measurments' % (i, len(scan)))
-                # print(scan)
-                img = self.turn_to_img(scan)
-                self.detect_leg(self.kmeans, img, show=show)
-                # print(self.left_leg, self.right_leg)
+        while True:
+            try:
+                info = self.rplidar.get_info()
+                print(info)
+                health = self.rplidar.get_health()
+                print(health)
                 if is_record:
-                    time_index = time.time()
-                    leg_data = np.r_[self.left_leg, self.right_leg]
-                    write_data = leg_data.tolist()
-                    write_data.insert(0, time_index)
-                    file_leg.write(str(write_data) + '\n')
-                    file_leg.flush()
+                    data_path = file_path + os.path.sep + "leg.txt"
+                    file_leg = open(data_path, 'w')
+                # try:
+                for i, scan in enumerate(self.rplidar.iter_scans(max_buf_meas=5000)):
+                    # print('%d: Got %d measurments' % (i, len(scan)))
+                    # print(scan)
+                    img = self.turn_to_img(scan)
+                    self.detect_leg(self.kmeans, img, show=show)
+                    # print(self.left_leg, self.right_leg)
+                    if is_record:
+                        time_index = time.time()
+                        leg_data = np.r_[self.left_leg, self.right_leg]
+                        write_data = leg_data.tolist()
+                        write_data.insert(0, time_index)
+                        file_leg.write(str(write_data) + '\n')
+                        file_leg.flush()
 
-        except KeyboardInterrupt as e:
-            self.rplidar.stop()
-            self.rplidar.stop_motor()
-            self.rplidar.disconnect()
+            except BaseException as be:
+                self.rplidar.clean_input()
+                self.rplidar.stop()
+                self.rplidar.stop_motor()
+                # self.rplidar.disconnect()
 
 
 if __name__ == "__main__":
