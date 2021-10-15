@@ -27,14 +27,16 @@ socket.bind("tcp://*:5453")
 
 while True:
     #  Wait for next request from client
-    # if IRSensor.distance_data[0] > collision_flag:
-    #   message = socket.recv()
-    #   if message:
-    #     control = json.loads(message)
-    #     print("Received request: %s" % control)
-    msg = json.dumps(IRSensor.distance_data.tolist())
-    socket.send_string(msg)
-    print("Sending data: %s" % msg)
+    if IRSensor.distance_data:
+      # message = socket.recv()
+      # if message:
+      #   control = json.loads(message)
+      #   print("Received request: %s" % control)
+      msg = json.dumps(IRSensor.distance_data.tolist())
+      socket.send_string(msg)
+      print("Sending data: %s" % msg)
 
+    # msg = "[79.84375000000001, 105.4296875, 90.98307291666666, 150.0, 133.90625, 107.28515625, 85.32924107142858]"
+    # msg = "[150.0, 105.4296875, 90.98307291666666, 150.0, 133.90625, 150.0, 150]"
     #  Do some 'work'
-    time.sleep(0.5)
+    time.sleep(0.2)
