@@ -27,7 +27,7 @@ socket.bind("tcp://*:5453")
 
 while True:
     #  Wait for next request from client
-    if len(IRSensor.distance_data) > 0:
+    if IRSensor.distance_data.size > 0:
       # message = socket.recv()
       # if message:
       #   control = json.loads(message)
