@@ -54,7 +54,7 @@ class Infrared_Sensor(object):
         self.sensor_num = sensor_num
         self.distance_data = np.zeros((sensor_num))
         # buffer is a time window for filtering data
-        self.buffer_length = 5
+        self.buffer_length = 50
         self.buffer = np.zeros((self.buffer_length,self.sensor_num))
         self.average_weight = np.ones((1,self.buffer_length))/self.buffer_length
         # status: whether the sensor is out of range
@@ -63,6 +63,8 @@ class Infrared_Sensor(object):
         self.table = [[20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150],
                       [2.5, 2, 1.55, 1.25, 1.1, 0.85, 0.8, 0.73, 0.7, 0.65, 0.6, 0.5, 0.45, 0.4]]
         self.table = np.array(self.table)
+        # check stability
+        self.count_num = np.zeros((1,self.sensor_num))
         pass
 
     def check_stability(self):
@@ -126,18 +128,25 @@ class Infrared_Sensor(object):
                     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
                     if is_shown:
                         print(self.distance_data)
+                        # self.count()
                     if is_record:
                         write_data = self.distance_data[0].tolist()
                         write_data.insert(0, time.time())
                         file.write(str(write_data)+"\n")
+
                 # new_time = time.time()
                 # print("frequency:%f"%(1/(new_time-current_time)))
                 # current_time=new_time
             except BaseException as be:
                 print("Data Error:", be)
 
+    def count(self):
+        for i in range(self.sensor_num):
+            if self.distance_data[i] <= 70:
+                self.count_num[0,i] += 1;
+        print(self.count_num)
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=True)
+    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
     infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()
