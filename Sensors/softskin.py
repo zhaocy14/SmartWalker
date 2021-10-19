@@ -107,42 +107,24 @@ class SoftSkin(object):
         file_path = data_path + os.path.sep + "Softskin.txt"
         plot_array = np.zeros((plot_num, self.port_num))
         if record:
-            with open(file_path, 'w') as file:
-                while True:
-                    # self.serial.flushInput()
-                    self.read_data(0)
-                    if len(self.raw_data) == len(self.base_data):
-                        temp_data = np.array(self.raw_data) - np.array(self.base_data)
-                        if show == True: print(temp_data)
-                        time_index = time.time()
-                        write_data = temp_data.tolist()
-                        write_data.insert(0,time_index)
-                        file.write(str(write_data) + '\n')
-                        file.flush()
-                        self.temp_data = temp_data
-                        # time.sleep(0.08)
-                        if plot == True:
-                            # plt.ion()
-                            plot_array[0:plot_num - 1, :] = plot_array[1:plot_num, :]
-                            plot_array[plot_num - 1, :] = np.array(temp_data)
-                            plt.clf()
-                            plt.xlabel('Time')
-                            plt.ylabel('pressure')
-                            plt.ylim((-10, 270))
-                            plt.plot(range(0, plot_num), plot_array)
-                            # plt.ioff()
-                            # plt.show()
-                            # plt.draw()
-                            plt.pause(0.000000000000000000000000000000000001)
-        else:
-            while True:
+            file = open(file_path, 'w')
+        while True:
+            try:
                 # self.serial.flushInput()
                 self.read_data(0)
                 if len(self.raw_data) == len(self.base_data):
                     temp_data = np.array(self.raw_data) - np.array(self.base_data)
+                    if show:
+                        print(temp_data)
+                    time_index = time.time()
+                    write_data = temp_data.tolist()
+                    write_data.insert(0,time_index)
+                    if record:
+                        file.write(str(write_data) + '\n')
+                        file.flush()
                     self.temp_data = temp_data
-                    if show == True: print(temp_data)
-                    if plot == True:
+                    # time.sleep(0.08)
+                    if plot:
                         # plt.ion()
                         plot_array[0:plot_num - 1, :] = plot_array[1:plot_num, :]
                         plot_array[plot_num - 1, :] = np.array(temp_data)
@@ -154,61 +136,9 @@ class SoftSkin(object):
                         # plt.ioff()
                         # plt.show()
                         # plt.draw()
-                        plt.pause(0.000000000000000000000000000000000001)
-
-    def record_label(self):
-        data_path = self.father_path + os.path.sep +"record_irdata"+ os.path.sep +  "Record_data" + os.path.sep + "label.txt"
-        file_skin = open(data_path, 'w')
-        while True:
-            # self.serial.flushInput()
-            self.read_data(0)
-            time_index = time.time()
-            if len(self.raw_data) == len(self.base_data):
-                temp_data = np.array(self.raw_data) - np.array(self.base_data)
-                max_position = np.argmax(temp_data)
-                if temp_data[max_position] < 8:
-                    # still
-                    label = 0
-                elif max_position < 8:
-                    # left
-                    label = 2
-                elif max_position > 22:
-                    # right
-                    label = 3
-                else:
-                    # forward
-                    label = 1
-                # print(label, time_index)
-                write_data = [time_index, label]
-                file_skin.write(str(write_data) + '\n')
-                file_skin.flush()
-                # time.sleep(0.1)
-                # self.serial.flushInput()
-        file_skin.close()
-
-    def read_once(self, record=False, show=False):
-        data_path = self.father_path + os.path.sep + "Record_data" + os.path.sep + "record.txt"
-        if record:
-            with open(data_path, 'w') as file:
-                self.read_data(0)
-                if len(self.raw_data) == len(self.base_data):
-                    temp_data = np.array(self.raw_data) - np.array(self.base_data)
-                    self.temp_data = temp_data.tolist()
-                    file.write(str(self.temp_data) + '\n')
-                    file.close()
-        else:
-            # self.serial.flushInput()
-            self.read_data(0)
-            if len(self.raw_data) == len(self.base_data):
-                temp_data = np.array(self.raw_data) - np.array(self.base_data)
-                self.temp_data = temp_data.tolist()
-                if show:
-                    print(self.temp_data)
-                    pass
-
-# plt.xlabel('T/mS')
-# plt.ylabel('Pressure Value')
-# plt.clf()
+                        plt.pause(0.0001)
+            except BaseException as be:
+                print("Data Error:", be)
 
 
 if __name__ == '__main__':
