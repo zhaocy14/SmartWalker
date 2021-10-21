@@ -1,7 +1,7 @@
 import serial
 import serial.tools.list_ports
 import numpy as np
-import os, sys
+import os,sys
 import time
 
 import matplotlib.pyplot as plt
@@ -10,9 +10,8 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 data_path = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
+    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
     os.path.sep + "data")
-
 
 def print_serial(port):
     print("---------------[ %s ]---------------" % port.name)
@@ -55,7 +54,7 @@ class Infrared_Sensor(object):
         self.sensor_num = sensor_num
         self.distance_data = np.zeros((sensor_num))
         # buffer is a time window for filtering data
-        self.buffer_length = 5
+        self.buffer_length = 50
         self.buffer = np.zeros((self.buffer_length, self.sensor_num))
         self.average_weight = np.ones((1, self.buffer_length)) / self.buffer_length
         # status: whether the sensor is out of range
@@ -63,14 +62,14 @@ class Infrared_Sensor(object):
         # table: first row is voltage, second row is distance
         self.table_150 = [[20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150],
                           [2.5, 2, 1.55, 1.25, 1.1, 0.85, 0.8, 0.73, 0.7, 0.65, 0.6, 0.5, 0.45, 0.4]]
-        self.table_80 = [[8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80],
+        self.table_80 = [[8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80],
                          [2.75, 2.3, 1.65, 1.3, 0.9, 0.8, 0.75, 0.67, 0.6, 0.51, 0.4]]
         self.table_150 = np.array(self.table_150)
         self.table_80 = np.array(self.table_80)
         pass
 
     def check_stability(self):
-        mean = np.mean(self.buffer, axis=0)
+        mean = np.mean(self.buffer,axis=0)
         print(mean)
         print(self.buffer)
         for i in range(self.sensor_num):
@@ -103,21 +102,22 @@ class Infrared_Sensor(object):
                     if self.distance_data[j] >= self.table_80[1, i]:
                         break
                 if i == 0:
-                    self.distance_data[j] = 20
+                    self.distance_data[j] = 10
                 elif i >= self.table_80.shape[1] - 1:
-                    self.distance_data[j] = 150
+                    self.distance_data[j] = 80
                 else:
                     self.distance_data[j] = self.my_inter(self.distance_data[j], self.table_80[1, i - 1],
                                                           self.table_80[1, i],
                                                           self.table_80[0, i - 1], self.table_80[0, i])
 
-    def read_data(self, is_shown: bool = False, is_record: bool = False, is_average: bool = True):
+
+    def read_data(self, is_shown:bool=False, is_record:bool=False, is_average:bool=False):
         # current_time = time.time()
+        if is_record:
+            file_path = data_path + os.path.sep + "infrared.txt"
+            file = open(file_path, "w")
         while True:
             try:
-                if is_record:
-                    file_path = data_path + os.path.sep + "infrared.txt"
-                    file = open(file_path, "w")
                 # self.serial.flushInput()
                 one_line_data = self.serial.readline().decode("utf-8")
                 # print("original:",one_line_data)
@@ -147,18 +147,27 @@ class Infrared_Sensor(object):
                     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
                     if is_shown:
                         print(self.distance_data)
+                        # self.count()
                     if is_record:
                         write_data = self.distance_data[0].tolist()
                         write_data.insert(0, time.time())
-                        file.write(str(write_data) + "\n")
+                        file.write(str(write_data)+"\n")
+                        file.flush()
+
+
                 # new_time = time.time()
                 # print("frequency:%f"%(1/(new_time-current_time)))
                 # current_time=new_time
             except BaseException as be:
                 print("Data Error:", be)
 
+    def count(self):
+        for i in range(self.sensor_num):
+            if self.distance_data[i] <= 70:
+                self.count_num[0,i] += 1;
+        print(self.count_num)
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=7, baud_rate=115200, is_windows=True)
-    infrared.read_data(is_shown=True, is_average=True)
+    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
+    infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()
