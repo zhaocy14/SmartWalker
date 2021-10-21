@@ -127,8 +127,8 @@ class Infrared_Sensor(object):
                 # print("strip:",one_line_data)
                 if len(one_line_data) == self.sensor_num:
                     one_line_data = list(map(float, one_line_data))
-                    self.buffer[0:-1, :] = self.buffer[1:self.buffer_length, :]
-                    self.buffer[-1, :] = np.array(one_line_data).reshape(self.distance_data.shape)
+                    # self.buffer[0:-1, :] = self.buffer[1:self.buffer_length, :]
+                    # self.buffer[-1, :] = np.array(one_line_data).reshape(self.distance_data.shape)
                     # maybe we can use standard deviation to check the consecutiveness
                     # self.check_stability()
                     if is_average:
@@ -140,7 +140,7 @@ class Infrared_Sensor(object):
                                     1 - alpha) * self.distance_data
                     else:
                         # one_line_data = list(map(int, one_line_data))
-                        self.distance_data = self.buffer[-1, :]
+                        self.distance_data = np.array(one_line_data).reshape(self.distance_data.shape)
                     # change the value into real voltage:
                     self.turn_to_distance()
                     # self.distance_data = self.distance_data / 1024 * 5
