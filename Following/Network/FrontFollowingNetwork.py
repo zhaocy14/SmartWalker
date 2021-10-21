@@ -77,6 +77,29 @@ class FrontFollowing_Model(object):
         self.current_net = self.create_current_net()
         self.combine_net = self.creat_combine_net()
 
+        """data buffer"""
+        if is_skin_input:
+            self.data_buffer = np.zeros((1,self.win_width*(self.ir_data_width+self.softskin_width)))
+        else:
+            self.data_buffer = np.zeros((1,self.win_width*(self.ir_data_width+self.leg_width)))
+
+    def update_buffer(self, new_ir_data, new_leg_data):
+        PART2 = self.win_width * self.ir_data_width
+        additional_data = [LD.left_leg[0], LD.left_leg[1], LD.right_leg[0], LD.right_leg[1]]
+        additional_data = np.array(additional_data) / 40 + 0.4
+        additional_data = np.reshape(additional_data, (additional_data.shape[0], 1))
+        buffer[PART2:PART2 + (buffer_length - 1) * additional_data_width, 0] = \
+            buffer[PART2 + additional_data_width:PART2 + buffer_length * additional_data_width, 0]
+        buffer[PART2 + (buffer_length - 1) * additional_data_width:PART2 + buffer_length * additional_data_width] = \
+            additional_data
+
+        buffer[PART2:PART2 + buffer_length * additional_data_width, 0] = buffer[
+                                                                         PART2:PART2 + buffer_length * additional_data_width,
+                                                                         0]
+        predict_buffer = buffer.reshape((-1, buffer_length * (ir_data_width + additional_data_width), 1))
+
+
+
     def call(self, inputs: np.ndarray) -> tf.Tensor:
         return self.model(inputs)
 
