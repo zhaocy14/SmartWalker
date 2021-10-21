@@ -127,17 +127,15 @@ class Infrared_Sensor(object):
                 # print("strip:",one_line_data)
                 if len(one_line_data) == self.sensor_num:
                     one_line_data = list(map(float, one_line_data))
-                    # self.buffer[0:-1, :] = self.buffer[1:self.buffer_length, :]
-                    # self.buffer[-1, :] = np.array(one_line_data).reshape(self.distance_data.shape)
-                    # maybe we can use standard deviation to check the consecutiveness
-                    # self.check_stability()
+                    self.buffer[0:-1, :] = self.buffer[1:self.buffer_length, :]
+                    self.buffer[-1, :] = np.array(one_line_data).reshape(self.distance_data.shape)
                     if is_average:
                         # self.distance_data = np.matmul(self.average_weight,self.buffer)[0]
-                        # self.distance_data = np.mean(self.buffer,axis=0)
+                        self.distance_data = np.mean(self.buffer,axis=0)
                         # or use exponential average
-                        alpha = 2 / (self.buffer_length + 1)
-                        self.distance_data = alpha * np.array(one_line_data).reshape(self.distance_data.shape) + (
-                                    1 - alpha) * self.distance_data
+                        # alpha = 2 / (self.buffer_length + 1)
+                        # self.distance_data = alpha * np.array(one_line_data).reshape(self.distance_data.shape) + (
+                        #             1 - alpha) * self.distance_data
                     else:
                         # one_line_data = list(map(int, one_line_data))
                         self.distance_data = np.array(one_line_data).reshape(self.distance_data.shape)
