@@ -1,10 +1,11 @@
 import os, sys
 pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+father_path = os.path.abspath(os.path.dirname(os.path.dirname(pwd)) + os.path.sep + "..")
 sys.path.append(father_path)
 data_path = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
-    os.path.sep + "data")
+    os.path.dirname(father_path + os.path.sep + ".."  +
+    os.path.sep + "data"))
+print(father_path,data_path)
 import numpy as np
 import math
 import cv2
@@ -16,8 +17,8 @@ from sklearn.cluster import KMeans
 
 class Leg_detector(object):
 
-    def __init__(self, portal: str = 'COM3', is_show:bool=False):
-        self.rplidar = RPLidar(portal)  # '/dev/ttyUSB1'
+    def __init__(self, portal: str = '/dev/ttyUSB2', is_show:bool=False):
+        self.rplidar = RPLidar(portal)  # '/dev/ttyUSB2'
         self.kmeans = KMeans(n_clusters=2)
         self.left_leg = np.zeros((1, 2))
         self.right_leg = np.zeros((1, 2))
@@ -136,4 +137,4 @@ class Leg_detector(object):
 
 if __name__ == "__main__":
     lidar = Leg_detector()
-    lidar.scan_procedure(show=True)
+    lidar.scan_procedure(show=False,is_record=True)

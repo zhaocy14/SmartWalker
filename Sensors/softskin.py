@@ -55,6 +55,10 @@ class SoftSkin(object):
         self.base_data = []  # 建立一组基准值用于初始化
         self.temp_data = []
         self.port_num = 32
+        self.average_length = 10
+        self.average_buffer = np.zeros((self.average_length,self.port_num))
+        self.max_pressure = 0
+
 
         pass
 
@@ -116,13 +120,15 @@ class SoftSkin(object):
                     temp_data = np.array(self.raw_data) - np.array(self.base_data)
                     if show:
                         print(temp_data)
-                    time_index = time.time()
-                    write_data = temp_data.tolist()
-                    write_data.insert(0,time_index)
+                        print(self.max_pressure)
                     if record:
+                        time_index = time.time()
+                        write_data = temp_data.tolist()
+                        write_data.insert(0, time_index)
                         file.write(str(write_data) + '\n')
                         file.flush()
                     self.temp_data = temp_data
+                    self.max_pressure = max(max(self.temp_data),self.max_pressure)
                     # time.sleep(0.08)
                     if plot:
                         # plt.ion()
@@ -136,16 +142,40 @@ class SoftSkin(object):
                         # plt.ioff()
                         # plt.show()
                         # plt.draw()
-                        plt.pause(0.0001)
+                        plt.pause(0.0000000001)
             except BaseException as be:
                 print("Data Error:", be)
 
 
 if __name__ == '__main__':
+    from Driver import ControlOdometryDriver as CD
+
+
     softskin = SoftSkin()
     softskin.build_base_line_data()
     # while True:
     #     softskin.read_data(0)
     #     print(np.array(softskin.raw_data) - np.array(softskin.base_data))
-    softskin.read_and_record(show=True, record=True)
+    def little_test(sk:SoftSkin, driver:CD.ControlDriver):
+        while True:
+            # print(sk.max_pressure)
+            # if sk.max_pressure>=70:
+            #     driver.speed = 0
+            #     time.sleep(5)
+            # driver.speed = 0.3
+            # time.sleep(0.5)
+            driver.speed = 0.3
+            time.sleep(3)
+            driver.speed = 0
+            time.sleep(3)
+
+
+    driver = CD.ControlDriver(left_right=0)
+    thread_test = threading.Thread(target=little_test,args=(softskin,driver,))
+    thread_test.start()
+
+    driver.start()
+    softskin.read_and_record(show=True, record=True,plot=False)
     # softskin.record_label()
+
+

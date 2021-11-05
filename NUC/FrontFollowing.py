@@ -17,7 +17,7 @@ from Driver import ControlOdometryDriver as cd
 """portal num"""
 
 camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB3'
+lidar_portal = '/dev/ttyUSB2'
 # IMU_walker_portal = '/dev/ttyUSB0'
 IMU_human_portal = '/dev/ttyUSB1'
 # IMU_left_leg_portal = '/dev/ttyUSB6'
@@ -198,21 +198,18 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
 
 
 thread_leg = threading.Thread(target=LD.scan_procedure, args=(False,True,))
+thread_leg.start()
 thread_cd = threading.Thread(target=CD.control_part, args=())
 thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel,file_path,IMU_human))
 # thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
 thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
-
 thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
 
 # thread_IMU_left = threading.Thread(target=IMU_left_leg.read_record,args=())
 # thread_IMU_right = threading.Thread(target=IMU_right_leg.read_record,args=())
 
-
-
-thread_leg.start()
-time.sleep(3)
-thread_cd.start()
+time.sleep(2)
+# thread_cd.start()
 thread_main.start()
 # thread_IMU_human.start()
 # thread_IMU_walker.start()
