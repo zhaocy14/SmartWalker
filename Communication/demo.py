@@ -20,7 +20,7 @@ context = zmq.Context()
 def receive():
     socket = context.socket(zmq.SUB)
     socket.connect("tcp://127.0.0.1:5454")
-    topicfilter = "SL_LOCATION"
+    topicfilter = "NAV_SL_LOCATION"
     socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
     while True:
@@ -34,7 +34,7 @@ def receive():
 def receive_pose():
     socket = context.socket(zmq.SUB)
     socket.connect("tcp://127.0.0.1:5454")
-    topicfilter = "DRIVER_RECV"
+    topicfilter = "NAV_WALKER_POSE"
     socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
     while True:

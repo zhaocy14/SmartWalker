@@ -26,8 +26,8 @@ def transmit_demo():
     socket.bind("tcp://*:%s" % sl_port)
 
     while True:
-        msg = datetime.now().strftime("%H:%M:%S")
-        socket.send_string("%s%s" % (transmit_topic, msg))
+        msg = "%s%s" % (transmit_topic, datetime.now().strftime("%H:%M:%S"))
+        socket.send_string(msg)
         print("Sending data: %s" % msg)
         time.sleep(1)
 
