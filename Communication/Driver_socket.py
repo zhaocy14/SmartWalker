@@ -38,14 +38,15 @@ thread_cd.start()
 
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
-socket.connect("tcp://127.0.0.1:5452")
-topicfilter = ""
+socket.connect("tcp://127.0.0.1:5454")
+topicfilter = "DRIVER_RECV"
 socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
 while True:
     #  Wait for next request from client
-    message = socket.recv()
+    message = socket.recv_string()
     if message:
+      message = message.replace(topicfilter, "")
       control = json.loads(message)
       if len(control) > 0:
         send_control(control)
