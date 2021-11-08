@@ -16,7 +16,7 @@ import zmq
 import json
 
 from Sensors import Infrared_Sensor
-IRSensor = Infrared_Sensor.Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
+IRSensor = Infrared_Sensor.Infrared_Sensor(sensor_num=5,baud_rate=115200, is_windows=False)
 # infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
 thread_infrared = threading.Thread(target=IRSensor.read_data,args=(False, False, True))
 thread_infrared.start()
