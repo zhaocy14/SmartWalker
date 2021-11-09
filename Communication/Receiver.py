@@ -29,8 +29,8 @@ class Receiver(object):
         t1.start()
     
     def start_Lidar(self):
-        t1 = threading.Thread(target=rzo.startLidar)
-        t1.start()
+        for _ in rzo.startLidar:
+          print("lidar data", _)
 
 
 if __name__ == "__main__":
