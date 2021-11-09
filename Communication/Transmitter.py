@@ -8,8 +8,8 @@ import threading
 import time
 
 from Communication.Modules.Transmit import TransmitZMQ
-# tzo = TransmitZMQ.get_instance()
-tzo = TransmitZMQ.get_instance(port="5456")
+tzo = TransmitZMQ.get_instance()
+# tzo = TransmitZMQ.get_instance(port="5456")
 from Communication.Modules.Infrared_transmit import InfraredTransmit
 from Communication.Modules.Time_transmit import TimeTransmit
 from Communication.Modules.Variables import *

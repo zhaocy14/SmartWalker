@@ -8,7 +8,8 @@ import threading
 
 from Communication.Modules.Variables import *
 from Communication.Modules.Receive import ReceiveZMQ
-rzo = ReceiveZMQ.get_instance(port="5456")
+rzo = ReceiveZMQ.get_instance()
+# rzo = ReceiveZMQ.get_instance(port="5454")
 from Communication.Modules.Driver_recv import DriverRecv
 from Communication.Modules.Pose_recv import PoseRecv
 
