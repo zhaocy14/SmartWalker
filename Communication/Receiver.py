@@ -29,13 +29,13 @@ class Receiver(object):
         t1 = threading.Thread(target=self.pose_recv.start)
         t1.start()
     
-    def start_Lidar(self):
-        for _ in rzo.startLidar():
-          print("lidar data", _)
+    # def start_Lidar(self):
+    #     for _ in rzo.startLidar():
+    #         print("lidar data", _)
 
 
 if __name__ == "__main__":
     recvObj = Receiver(mode="local")
     recvObj.start_DriverControl()
     recvObj.start_Pose()
-    recvObj.start_Lidar()
+    # recvObj.start_Lidar()
