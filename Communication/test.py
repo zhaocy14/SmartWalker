@@ -1,15 +1,6 @@
-import zmq
-import random
-import sys
-import time
 
+import re
 
-context = zmq.Context()
-socket = context.socket(zmq.PUB)
-socket.bind("tcp://*:5452")
-
-while True:
-    topic = 10001
-    messagedata = random.randrange(1,215) - 80
-    socket.send_string("%d %d" % (topic, messagedata))
-    time.sleep(1)
+string = "1980000000 0.67 03530.00 188"
+m = re.match(r"(?P<time>\d+) (?P<theta>\d+\.\d+) (?P<dist>\d+\.\d+) (?P<q>\d+)", string)
+print(m.groupdict())

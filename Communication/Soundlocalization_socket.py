@@ -21,8 +21,8 @@ class CLIENT:
     def __init__(self):
         context = zmq.Context()
         sl_port = "5454"
-        self.transmit_topic = "NAV_SL_LOCATION"
-        self.receive_topic = "NAV_WALKER_POSE"
+        self.transmit_topic = "NAV_SL_LOCATION::"
+        self.receive_topic = "NAV_WALKER_POSE::"
         
         self.transmit_socket = context.socket(zmq.PUB)
         self.transmit_socket.bind("tcp://*:5455")
