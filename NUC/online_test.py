@@ -38,7 +38,7 @@ class network_data(object):
 if __name__ == "__main__":
     """portal num"""
     camera_portal = '/dev/ttyUSB1'
-    lidar_portal = '/dev/ttyUSB0'
+    lidar_portal = '/dev/ttyUSB2'
     IRCamera = IRCamera.IRCamera()
     IRSensor = Infrared_Sensor.Infrared_Sensor(sensor_num=1)
     LD = Leg_detector.Leg_detector(lidar_portal)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     time.sleep(2) # wait for the start of the lidar
 
     thread_control_driver = threading.Thread(target=cd.control_part, args=())
-    thread_control_driver.start()
+    # thread_control_driver.start()
 
     while True:
         # present_time = time.time()
