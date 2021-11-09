@@ -30,7 +30,7 @@ class Receiver(object):
         t1.start()
     
     def start_Lidar(self):
-        for _ in rzo.startLidar:
+        for _ in rzo.startLidar():
           print("lidar data", _)
 
 
