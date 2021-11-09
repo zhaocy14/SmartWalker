@@ -72,7 +72,7 @@ class ReceiveZMQ(object):
         poller = zmq.Poller()
         # Create driver socket to receive command
         lidarSocket_sub = self.context.socket(zmq.SUB)
-        lidarSocket_sub.connect("tcp://%s:%s" % (self.address, ""))
+        lidarSocket_sub.connect("tcp://%s:%s" % (self.address, self.lidarPort))
         lidarSocket_sub.setsockopt_string(zmq.SUBSCRIBE, "")
         poller.register(lidarSocket_sub, zmq.POLLIN)
         should_continue = True
