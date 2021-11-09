@@ -81,7 +81,7 @@ class ReceiveZMQ(object):
             if lidarSocket_sub in socks and socks[lidarSocket_sub] == zmq.POLLIN:
                 string = lidarSocket_sub.recv_string()
                 parsed_data = re.match(r"(?P<time>\d+) (?P<theta>\d+\.\d+) (?P<dist>\d+\.\d+) (?P<q>\d+)", string)
-                yield parsed_data
+                yield parsed_data.groupdict()
 
 
 if __name__ == "__main__":
