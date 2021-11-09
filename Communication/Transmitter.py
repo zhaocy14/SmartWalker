@@ -1,5 +1,4 @@
 import os, sys
-
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
@@ -36,7 +35,7 @@ class Transmitter(object):
 
 
 if __name__ == "__main__":
-    transmitterObj = Transmitter("local")
+    transmitterObj = Transmitter()
     transmitterObj.start_IR()
     transmitterObj.start_Timer()
     while True:
