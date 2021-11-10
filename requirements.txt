@@ -29,3 +29,4 @@ unicodedata2
 wincertstore
 zipp
 pyzmq==22.3.0
+docker
