@@ -70,7 +70,7 @@ class CppCommands(object):
         offline mode is mainly for testing purpose
         stdout is to determine the output of console, need to run in a new thread in order to unblock the process
     """
-    def start_navigation(self, map_file="map.2021-09-25.070808", mode="online", testing="", stdout=False):
+    def start_navigation(self, map_file="latest", mode="online", testing="", stdout=False):
         filter = "60"
         if mode == "online" and not self._sensors_running:
             self.start_sensors()
