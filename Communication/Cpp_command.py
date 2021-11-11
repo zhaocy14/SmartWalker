@@ -33,7 +33,7 @@ class CppCommand(object):
         self.stop_navigation()
         self.stop_drawing()
         self.stop_sensors()
-        # time.sleep(5)
+        time.sleep(3)
         exit(0)
 
 
