@@ -4,12 +4,10 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 
-import threading
-
 from Communication.Modules.Variables import *
 from Communication.Modules.Receive import ReceiveZMQ
-# rzo = ReceiveZMQ.get_instance()
-rzo = ReceiveZMQ.get_instance(port="5456")
+rzo = ReceiveZMQ.get_instance()
+# rzo = ReceiveZMQ.get_instance(port="5456")
 from Communication.Modules.Driver_recv import DriverRecv
 from Communication.Modules.Pose_recv import PoseRecv
 
