@@ -6,7 +6,7 @@ from signal import signal, SIGINT
 import docker
 
 
-class CppCommands(object):
+class CppCommand(object):
     _instance = None
     _sensors_running = False
     _nav_running = False
@@ -14,9 +14,9 @@ class CppCommands(object):
     
     @staticmethod
     def get_instance(lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB1"):
-        if CppCommands._instance is None:
-            CppCommands(lidar_port=lidar_port, imu_port=imu_port)
-        return CppCommands._instance
+        if CppCommand._instance is None:
+            CppCommand(lidar_port=lidar_port, imu_port=imu_port)
+        return CppCommand._instance
 
 
     def get_id(self):
@@ -32,11 +32,11 @@ class CppCommands(object):
 
 
     def __init__(self, lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB1"):
-        if CppCommands._instance is not None:
+        if CppCommand._instance is not None:
             raise Exception('only one instance can exist')
         else:
             self._id = id(self)
-            CppCommands._instance = self
+            CppCommand._instance = self
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
         self.lidar_port = lidar_port
