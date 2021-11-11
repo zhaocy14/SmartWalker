@@ -4,8 +4,8 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 
-from Communication.Cpp_commands import CppCommands
-cco = CppCommands.get_instance()
+from Communication.Cpp_command import CppCommand
+cco = CppCommand.get_instance()
 
 if __name__ == "__main__":
     cco.start_navigation(mode="offline", testing="local", stdout=True)
