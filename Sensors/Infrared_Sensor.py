@@ -41,7 +41,7 @@ def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
 
 
 class Infrared_Sensor(object):
-    def __init__(self, sensor_num: int = 1, baud_rate: int = 14400, is_windows: bool = False):
+    def __init__(self, sensor_num: int = 5, baud_rate: int = 115200, is_windows: bool = False):
         if is_windows:
             port_name = detect_serials(description="Arduino Mega 2560")
         else:

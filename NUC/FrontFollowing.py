@@ -9,7 +9,7 @@ data_path = os.path.abspath(
 import time
 import threading
 
-from Sensors import IRCamera, IMU
+from Sensors import IRCamera, IMU, Infrared_Sensor, softskin
 from Following.Preprocessing import Leg_detector
 from Following.Network import FrontFollowingNetwork as FFL
 from Driver import ControlOdometryDriver as cd
@@ -17,9 +17,9 @@ from Driver import ControlOdometryDriver as cd
 """portal num"""
 
 camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB2'
+lidar_portal = '/dev/ttyUSB4'
 # IMU_walker_portal = '/dev/ttyUSB0'
-IMU_human_portal = '/dev/ttyUSB1'
+IMU_human_portal = '/dev/ttyUSB0'
 # IMU_left_leg_portal = '/dev/ttyUSB6'
 # IMU_right_leg_portal = '/dev/ttyUSB3'
 # IMU_human_portal = '/dev/ttyUSB5'
@@ -209,7 +209,7 @@ thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
 # thread_IMU_right = threading.Thread(target=IMU_right_leg.read_record,args=())
 
 time.sleep(2)
-# thread_cd.start()
+thread_cd.start()
 thread_main.start()
 # thread_IMU_human.start()
 # thread_IMU_walker.start()
