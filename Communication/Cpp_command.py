@@ -5,6 +5,7 @@ sys.path.append(father_path)
 from signal import signal, SIGINT
 from sys import exit
 import docker
+import time
 
 from Communication.Modules.Driver_recv import DriverRecv
 
@@ -32,6 +33,7 @@ class CppCommand(object):
         self.stop_navigation()
         self.stop_drawing()
         self.stop_sensors()
+        time.sleep(5)
         exit(0)
 
 
