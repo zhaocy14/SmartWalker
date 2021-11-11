@@ -8,4 +8,4 @@ from Communication.Cpp_command import CppCommand
 cco = CppCommand.get_instance(lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB4")
 
 if __name__ == "__main__":
-    cco.start_sensors(mode="offline", testing="local", stdout=True)
+    cco.start_sensors(stdout=True)
