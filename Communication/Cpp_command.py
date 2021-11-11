@@ -3,6 +3,7 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 from signal import signal, SIGINT
+from sys import exit
 import docker
 
 from Communication.Modules.Driver_recv import DriverRecv
@@ -31,6 +32,7 @@ class CppCommand(object):
         self.stop_navigation()
         self.stop_drawing()
         self.stop_sensors()
+        exit(0)
 
 
     def __init__(self, lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB4"):

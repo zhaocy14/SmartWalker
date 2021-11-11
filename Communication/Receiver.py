@@ -34,7 +34,3 @@ class Receiver(object):
 
 if __name__ == "__main__":
     recvObj = Receiver(mode="local")
-    # recvObj.start_DriverControl()
-    for _ in recvObj.start_Pose():
-        print("testing", _)
-    # recvObj.start_Lidar()
