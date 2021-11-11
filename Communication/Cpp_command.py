@@ -31,7 +31,7 @@ class CppCommand(object):
         self.stop_sensors()
 
 
-    def __init__(self, lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB1"):
+    def __init__(self, lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB4"):
         if CppCommand._instance is not None:
             raise Exception('only one instance can exist')
         else:
