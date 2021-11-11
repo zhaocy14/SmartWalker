@@ -44,7 +44,7 @@ class CppCommand(object):
         self.lidar_port = lidar_port
         self.imu_port = imu_port
         # Initialize the driver receiver object
-        self.drvObj = DriverRecv()
+        self.drvObj = DriverRecv(mode="offline")
         signal(SIGINT, self.handler)
 
 
