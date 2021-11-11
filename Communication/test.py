@@ -4,9 +4,8 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 
-from Communication.Modules.Variables import *
-from Communication.Modules.Receive import ReceiveZMQ
-rzo = ReceiveZMQ.get_instance()
+from Communication.Cpp_commands import CppCommands
+cco = CppCommands.get_instance()
 
-for topic, message in rzo.start(topic=pose_topic):
-    print(message)
+if __name__ == "__main__":
+    cco.start_navigation(mode="offline", testing="local", stdout=True)
