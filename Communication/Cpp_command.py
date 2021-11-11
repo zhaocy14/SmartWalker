@@ -5,6 +5,8 @@ sys.path.append(father_path)
 from signal import signal, SIGINT
 import docker
 
+from Communication.Modules.Driver_recv import DriverRecv
+
 
 class CppCommand(object):
     _instance = None
@@ -41,6 +43,8 @@ class CppCommand(object):
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
         self.lidar_port = lidar_port
         self.imu_port = imu_port
+        # Initialize the driver receiver object
+        self.drvObj = DriverRecv()
         signal(SIGINT, self.handler)
 
 
@@ -70,10 +74,14 @@ class CppCommand(object):
         offline mode is mainly for testing purpose
         stdout is to determine the output of console, need to run in a new thread in order to unblock the process
     """
-    def start_navigation(self, map_file="latest", mode="online", testing="", stdout=False):
+    def start_navigation(self, map_file="latest", mode="online", testing="", stdout=False, driver_ctrl=False):
         filter = "60"
-        if mode == "online" and not self._sensors_running:
-            self.start_sensors()
+        if mode == "online":
+            # Start the sensors if it is not runing
+            if not self._sensors_running:
+                self.start_sensors()
+            if driver_ctrl:
+                self.drvObj.start(use_thread=True)
 
         if not self._nav_running:
             _, stream = self.container.exec_run("/app/smartwalker_cartomap/build/start_navigation %s %s %s %s" % (map_file, filter, mode, testing), stream=True)

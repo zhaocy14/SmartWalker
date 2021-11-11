@@ -8,8 +8,8 @@ import threading
 
 from Communication.Modules.Variables import *
 from Communication.Modules.Receive import ReceiveZMQ
-rzo = ReceiveZMQ.get_instance()
-# rzo = ReceiveZMQ.get_instance(port="5454")
+# rzo = ReceiveZMQ.get_instance()
+rzo = ReceiveZMQ.get_instance(port="5456")
 from Communication.Modules.Driver_recv import DriverRecv
 from Communication.Modules.Pose_recv import PoseRecv
 
@@ -21,13 +21,13 @@ class Receiver(object):
 
     
     def start_DriverControl(self):
-        t1 = threading.Thread(target=self.drv_recv.start)
-        t1.start()
+        self.drv_recv.start(use_thread=True)
     
 
     def start_Pose(self):
-        t1 = threading.Thread(target=self.pose_recv.start)
-        t1.start()
+        # t1 = threading.Thread(target=self.pose_recv.start)
+        # t1.start()
+        return self.pose_recv.start()
     
     # def start_Lidar(self):
     #     for _ in rzo.startLidar():
@@ -36,6 +36,7 @@ class Receiver(object):
 
 if __name__ == "__main__":
     recvObj = Receiver(mode="local")
-    recvObj.start_DriverControl()
-    recvObj.start_Pose()
+    # recvObj.start_DriverControl()
+    for _ in recvObj.start_Pose():
+        print("testing", _)
     # recvObj.start_Lidar()
