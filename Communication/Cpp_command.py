@@ -8,7 +8,7 @@ import docker
 import time
 
 from Communication.Modules.Driver_recv import DriverRecv
-
+from Communication.Modules.Infrared_transmit import InfraredTransmit
 
 class CppCommand(object):
     _instance = None
@@ -48,7 +48,7 @@ class CppCommand(object):
         self.lidar_port = lidar_port
         self.imu_port = imu_port
         # Initialize the driver receiver object
-        self.drvObj = DriverRecv(mode="offline")
+        # self.drvObj = DriverRecv(mode="offline")
         signal(SIGINT, self.handler)
 
 
@@ -68,8 +68,11 @@ class CppCommand(object):
             print("Sensors already running ...")
 
 
-    def stop_sensors(self):
-        self.container.exec_run("pkill -INT -f 'start_record*'")
+    def stop_sensors(self, force=False):
+        if force:
+          self.container.exec_run("pkill -9 -f 'start_record*'")
+        else:
+          self.container.exec_run("pkill -INT -f 'start_record*'")
         self._sensors_running = False
 
 
@@ -78,14 +81,18 @@ class CppCommand(object):
         offline mode is mainly for testing purpose
         stdout is to determine the output of console, need to run in a new thread in order to unblock the process
     """
-    def start_navigation(self, map_file="latest", mode="online", testing="", stdout=False, driver_ctrl=False):
+    def start_navigation(self, map_file="latest", mode="online", testing="", stdout=False, driver_ctrl=False, ir_sensor=False):
         filter = "60"
         if mode == "online":
             # Start the sensors if it is not runing
             if not self._sensors_running:
                 self.start_sensors()
             if driver_ctrl:
-                self.drvObj.start(use_thread=True)
+                drvObj = DriverRecv(mode=mode)
+                drvObj.start(use_thread=True)
+            if ir_sensor:
+                irObj = InfraredTransmit(mode=mode)
+                irObj.start(use_thread=True)
 
         if not self._nav_running:
             _, stream = self.container.exec_run("/app/smartwalker_cartomap/build/start_navigation %s %s %s %s" % (map_file, filter, mode, testing), stream=True)
@@ -97,8 +104,13 @@ class CppCommand(object):
             print("Navigation already running ...")
 
 
-    def stop_navigation(self):
-        self.container.exec_run("pkill -INT -f 'start_navigation*'")
+    def stop_navigation(self, force=False):
+        if self._sensors_running:
+            self.stop_sensors(force)
+        if force:
+          self.container.exec_run("pkill -9 -f 'start_navigation*'")
+        else:
+          self.container.exec_run("pkill -INT -f 'start_navigation*'")
         self._nav_running = False
 
 
@@ -119,6 +131,11 @@ class CppCommand(object):
             print("Drawing already running ...")
 
 
-    def stop_drawing(self):
-        self.container.exec_run("pkill -INT -f 'draw_map_realtime*'")
+    def stop_drawing(self, force=False):
+        if self._sensors_running:
+            self.stop_sensors(force)
+        if force:
+          self.container.exec_run("pkill -9 -f 'draw_map_realtime*'")
+        else:
+          self.container.exec_run("pkill -INT -f 'draw_map_realtime*'")
         self._draw_running = False
