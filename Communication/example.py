@@ -13,12 +13,14 @@ if __name__ == "__main__":
     '''
         Start map drawing example
         **If wanted to use the latest map file, can use map_file="latest"
+        **If needed to move the walker, set driver_ctrl=True
+        **If needed the ir sensor, set ir_sensor=True
     '''
     cco.start_navigation(stdout=False, driver_ctrl=False, ir_sensor=False, map_file="map.2021-09-25.070808")
-    recvObj = Receiver(mode="local")
+    # recvObj = Receiver(mode="local")
     # recvObj.start_DriverControl()
-    for _ in recvObj.start_Pose():
-        print("testing", _)
+    # for _ in recvObj.start_Pose():
+    #     print("testing", _)
     
     '''
         Start map drawing example
