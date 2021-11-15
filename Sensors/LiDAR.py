@@ -1,9 +1,7 @@
 import serial
 import serial.tools.list_ports
-import numpy as np
 import math
 import threading
-import re
 import os
 import sys
 import time
@@ -50,12 +48,11 @@ def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
 
 class lidar(rplidar.RPLidar):
 
-    def __init__(self, portal):
-        super().__init__(portal)
-        port_name = detect_serials(description="ttyACM0")
+    def __init__(self):
+        super().__init__(detect_serials(description="CP2102 USB"))
         self.scan_data_list = []
 
-    def scan_procedure(self, show: bool = False, file_path: str = data_path):
+    def scan_procedure(self):
         while True:
             try:
                 info = self.get_info()
@@ -64,10 +61,13 @@ class lidar(rplidar.RPLidar):
                 print(health)
                 for i, scan in enumerate(self.iter_scans(max_buf_meas=5000)):
                     self.scan_data_list = scan
+                    print(len(scan))
             except BaseException as be:
                 self.clean_input()
                 self.stop()
                 self.stop_motor()
 
 if __name__ == "__main__":
-    detect_serials("ttyACM100")
+    lidar_instance = lidar()
+    lidar_instance.scan_procedure()
+
