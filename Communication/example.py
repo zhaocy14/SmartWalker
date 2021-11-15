@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # cco.start_navigation(mode="offline", testing="local", stdout=False, map_file="map.2021-09-25.070808")
     
     '''
-        Start map drawing example
+        Start navigation example
         **If wanted to use the latest map file, can use map_file="latest"
         **If needed to move the walker, set driver_ctrl=True
         **If needed the ir sensor, set ir_sensor=True
