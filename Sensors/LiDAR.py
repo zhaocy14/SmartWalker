@@ -52,7 +52,7 @@ class lidar(rplidar.RPLidar):
         super().__init__(detect_serials(description="CP2102 USB"))
         self.scan_data_list = []
 
-    def scan_procedure(self):
+    def scan_procedure(self,is_show:bool=False):
         while True:
             try:
                 info = self.get_info()
@@ -61,7 +61,8 @@ class lidar(rplidar.RPLidar):
                 print(health)
                 for i, scan in enumerate(self.iter_scans(max_buf_meas=5000)):
                     self.scan_data_list = scan
-                    print(len(scan))
+                    if is_show:
+                        print(self.scan_data_list)
             except BaseException as be:
                 self.clean_input()
                 self.stop()
@@ -69,5 +70,5 @@ class lidar(rplidar.RPLidar):
 
 if __name__ == "__main__":
     lidar_instance = lidar()
-    lidar_instance.scan_procedure()
-
+    thread_lidar_scan = threading.Thread(target=lidar_instance.scan_procedure,args=())
+    thread_lidar_scan.start()
