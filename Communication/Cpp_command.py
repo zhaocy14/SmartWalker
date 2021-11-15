@@ -33,7 +33,13 @@ class CppCommand(object):
         self.stop_navigation()
         self.stop_drawing()
         self.stop_sensors()
-        time.sleep(3)
+        count = 3
+        while True:
+          print('Counting down ... %d' % count)
+          count = count -1
+          if count == 0:
+            break
+          time.sleep(1)
         exit(0)
 
 
