@@ -9,6 +9,8 @@ import time
 
 from Communication.Modules.Driver_recv import DriverRecv
 from Communication.Modules.Infrared_transmit import InfraredTransmit
+from Sensors.LiDAR import lidar
+from Sensors.IMU import IMU
 
 class CppCommand(object):
     _instance = None
@@ -17,9 +19,9 @@ class CppCommand(object):
     _draw_running = False
     
     @staticmethod
-    def get_instance(lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB1"):
+    def get_instance():
         if CppCommand._instance is None:
-            CppCommand(lidar_port=lidar_port, imu_port=imu_port) 
+            CppCommand() 
         return CppCommand._instance
 
 
@@ -42,17 +44,19 @@ class CppCommand(object):
           time.sleep(1)
 
 
-    def __init__(self, lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB4"):
+    def __init__(self):
         print("CppCommand init...")
         if CppCommand._instance is not None:
             raise Exception('only one instance can exist')
         else:
             self._id = id(self)
             CppCommand._instance = self
+        imuObj = IMU()
+        lidarObj = lidar()
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
-        self.lidar_port = lidar_port
-        self.imu_port = imu_port
+        self.lidar_port = imuObj.port_name
+        self.imu_port = lidarObj.port_name
         # Initialize the driver receiver object
         self.drvObj = DriverRecv(mode="offline")
         

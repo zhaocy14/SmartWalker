@@ -5,15 +5,11 @@ sys.path.append(father_path)
 
 import time
 
-from Sensors.LiDAR import lidar
-from Sensors.IMU import IMU
 from Communication.Cpp_command import CppCommand
 from Communication.Receiver import Receiver
-imuObj = IMU()
-lidarObj = lidar()
 
 if __name__ == "__main__":
-    with CppCommand.get_instance(lidar_port=lidarObj.port_name, imu_port=imuObj.port_name) as cco:
+    with CppCommand.get_instance() as cco:
         # cco.start_navigation(mode="offline", testing="local", stdout=False, map_file="map.2021-09-25.070808")
         '''
             Start navigation example
