@@ -62,16 +62,7 @@ class CppCommand(object):
         
     def __enter__(self):
         return self._instance
-        # if CppCommand._instance is not None:
-        #     raise Exception('only one instance can exist')
-        # else:
-        #     self._id = id(self)
-        #     CppCommand._instance = self
-        # self.client = docker.from_env()
-        # self.container = self.client.containers.get('SMARTWALKER_CARTO')
-        # self.lidar_port = lidar_port
-        # self.imu_port = imu_port
-
+      
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.handler()
