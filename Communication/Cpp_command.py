@@ -45,7 +45,6 @@ class CppCommand(object):
 
 
     def __init__(self):
-        print("CppCommand init...")
         if CppCommand._instance is not None:
             raise Exception('only one instance can exist')
         else:
@@ -62,7 +61,6 @@ class CppCommand(object):
         
         
     def __enter__(self):
-        print("CppCommand enter...")
         return self._instance
         # if CppCommand._instance is not None:
         #     raise Exception('only one instance can exist')
@@ -76,9 +74,10 @@ class CppCommand(object):
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        print("CppCommand exit...")
         self.handler()
         return True
+      
+      
     """
         online mode is for realtime sensor data generation
         offline mode is for recording the current sensor data, cannot be used for navigation or map drawing
