@@ -2,7 +2,7 @@ import os, sys
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
-from signal import signal, SIGINT
+from signal import Handlers, signal, SIGINT
 from sys import exit
 import docker
 import time
@@ -19,7 +19,7 @@ class CppCommand(object):
     @staticmethod
     def get_instance(lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB1"):
         if CppCommand._instance is None:
-            CppCommand(lidar_port=lidar_port, imu_port=imu_port)
+            CppCommand(lidar_port=lidar_port, imu_port=imu_port) 
         return CppCommand._instance
 
 
@@ -27,9 +27,9 @@ class CppCommand(object):
         return self._id
 
     
-    def handler(self, signal_received, frame):
+    def handler(self, signal_received=None, frame=None):
         # Handle any cleanup here
-        print('SIGINT or CTRL-C detected. Exiting gracefully')
+        # print('SIGINT or CTRL-C detected. Exiting gracefully')
         self.stop_navigation()
         self.stop_drawing()
         self.stop_sensors()
@@ -40,10 +40,10 @@ class CppCommand(object):
           if count == 0:
             break
           time.sleep(1)
-        exit(0)
 
 
     def __init__(self, lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB4"):
+        print("CppCommand init...")
         if CppCommand._instance is not None:
             raise Exception('only one instance can exist')
         else:
@@ -54,10 +54,27 @@ class CppCommand(object):
         self.lidar_port = lidar_port
         self.imu_port = imu_port
         # Initialize the driver receiver object
-        # self.drvObj = DriverRecv(mode="offline")
-        signal(SIGINT, self.handler)
+        self.drvObj = DriverRecv(mode="offline")
+        
+        
+    def __enter__(self):
+        print("CppCommand enter...")
+        return self._instance
+        # if CppCommand._instance is not None:
+        #     raise Exception('only one instance can exist')
+        # else:
+        #     self._id = id(self)
+        #     CppCommand._instance = self
+        # self.client = docker.from_env()
+        # self.container = self.client.containers.get('SMARTWALKER_CARTO')
+        # self.lidar_port = lidar_port
+        # self.imu_port = imu_port
 
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("CppCommand exit...")
+        self.handler()
+        return True
     """
         online mode is for realtime sensor data generation
         offline mode is for recording the current sensor data, cannot be used for navigation or map drawing
