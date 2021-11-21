@@ -58,6 +58,7 @@ class CppCommand(object):
         self.imu_port = lidarObj.port_name
         # Initialize the driver receiver object
         self.drvObj = DriverRecv(mode="offline")
+        self.program_path = "/app/smartwalker_cartomap/build"
         
         
     def __enter__(self):
@@ -76,7 +77,7 @@ class CppCommand(object):
     """
     def start_sensors(self, mode="online", stdout=False):
         if not self._sensors_running:
-            _, stream = self.container.exec_run("/app/smartwalker_cartomap/build/start_record %s %s %s" % (self.lidar_port, self.imu_port, mode), stream=True)
+            _, stream = self.container.exec_run("%s/start_record %s %s %s" % (self.program_path, self.lidar_port, self.imu_port, mode), stream=True)
             if stdout:
                 for data in stream:
                     print(data.decode(), end="")
@@ -112,7 +113,7 @@ class CppCommand(object):
                 irObj.start(use_thread=True)
 
         if not self._nav_running:
-            _, stream = self.container.exec_run("/app/smartwalker_cartomap/build/start_navigation %s %s %s %s" % (map_file, filter, mode, testing), stream=True)
+            _, stream = self.container.exec_run("%s/start_navigation %s %s %s %s" % (self.program_path, map_file, filter, mode, testing), stream=True)
             if stdout:
                 for data in stream:
                     print(data.decode(), end="")
@@ -139,7 +140,7 @@ class CppCommand(object):
             self.start_sensors()
             
         if not self._draw_running:
-            _, stream = self.container.exec_run("/app/smartwalker_cartomap/build/draw_map_realtime", stream=True)
+            _, stream = self.container.exec_run("%s/draw_map_realtime" % self.program_path, stream=True)
             if stdout:
                 for data in stream:
                     print(data.decode(), end="")
