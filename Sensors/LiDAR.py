@@ -53,6 +53,7 @@ class lidar(rplidar.RPLidar):
         self.scan_data_list = []
 
     def scan_procedure(self,is_show:bool=False):
+        # present_time = time.time()
         while True:
             try:
                 info = self.get_info()
@@ -60,6 +61,9 @@ class lidar(rplidar.RPLidar):
                 health = self.get_health()
                 print(health)
                 for i, scan in enumerate(self.iter_scans(max_buf_meas=5000)):
+                    # new_time = time.time()
+                    # print("frequency:",1/(new_time-present_time))
+                    # present_time = new_time
                     self.scan_data_list = scan
                     if is_show:
                         print(self.scan_data_list)

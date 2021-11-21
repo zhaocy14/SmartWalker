@@ -30,22 +30,22 @@ def print_serial(port):
     print()
 
 
-def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
+def detect_serials(location="1-1.1:1.0", vid=0x10c4, pid=0xea60):
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print_serial(port)
 
-        if port.description.__contains__(description):
+        if port.location.__contains__(location):
             port_path = port.device
             return port_path
         else:
-            print("Cannot find the target device: %s" % description)
+            print("Cannot find the target device: %s" % location)
     return None
 
 
 class SoftSkin(object):
     def __init__(self):
-        port_name = detect_serials(description="ttyACM0")  # Arduino Mega 2560 ttyACM0
+        port_name = detect_serials()  # Arduino Mega 2560 ttyACM0
         baud_rate = 115200
         print(port_name, baud_rate)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
@@ -58,7 +58,7 @@ class SoftSkin(object):
         self.average_length = 10
         self.average_buffer = np.zeros((self.average_length,self.port_num))
         self.max_pressure = 0
-
+        self.build_base_line_data()
 
         pass
 
@@ -128,8 +128,8 @@ class SoftSkin(object):
                         file.write(str(write_data) + '\n')
                         file.flush()
                     self.temp_data = temp_data
-                    self.max_pressure = max(max(self.temp_data),self.max_pressure)
-                    # time.sleep(0.08)
+                    self.max_pressure = max(self.temp_data)
+                    time.sleep(0.1)
                     if plot:
                         # plt.ion()
                         plot_array[0:plot_num - 1, :] = plot_array[1:plot_num, :]
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     thread_test = threading.Thread(target=little_test,args=(softskin,driver,))
     thread_test.start()
 
-    driver.start()
+    # driver.start()
     softskin.read_and_record(show=True, record=True,plot=False)
     # softskin.record_label()
 

@@ -27,25 +27,22 @@ def print_serial(port):
     print()
 
 
-def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
+def detect_serials(location="1-3.2:1.0", vid=0x10c4, pid=0xea60):
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print_serial(port)
 
-        if port.description.__contains__(description):
+        if port.location.__contains__(location):
             port_path = port.device
             return port_path
         else:
-            print("Cannot find the target device: %s" % description)
+            print("Cannot find the target device: %s" % location)
     return None
 
 
 class Infrared_Sensor(object):
     def __init__(self, sensor_num: int = 5, baud_rate: int = 115200, is_windows: bool = False):
-        if is_windows:
-            port_name = detect_serials(description="Arduino Mega 2560")
-        else:
-            port_name = detect_serials(description="ttyACM0")
+        port_name = detect_serials()
         print(port_name, baud_rate)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
         self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
