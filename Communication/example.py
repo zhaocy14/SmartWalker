@@ -34,4 +34,4 @@ if __name__ == "__main__":
             Start sensors command example
         '''
         cco.start_sensors(stdout=False)
-        cco.start_drawing(stdout=True)
+        # cco.start_drawing(stdout=True)
