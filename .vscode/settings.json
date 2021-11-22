@@ -1,0 +1,7 @@
+{
+  "python.analysis.extraPaths": [
+    "./venv/lib",
+    "./venv/include"
+  ],
+  "python.formatting.provider": "black"
+}

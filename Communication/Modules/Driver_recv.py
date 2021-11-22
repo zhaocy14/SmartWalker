@@ -6,8 +6,6 @@
 # Socket number: 
 # RpLidar is 5450, IMU is 5451, Driver is 5452
 #
-
-import numpy as np
 import os,sys
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
@@ -41,13 +39,20 @@ class DriverRecv(object):
             thread_cd.start()
     
 
-    def start(self):
-        for topic, msg in rzo.start(self.topic):
-            if self.mode == "online":
-                control = json.loads(msg)
-                if len(control) > 0:
-                    self.send_control(control)
-            print("Received request - {}::{}".format(topic, msg))
+    def start(self, use_thread=False):
+        def _start():
+            for topic, msg in rzo.start(self.topic):
+                if self.mode == "online":
+                    control = json.loads(msg)
+                    if len(control) > 0:
+                        self.send_control(control)
+                print("Received request - {}::{}".format(topic, msg))
+
+        if use_thread:
+            th1 = threading.Thread(target=_start)
+            th1.start()
+        else:
+            _start()
 
     
     def send_control(self, control = None):
