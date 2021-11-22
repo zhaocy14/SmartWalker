@@ -2,13 +2,15 @@ import os, sys
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
-from signal import signal, SIGINT
+from signal import Handlers, signal, SIGINT
 from sys import exit
 import docker
 import time
 
 from Communication.Modules.Driver_recv import DriverRecv
 from Communication.Modules.Infrared_transmit import InfraredTransmit
+from Sensors.LiDAR import lidar
+from Sensors.IMU import IMU
 
 class CppCommand(object):
     _instance = None
@@ -17,9 +19,9 @@ class CppCommand(object):
     _draw_running = False
     
     @staticmethod
-    def get_instance(lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB1"):
+    def get_instance():
         if CppCommand._instance is None:
-            CppCommand(lidar_port=lidar_port, imu_port=imu_port)
+            CppCommand() 
         return CppCommand._instance
 
 
@@ -27,9 +29,9 @@ class CppCommand(object):
         return self._id
 
     
-    def handler(self, signal_received, frame):
+    def handler(self, signal_received=None, frame=None):
         # Handle any cleanup here
-        print('SIGINT or CTRL-C detected. Exiting gracefully')
+        # print('SIGINT or CTRL-C detected. Exiting gracefully')
         self.stop_navigation()
         self.stop_drawing()
         self.stop_sensors()
@@ -40,24 +42,33 @@ class CppCommand(object):
           if count == 0:
             break
           time.sleep(1)
-        exit(0)
 
 
-    def __init__(self, lidar_port="/dev/ttyUSB0", imu_port="/dev/ttyUSB4"):
+    def __init__(self):
         if CppCommand._instance is not None:
             raise Exception('only one instance can exist')
         else:
             self._id = id(self)
             CppCommand._instance = self
+        imuObj = IMU()
+        lidarObj = lidar()
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
-        self.lidar_port = lidar_port
-        self.imu_port = imu_port
+        self.lidar_port = imuObj.port_name
+        self.imu_port = lidarObj.port_name
         # Initialize the driver receiver object
-        # self.drvObj = DriverRecv(mode="offline")
-        signal(SIGINT, self.handler)
+        self.drvObj = DriverRecv(mode="offline")
+        
+        
+    def __enter__(self):
+        return self._instance
+      
 
-
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.handler()
+        return True
+      
+      
     """
         online mode is for realtime sensor data generation
         offline mode is for recording the current sensor data, cannot be used for navigation or map drawing

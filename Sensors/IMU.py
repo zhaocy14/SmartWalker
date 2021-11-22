@@ -16,9 +16,9 @@ class IMU(object):
     def __init__(self, baud_rate=115200,name:str=""):
         """serial information"""
         self.baud_rate = baud_rate
-        self.port_name = ""
-        self.port_list = ""
-        self.serial = ""
+        self.port_name, self.port_list = self.detect_serials("USB Serial") #USB-SERIAL CH340   USB Serial
+        print(self.port_name)
+        self.serial = serial.Serial(self.port_name, self.baud_rate, timeout=None)
 
         """data processing"""
         self.ACCData = [0.0] * 8
@@ -52,13 +52,13 @@ class IMU(object):
 
     """list all the port"""
 
-    def detect_serials(self, description, vid=0x10c4, pid=0xea60):
+    def detect_serials(self, description="USB Serial", vid=0x10c4, pid=0xea60):
         ports = serial.tools.list_ports.comports()
         port_cnt = 0
         port_list = []
         for port in ports:
-            # self.print_serial(port)
-            if port.device.__contains__(description):
+            self.print_serial(port)
+            if port.description.__contains__(description):
                 port_list = port.description
                 port_path = port.device
                 self.print_serial(port)
@@ -66,20 +66,7 @@ class IMU(object):
                 return port_path, port_list
 
         print("Cannot find the device: IMU")
-
-            # print("%x and %x" % (port.vid, port.pid))
-            # if vid == port.vid and port.pid == pid:
-            #     port_list.append(port)
-            #     port_cnt += 1
-        #     这里我还不知道vid和pid是什么东西
         return None, None
-
-    """ Open the target serial"""
-    def open_serial(self,description="USB-SERIAL CH340"):
-        self.port_name, self.port_list = self.detect_serials(
-            description)  # Windows: USB-SERIAL CH340   Ubuntu:USB2.0-Serial  Multiple Sensors: COM4/COM9
-        self.serial = serial.Serial(self.port_name, self.baud_rate, timeout=None)
-        print(self.port_name, self.baud_rate)
 
     """ Collect all of the original data"""
     def collect_all(self,show=False):  # 新增的核心程序，对读取的数据进行划分，各自读到对应的数组里
@@ -231,15 +218,9 @@ class IMU(object):
 
 if __name__ == '__main__':
     IMU_1 = IMU()
-    # IMU_2 = IMU()
+
     time.sleep(2)
-    IMU_1.open_serial("/dev/ttyUSB1")
-    # IMU_1.collect_data(show=True)
+
     IMU_1.read_record(show=True)
-    # IMU_2.open_serial("COM9")
-    # I1_thread = threading.Thread(target=IMU_1.read_record,args=(0,False,))
-    # I2_thread = threading.Thread(target=IMU_2.read_record,args=(0,False,))
-    # I1_thread.start()
-    # I2_thread.start()
-    # IMU.read_record(show=False)
+
 

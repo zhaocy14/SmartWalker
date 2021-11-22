@@ -45,7 +45,7 @@ class Infrared_Sensor(object):
         if is_windows:
             port_name = detect_serials(description="Arduino Mega 2560")
         else:
-            port_name = detect_serials(description="ttyACM1")
+            port_name = detect_serials(description="ttyACM0")
         print(port_name, baud_rate)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
         self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
@@ -166,6 +166,6 @@ class Infrared_Sensor(object):
         print(self.count_num)
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=5,baud_rate=115200, is_windows=False)
-    infrared.read_data(is_shown=True,is_average=False,is_record=True)
+    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
+    infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()
