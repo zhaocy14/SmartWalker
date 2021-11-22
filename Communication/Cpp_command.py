@@ -54,8 +54,8 @@ class CppCommand(object):
         lidarObj = lidar()
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
-        self.lidar_port = imuObj.port_name
-        self.imu_port = lidarObj.port_name
+        self.lidar_port = lidarObj.port_name
+        self.imu_port = imuObj.port_name
         # Initialize the driver receiver object
         self.drvObj = DriverRecv(mode="offline")
         self.program_path = "/app/smartwalker_cartomap/build"

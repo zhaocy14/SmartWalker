@@ -16,7 +16,7 @@ class IMU(object):
     def __init__(self, baud_rate=115200,name:str=""):
         """serial information"""
         self.baud_rate = baud_rate
-        self.port_name, self.port_list = self.detect_serials("USB Serial") #USB-SERIAL CH340   USB Serial
+        self.port_name, self.port_list = self.detect_serials("1-3.4") #USB-SERIAL CH340   1-3.3
         print(self.port_name)
         self.serial = serial.Serial(self.port_name, self.baud_rate, timeout=None)
 
@@ -52,13 +52,13 @@ class IMU(object):
 
     """list all the port"""
 
-    def detect_serials(self, description="USB Serial", vid=0x10c4, pid=0xea60):
+    def detect_serials(self, description="1-3.3", vid=0x10c4, pid=0xea60):
         ports = serial.tools.list_ports.comports()
         port_cnt = 0
         port_list = []
         for port in ports:
             self.print_serial(port)
-            if port.description.__contains__(description):
+            if port.location.__contains__(description):
                 port_list = port.description
                 port_path = port.device
                 self.print_serial(port)
@@ -200,13 +200,13 @@ class IMU(object):
         IMU_data_path = file_path + os.path.sep + "IMU" + str(self.name) + ".txt"
         file_IMU = open(IMU_data_path, "w")
         while True:
-            self.collect_all(show)
-            # Add time stamp
-            combine_data = list([time.time()]) + list(self.a) + list(self.w) + list(self.Angle)
-            # print(combine_data)
-            file_IMU.write(str(combine_data) + "\n")
-            file_IMU.flush()
-            time.sleep(time_delay)
+                self.collect_all(show)
+                # Add time stamp
+                combine_data = list([time.time()]) + list(self.a) + list(self.w) + list(self.Angle)
+                # print(combine_data)
+                file_IMU.write(str(combine_data) + "\n")
+                file_IMU.flush()
+                time.sleep(time_delay)
 
     def collect_data(self,time_delay=0,show=False):
         while True:
