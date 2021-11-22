@@ -7,8 +7,8 @@ import time
 
 from Communication.Cpp_command import CppCommand
 from Communication.Receiver import Receiver
-cco = CppCommand.get_instance(lidar_port="/dev/ttyUSB2", imu_port="/dev/ttyUSB1")
-
+# cco = CppCommand.get_instance(lidar_port="/dev/ttyUSB2", imu_port="/dev/ttyUSB1")
+# cco = CppCommand.get_instance()
 if __name__ == "__main__":
     with CppCommand.get_instance() as cco:
         # cco.start_navigation(mode="offline", testing="local", stdout=False, map_file="map.2021-09-25.070808")
@@ -18,8 +18,8 @@ if __name__ == "__main__":
             **If needed to move the walker, set driver_ctrl=True
             **If needed the ir sensor, set ir_sensor=True
         '''
-        cco.start_navigation(stdout=False, driver_ctrl=False, ir_sensor=False, map_file="map.2021-09-25.070808")
-        time.sleep(5)
+        # cco.start_navigation(stdout=False, driver_ctrl=False, ir_sensor=False, map_file="map.2021-09-25.070808")
+        # time.sleep(5)
         # recvObj = Receiver(mode="local")
         # recvObj.start_DriverControl()
         # for _ in recvObj.start_Pose():
@@ -33,4 +33,5 @@ if __name__ == "__main__":
         '''
             Start sensors command example
         '''
-        # cco.start_sensors(stdout=True)
+        cco.start_sensors(stdout=False)
+        cco.start_drawing(stdout=True)
