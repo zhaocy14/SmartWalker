@@ -1,192 +1,397 @@
-"""
-    hard-encoded corresponding 2D map of CYC 4th floor
-"""
+# !/usr/bin/env python
+# -*- coding:utf-8 _*-
+# @Author: swang
+# @Contact: wang00sheng@gmail.com
+# @Project Name: RL_Simulation
+# @File: Env_MAP.py
+# @Time: 2021/10/31/10:19
+# @Software: PyCharm
 
-import math
+
+import os
+import sys
+import time
+import random
 import numpy as np
-from SoundSourceLocalization.ssl_setup import STEP_SIZE
+from copy import deepcopy
+import networkx as nx
+import pickle
 
 
-class Map:
-    def __init__(self):
-        # start position
-        # mass center of the walker
-        self.walker_pos_x = None
-        self.walker_pos_z = None
+class Node(object):
+    def __init__(self, ):
+        super(Node, self).__init__()
+    
+    def set_coordinate(self, coordinate):
+        self.coordinate = np.array(coordinate)
+    
+    def set_neighbors(self, neighbors):
+        self.neighbors = np.array(neighbors)
+    
+    def set_id(self, id):
+        self.id = id
+    
+    def get_neighbor(self):
+        return self.neighbors
+    
+    def get_coordinate(self):
+        return self.coordinate
 
-        # world axis indicate walker head
-        self.walker_face_to = None
 
-        # max length of walker, safe distance
-        self.walker_length = 1.35
+class Map_graph(object):
+    def __init__(self, ds_path=None):
+        super(Map_graph, self).__init__()
+        self.ds_path = ds_path
+        coordinates = [[None, None],
+                       [60, 425],
+                       [160, 320],
+                       [340, 425],
+                       [530, 320],
+                       [215, 220],
+                       [170, 160],
+                       [220, 100],
+                       [280, 160],
+                       [220, 15],
+                       [460, 15],
+                       [420, 220],
+                       [160, 425],
+                       [530, 425],
+                       [280, 220],
+                       [280, 100],
+                       [280, 15],
+                       [160, 220],
+                       [530, 220],
+                       [170, 100],
+                       [550, 15]]
+        regions = [[None, None, None, None],
+                   [418, 4, 450, 145],
+                   [250, 145, 418, 175],
+                   [418, 175, 450, 515],
+                   [250, 515, 418, 545],
+                   [210, 175, 250, 250],
+                   [None, None, None, None],
+                   [None, None, None, None],
+                   [42, 250, 210, 322],
+                   [12, 180, 49, 250],
+                   [12, 317, 42, 500],
+                   [210, 317, 250, 515],
+                   [418, 145, 450, 175],
+                   [418, 515, 450, 545],
+                   [210, 250, 250, 317],
+                   [None, None, None, None],
+                   [12, 250, 42, 317],
+                   [210, 145, 250, 175],
+                   [210, 515, 250, 545],
+                   [None, None, None, None],
+                   [12, 500, 42, 800]]
+        map_adj_ls = np.load('../data/adjacency_list.npz')['adjacency_list']
+        self.num_node = len(coordinates)
+        self.coordinates = np.array(coordinates)
+        self.regions = np.array(regions)
+        self.map_adj_ls = np.array(map_adj_ls)
+        self.map_graph = self.construct_map_graph()
+        self.data_adj_ls = self.cal_data_adjacency_list()
+        self.data_graph = self.construct_data_graph()
+        self.src_ids = np.where(np.any(self.data_adj_ls, axis=-1))[0]
+        print('Number of src_ids: ', len(self.src_ids), '\n', 'src_ids: ', self.src_ids)
+        
+        self.nodes = np.array([Node() for _ in range(self.num_node)])
+        self.__init_nodes__()
+        # self.print_map_graph()
+    
+    def __init_nodes__(self):
+        node_idx = np.arange(self.num_node)
+        for i, adj_ls in enumerate(self.map_adj_ls):
+            if np.all(adj_ls == np.inf):
+                self.nodes[i] = None
+            else:
+                neighbors = np.full((8,), None)
+                neighbors[np.array(adj_ls[adj_ls != np.inf], dtype=int)] = node_idx[adj_ls != np.inf]
+                # neighbors[np.array(adj_ls[adj_ls != np.inf], dtype=int)] = self.nodes[adj_ls != np.inf]
+                self.nodes[i].set_neighbors(neighbors)
+                self.nodes[i].set_coordinate(self.coordinates[i])
+                self.nodes[i].set_id(i)
+    
+    def print_map_graph(self):
+        print('-' * 20, 'Graph of nodes', '-' * 20, )
+        for i, node in enumerate(self.nodes):
+            if node is None:
+                continue
+            print('id: ', node.id)
+            print('directions: ', list(range(8)))
+            # ids = []
+            # for j, neighbor in enumerate(node.neighbors):
+            #     if neighbor is not None:
+            #         ids.append(neighbor.id)
+            #     else:
+            #         ids.append('')
+            # print('neighbors: ', ids)
+            print('neighbors:  ', node.neighbors)
+        print('-' * 20, 'Finish printing graph', '-' * 20, )
+    
+    def cal_data_adjacency_list(self, ):
+        def load_dataset():
+            # Statistical information of the dataset
+            if self.ds_path is None:
+                ds_path = '../data/4F_CYC/256ms_0.13_400_16000/norm_drop_denoised_norm_ini_hann_dict_gcc_phat_128.pkl'
+            else:
+                ds_path = self.ds_path
+            with open(ds_path, 'rb') as fo:
+                ds = pickle.load(fo)
+            return ds['dataset']
+        
+        def dataset_info(dataset):
+            info = dict()
+            for src_key in dataset.keys():
+                info[src_key] = list(dataset[src_key].keys())
+            return info
+        
+        dataset = load_dataset()
+        data_info = dataset_info(dataset)
+        del dataset
+        # cal_data_adjacency_list
+        self.data_adj_ls = np.full((self.num_node, self.num_node), False)
+        for src_key in data_info.keys():
+            src_coord = list(map(int, src_key.split('_')))
+            src_idx = np.where(np.all(self.coordinates == [src_coord], axis=-1))[0][0]
+            for wk_key in data_info[src_key]:
+                wk_coord = list(map(int, wk_key.split('_')))
+                wk_coord = [wk_coord[0], wk_coord[-1]]
+                wk_idx = np.where(np.all(self.coordinates == [wk_coord], axis=-1))[0][0]
+                # self.data_adj_ls[src_idx][wk_idx] = True
+                path = nx.dijkstra_path(self.map_graph, source=src_idx, target=wk_idx)
+                for i in path:
+                    self.data_adj_ls[src_idx][i] = True
+        self.data_adj_ls[np.diag_indices_from(self.data_adj_ls)] = False
+        
+        print('-' * 20, 'Data graph', '-' * 20, )
+        for src_id, adj_ls in enumerate(self.data_adj_ls):
+            wk_ids = np.where(adj_ls)[0]
+            if len(wk_ids) > 0:
+                print('src:', src_id, '-' * 4, 'wk:', np.where(adj_ls)[0])
+        print('-' * 20, 'Finish printing graph', '-' * 20, )
+        
+        return self.data_adj_ls
+    
+    def construct_map_graph(self, ):
+        map_adj_ls = np.array(self.map_adj_ls)
+        row, col = np.array(np.where(map_adj_ls != np.inf))
+        
+        G = nx.Graph()
+        for i in {*row, *col}:
+            G.add_node(i)
+        for i, j in list(zip(row, col)):
+            distance = np.linalg.norm(self.coordinates[i] - self.coordinates[j], ord=2)
+            G.add_weighted_edges_from([(i, j, distance)])
+        
+        return G
+    
+    def construct_data_graph(self, ):  # src -> wk
+        data_adj_ls = np.array(self.data_adj_ls)
+        row, col = np.array(np.where(data_adj_ls))
+        
+        G = nx.DiGraph()
+        for i in {*row, *col}:
+            G.add_node(i)
+        for i, j in list(zip(row, col)):
+            distance = nx.dijkstra_path_length(self.map_graph, source=i, target=j)
+            G.add_weighted_edges_from([(i, j, distance)])
+        
+        return G
+    
+    def random_src_id(self):
+        return np.random.choice(self.src_ids, 1)[0]
+    
+    def random_wk_id(self, src_id):  # randomly select one node from src_id's data_children
+        children = np.where(self.data_adj_ls[src_id], )[0]
+        return np.random.choice(children, 1)[0]
+    
+    def random_doa(self):
+        return np.random.choice(range(8), 1)[0]
+    
+    def find_id_by_direction(self, base_id, direction):  # find the id in the specific direction of base_id
+        return self.nodes[base_id].get_neighbor()[direction]
+    
+    def find_relative_direction(self, src_id, wk_id, ):  # find where src_id is relative to wk_id
+        # TODO 仅支持当前地图
+        path = self.find_shortest_map_path(src_id, wk_id, )
+        wk_neighbors = self.nodes[wk_id].get_neighbor()
+        return np.where(wk_neighbors == path[-2])[0][0]
+    
+    def cal_relative_doa(self, src_id, wk_id, abs_doa):
+        src_2_wk_doa = self.find_relative_direction(src_id, wk_id)
+        rela_doa = (src_2_wk_doa - abs_doa + 2 + 16) % 8
+        return rela_doa
+    
+    def is_data_neighbor(self, src_id, wk_id, ):
+        return self.data_adj_ls[src_id][wk_id]
+    
+    def find_shortest_map_path(self, src_id, wk_id):
+        path = nx.dijkstra_path(self.map_graph, source=src_id, target=wk_id)
+        # distance = nx.dijkstra_path_length(self.map_graph, source=src_id, target=wk_id)
+        return path
+    
+    def find_shortest_data_path(self, src_id, wk_id):
+        path = nx.dijkstra_path(self.data_graph, source=src_id, target=wk_id)
+        # distance = nx.dijkstra_path_length(self.data_graph, source=src_id, target=wk_id)
+        return path
+    
+    def find_intermediary_src(self, src_id, wk_id):
+        path = self.find_shortest_data_path(src_id, wk_id)
+        return path[1:-1]
+    
+    def get_coordinate(self, id):
+        return self.nodes[id].get_coordinate()
+    
+    def get_region_idx(self, position):
+        x, y = position
+        for i, node in enumerate(self.nodes):
+            if node is not None:
+                x1, y1, x2, y2 = self.regions[i]
+                if (x1 <= x <= x2 or x2 <= x <= x1) and (y1 <= y <= y2 or y2 <= y <= y1):
+                    return i
+        return None
 
-        # determine regions and gates
-        self.gate_region_1 = [3.2, 7.5]
-        self.gate_region_2 = [0, 0.9]
-        self.gate_region_3 = [3.2, 0.9]
-        self.gate_region_4 = [0.8, 0]
 
-        self.hall_r2_r1 = [0]
-        self.hall_r2_r4 = [0, 0, 0]
-        self.hall_same = [45, 315, 0]
-        self.hall_r3_r1 = [0, 0, 0, 45, 45, 0, 0]
-        self.hall_m = [0, 45]
+class ONLINE_Map_graph(object):
+    def __init__(self, ):
+        super(ONLINE_Map_graph, self).__init__()
+        coordinates = [[None, None],  # 0
+                       [60, 425],  # 1
+                       [160, 320],  # 2
+                       [340, 425],  # 3
+                       [530, 320],  # 4
+                       [215, 220],  # 5
+                       [170, 160],  # 6
+                       [220, 100],  # 7
+                       [280, 160],  # 8
+                       [220, 15],  # 9
+                       [460, 15],  # 10
+                       [420, 220],  # 11
+                       [160, 425],  # 12
+                       [530, 425],  # 13
+                       [280, 220],  # 14
+                       [280, 100],  # 15
+                       [280, 15],  # 16
+                       [160, 220],  # 17
+                       [530, 220],  # 18
+                       [170, 100],  # 19
+                       [550, 15]]  # 20
+        regions = [[None, None, None, None],  # 0
+                   [4, 418, 145, 450],  # 1
+                   [145, 250, 175, 418],  # 2
+                   [175, 418, 515, 450],  # 3
+                   [515, 250, 545, 418],  # 4
+                   [175, 210, 250, 250],  # 5
+                   [None, None, None, None],  # 6
+                   [None, None, None, None],  # 7
+                   [250, 42, 322, 210],  # 8
+                   [180, 12, 250, 49],  # 9
+                   [317, 12, 500, 42],  # 10
+                   [317, 210, 515, 250],  # 11
+                   [145, 418, 175, 450],  # 12
+                   [515, 418, 545, 450],  # 13
+                   [250, 210, 317, 250],  # 14
+                   [None, None, None, None],  # 15
+                   [250, 12, 317, 42],  # 16
+                   [145, 210, 175, 250],  # 17
+                   [515, 210, 545, 250],  # 18
+                   [None, None, None, None],  # 19
+                   [500, 12, 800, 42]]  # 20
+        map_adj_ls = np.load('./map_data/adjacency_list.npz')['adjacency_list']
+        self.num_node = len(coordinates)
+        self.coordinates = np.array(coordinates)
+        self.regions = np.array(regions)
+        self.map_adj_ls = np.array(map_adj_ls)
+        self.map_graph = self.construct_map_graph()
+        
+        self.nodes = np.array([Node() for _ in range(self.num_node)])
+        self.__init_nodes__()
+        # self.print_map_graph()
+    
+    def __init_nodes__(self):
+        node_idx = np.arange(self.num_node)
+        for i, adj_ls in enumerate(self.map_adj_ls):
+            if np.all(adj_ls == np.inf):
+                self.nodes[i] = None
+            else:
+                neighbors = np.full((8,), None)
+                neighbors[np.array(adj_ls[adj_ls != np.inf], dtype=int)] = node_idx[adj_ls != np.inf]
+                # neighbors[np.array(adj_ls[adj_ls != np.inf], dtype=int)] = self.nodes[adj_ls != np.inf]
+                self.nodes[i].set_neighbors(neighbors)
+                self.nodes[i].set_coordinate(self.coordinates[i])
+                self.nodes[i].set_id(i)
+    
+    def print_map_graph(self):
+        print('-' * 20, 'Graph of nodes', '-' * 20, )
+        for i, node in enumerate(self.nodes):
+            if node is None:
+                continue
+            print('id: ', node.id)
+            print('directions: ', list(range(8)))
+            print('neighbors:  ', node.neighbors)
+        print('-' * 20, 'Finish printing graph', '-' * 20, )
+    
+    def construct_map_graph(self, ):
+        map_adj_ls = np.array(self.map_adj_ls)
+        row, col = np.array(np.where(map_adj_ls != np.inf))
+        
+        G = nx.Graph()
+        for i in {*row, *col}:
+            G.add_node(i)
+        for i, j in list(zip(row, col)):
+            distance = np.linalg.norm(self.coordinates[i] - self.coordinates[j], ord=2)
+            G.add_weighted_edges_from([(i, j, distance)])
+        
+        return G
+    
+    def find_id_by_direction(self, base_id, direction):  # find the id in the specific direction of base_id
+        return self.nodes[base_id].get_neighbor()[direction]
+    
+    def find_relative_direction(self, src_id, wk_id, ):  # find where src_id is relative to wk_id
+        # TODO 仅支持当前地图
+        path = self.find_shortest_map_path(src_id, wk_id, )
+        wk_neighbors = self.nodes[wk_id].get_neighbor()
+        return np.where(wk_neighbors == path[-2])[0][0]
+    
+    def cal_relative_doa(self, src_id, wk_id, abs_doa):
+        src_2_wk_doa = self.find_relative_direction(src_id, wk_id)
+        rela_doa = (src_2_wk_doa - abs_doa + 2 + 16) % 8
+        return rela_doa
+    
+    def find_shortest_map_path(self, src_id, wk_id):
+        path = nx.dijkstra_path(self.map_graph, source=src_id, target=wk_id)
+        # distance = nx.dijkstra_path_length(self.map_graph, source=src_id, target=wk_id)
+        return path
+    
+    def get_coordinate(self, id):
+        return self.nodes[id].get_coordinate()
+    
+    def get_region_idx(self, position):
+        x, y = position
+        for i, node in enumerate(self.nodes):
+            if node is not None:
+                x1, y1, x2, y2 = self.regions[i]
+                if (x1 <= x <= x2 or x2 <= x <= x1) and (y1 <= y <= y2 or y2 <= y <= y1):
+                    return i
+        return None
+    
+    def get_node_neighbors(self, node_idx):
+        return self.nodes[node_idx].get_neighbor()
 
-    # just show next position and its facing direction
-    def next_walker_pos(self, direction):
-        move_towards = (self.walker_face_to + direction) % 360
 
-        x = None
-        z = None
-
-        if move_towards == 0:
-            x = self.walker_pos_x
-            z = self.walker_pos_z + STEP_SIZE
-        elif move_towards == 45:
-            x = self.walker_pos_x + (STEP_SIZE * math.sqrt(0.5))
-            z = self.walker_pos_z + (STEP_SIZE * math.sqrt(0.5))
-        elif move_towards == 90:
-            x = self.walker_pos_x + STEP_SIZE
-            z = self.walker_pos_z
-        elif move_towards == 135:
-            x = self.walker_pos_x + (STEP_SIZE * math.sqrt(0.5))
-            z = self.walker_pos_z - (STEP_SIZE * math.sqrt(0.5))
-        elif move_towards == 180:
-            x = self.walker_pos_x
-            z = self.walker_pos_z - STEP_SIZE
-        elif move_towards == 225:
-            x = self.walker_pos_x - (STEP_SIZE * math.sqrt(0.5))
-            z = self.walker_pos_z - (STEP_SIZE * math.sqrt(0.5))
-        elif move_towards == 270:
-            x = self.walker_pos_x - STEP_SIZE
-            z = self.walker_pos_z
-        elif move_towards == 315:
-            x = self.walker_pos_x - (STEP_SIZE * math.sqrt(0.5))
-            z = self.walker_pos_z + (STEP_SIZE * math.sqrt(0.5))
-        else:
-            print("Fail to cal next position: wrong direction")
-            exit(1)
-
-        return x, z, move_towards
-
-    # update position
-    def update_walker_pos(self, direction):
-        x, z, d = self.next_walker_pos(direction)
-        self.walker_pos_x = x
-        self.walker_pos_z = z
-        self.walker_face_to = d
-
-    # return the set of invalid directions (degrees)
-    def detect_invalid_directions(self):
-        x = self.walker_pos_x
-        z = self.walker_pos_z
-
-        potential_dirs = [0, 45, 90, 135, 180, 225, 270, 315]
-
-        invalids = []
-
-        if 6.0 < z <= 7.5:
-            # for dire in potential_dirs:
-            #     if (dire + self.walker_face_to) % 360 in [315, 0, 45]:
-            #         invalids.append(dire)
-
-            if x < self.walker_length:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [225, 270, 315]:
-                        invalids.append(dire)
-
-            if 3.2 <= x:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [0, 45, 135, 180, 225, 315]:
-                        invalids.append(dire)
-
-        elif 1.8 < z <= 6.0:
-            if x < self.walker_length:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [225, 270, 315]:
-                        invalids.append(dire)
-            elif x > 3.2 - self.walker_length:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [45, 90, 135]:
-                        invalids.append(dire)
-
-        elif 0 <= z <= 1.8:
-            if x < 0 or x > 3.2:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [0, 45, 135, 180, 225, 315]:
-                        invalids.append(dire)
-
-            if 0 <= x < 1.7:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [135, 225, 315]:
-                        invalids.append(dire)
-
-            if 1.7 <= x <= 3.2:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [135, 180, 225]:
-                        invalids.append(dire)
-
-        elif z < 0:
-            if x < 1.7:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [0, 45, 90, 135]:
-                        invalids.append(dire)
-            if x > 1.9:
-                for dire in potential_dirs:
-                    if (dire + self.walker_face_to) % 360 in [0, 225, 270, 315]:
-                        invalids.append(dire)
-
-        else:
-            print("Out of condition for z .")
-
-        return invalids
-
-    # Hall - 0, out_room - 1, left - 2, right - 3, lab - 4, cvlab - 5
-    def detect_which_region(self):
-        x = self.walker_pos_x
-        z = self.walker_pos_z
-
-        current_region = None
-        if 0 <= x <= 3.2 and 0 <= z <= 7.5:
-            print("Detect walker in Region 0 .")
-            current_region = 0
-        elif 3.2 < x and 6.0 <= z <= 7.5:
-            print("Detect walker in Region 1 .")
-            current_region = 1
-        elif x < 0 and 0 <= z <= 1.8:
-            print("Detect walker in Region 2 .")
-            current_region = 2
-        elif 3.2 < x and 0 <= z <= 1.8:
-            print("Detect walker in Region 3 .")
-            current_region = 3
-        elif x <= 1.7 and z < 0:
-            print("Detect walker in Region 4 .")
-            current_region = 4
-        elif x >= 3.2 and z < 0:
-            print("Detect walker in Region 5 .")
-            current_region = 5
-        else:
-            print("Fail to detect walker region .")
-
-        return current_region
-
-    def cal_distance_region(self, region_num):
-        if region_num == 1:
-            return np.abs(self.gate_region_1[0] - self.walker_pos_x) + np.abs(self.gate_region_1[1] - self.walker_pos_z)
-
-        elif region_num == 2:
-            return np.abs(self.gate_region_2[0] - self.walker_pos_x) + np.abs(self.gate_region_2[1] - self.walker_pos_z)
-
-        elif region_num == 3:
-            return np.abs(self.gate_region_3[0] - self.walker_pos_x) + np.abs(self.gate_region_3[1] - self.walker_pos_z)
-
-        elif region_num == 4:
-            return np.abs(self.gate_region_4[0] - self.walker_pos_x) + np.abs(self.gate_region_4[1] - self.walker_pos_z)
-
-        else:
-            print("no such distance to region %d" % region_num)
-
-    def print_walker_status(self):
-        print("walker at x: ", self.walker_pos_x)
-        print("walker at z: ", self.walker_pos_z)
-        print("walker face to: ", self.walker_face_to)
+if __name__ == '__main__':
+    # adjacency_list = np.full((21, 21), np.inf)
+    # for i in range(21):
+    #     for j in range(21):
+    #         ipt = input('{:.1f}相对于{:.1f}的位置关系：'.format(j, i))
+    #         try:
+    #             ipt = int(ipt)
+    #             print(ipt)
+    #             adjacency_list[i][j] = ipt
+    #         except:
+    #             pass
+    # np.savez('./adjacency_list.npz', adjacency_list=adjacency_list)
+    # print(adjacency_list)
+    
+    map_graph = Map_graph()

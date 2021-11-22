@@ -12,7 +12,7 @@ import sys
 import tensorflow as tf
 
 # pylint: disable=unused-import
-from tensorflow.contrib.framework.python.ops import audio_ops as contrib_audio
+# from tensorflow.core.framework.python.ops import audio_ops as contrib_audio
 # pylint: enable=unused-import
 
 class KwsNNet:
@@ -26,10 +26,10 @@ class KwsNNet:
 
         """Loads the model and labels, and runs the inference to print predictions."""
 
-        if not self.labels or not tf.gfile.Exists(self.labels):
+        if not self.labels or not tf.io.gfile.Exists(self.labels):
             tf.logging.fatal('Labels file does not exist %s', self.labels)
 
-        if not self.graph or not tf.gfile.Exists(self.graph):
+        if not self.graph or not tf.io.gfile.Exists(self.graph):
             tf.logging.fatal('Graph file does not exist %s', self.graph)
 
         self.labels_list = self.load_labels(self.labels)
@@ -39,7 +39,7 @@ class KwsNNet:
 
     def load_graph(self, filename):
         """Unpersists graph from file as default graph."""
-        with tf.gfile.FastGFile(filename, 'rb') as f:
+        with tf.io.gfile.FastGFile(filename, 'rb') as f:
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())
             tf.import_graph_def(graph_def, name='')

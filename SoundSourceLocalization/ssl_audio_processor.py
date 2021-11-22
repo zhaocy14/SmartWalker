@@ -43,7 +43,7 @@ def cal_volume(waveData, frameSize=256, overLap=128):
     volume = np.zeros((frameNum, 1))
     for i in range(frameNum):
         curFrame = waveData[np.arange(i * step, min(i * step + frameSize, wlen))]
-        curFrame = curFrame - np.median(curFrame)  # zero-justified
+        curFrame = curFrame - np.median(curFrame)  # zero-justified fixme mean?
         volume[i] = np.sum(np.abs(curFrame))
     return volume
 
@@ -59,9 +59,9 @@ def split_channels(wave_output_filename):
         mic2.append(item[1])
         mic3.append(item[2])
         mic4.append(item[3])
-
+    
     front = wave_output_filename[:len(wave_output_filename) - 4]
-
+    
     # physic mic number --- channel number
     wavfile.write(front + '_mic1.wav', sampleRate, np.array(mic2))
     wavfile.write(front + '_mic2.wav', sampleRate, np.array(mic3))
@@ -83,15 +83,15 @@ def nextpow2(x):
 
 def de_noise(input_file, output_file):
     f = wave.open(input_file)
-
+    
     params = f.getparams()
     nchannels, sampwidth, framerate, nframes = params[:4]
     fs = framerate
     str_data = f.readframes(nframes)
     f.close()
     x = np.fromstring(str_data, dtype=np.short)
-
-    len_ = 20 * fs // 1000  # 样本中帧的大小
+    
+    len_ = 20 * fs // 1000  # 样本中帧的大小 20ms   fixme 32ms?
     PERC = 50  # 窗口重叠占帧的百分比
     len1 = len_ * PERC // 100  # 重叠窗口
     len2 = len_ - len1  # 非重叠窗口
@@ -100,28 +100,28 @@ def de_noise(input_file, output_file):
     Expnt = 2.0
     beta = 0.002
     G = 0.9
-
+    
     win = np.hamming(len_)
     # normalization gain for overlap+add with 50% overlap
     winGain = len2 / sum(win)
-
+    
     # Noise magnitude calculations - assuming that the first 5 frames is noise/silence
     nFFT = 2 * 2 ** (nextpow2(len_))
     noise_mean = np.zeros(nFFT)
-
+    
     j = 0
     for k in range(1, 6):
         noise_mean = noise_mean + abs(np.fft.fft(win * x[j:j + len_], nFFT))
         j = j + len_
     noise_mu = noise_mean / 5
-
+    
     # --- allocate memory and initialize various variables
     k = 1
     img = 1j
     x_old = np.zeros(len1)
     Nframes = len(x) // len2 - 1
     xfinal = np.zeros(Nframes * len2)
-
+    
     # =========================    Start Processing   ===============================
     for n in range(0, Nframes):
         # Windowing
@@ -130,11 +130,11 @@ def de_noise(input_file, output_file):
         spec = np.fft.fft(insign, nFFT)
         # compute the magnitude
         sig = abs(spec)
-
+        
         # save the noisy phase information
         theta = np.angle(spec)
         SNRseg = 10 * np.log10(np.linalg.norm(sig, 2) ** 2 / np.linalg.norm(noise_mu, 2) ** 2)
-
+        
         def berouti(SNR):
             if -5.0 <= SNR <= 20.0:
                 a = 4 - SNR * 3 / 20
@@ -144,7 +144,7 @@ def de_noise(input_file, output_file):
                 if SNR > 20:
                     a = 1
             return a
-
+        
         def berouti1(SNR):
             if -5.0 <= SNR <= 20.0:
                 a = 3 - SNR * 2 / 20
@@ -154,25 +154,25 @@ def de_noise(input_file, output_file):
                 if SNR > 20:
                     a = 1
             return a
-
+        
         if Expnt == 1.0:  # 幅度谱
             alpha = berouti1(SNRseg)
         else:  # 功率谱
             alpha = berouti(SNRseg)
         #############
-        sub_speech = sig ** Expnt - alpha * noise_mu ** Expnt;
+        sub_speech = sig ** Expnt - alpha * noise_mu ** Expnt
         # 当纯净信号小于噪声信号的功率时
         diffw = sub_speech - beta * noise_mu ** Expnt
-
+        
         # beta negative components
-
+        
         def find_index(x_list):
             index_list = []
             for i in range(len(x_list)):
                 if x_list[i] < 0:
                     index_list.append(i)
             return index_list
-
+        
         z = find_index(diffw)
         if len(z) > 0:
             # 用估计出来的噪声信号表示下限值
@@ -187,7 +187,7 @@ def de_noise(input_file, output_file):
         x_phase = (sub_speech ** (1 / Expnt)) * (
                 np.array([math.cos(x) for x in theta]) + img * (np.array([math.sin(x) for x in theta])))
         # take the IFFT
-
+        
         xi = np.fft.ifft(x_phase).real
         # --- Overlap and add ---------------
         xfinal[k - 1:k + len2 - 1] = x_old + xi[0:len1]
@@ -204,6 +204,12 @@ def de_noise(input_file, output_file):
 
 
 def judge_active(wave_output_filename):
+    '''
+    determine whether there is a vocal fragment or not
+    :param wave_output_filename:
+    :return:
+    '''
+    
     sampleRate, musicData = wavfile.read(wave_output_filename)
     d1 = []
     d2 = []
@@ -214,16 +220,22 @@ def judge_active(wave_output_filename):
         d2.append(item[1])
         d3.append(item[2])
         d4.append(item[3])
-
+    
     v1 = np.average(np.abs(d1))
     v2 = np.average(np.abs(d2))
     v3 = np.average(np.abs(d3))
     v4 = np.average(np.abs(d4))
-
+    
     threshold_v = 230  # day:400 night:230
-
-    if v1 > threshold_v or v2 > threshold_v or v3 > threshold_v or v4 > threshold_v:
+    
+    if v1 > threshold_v or v2 > threshold_v or v3 > threshold_v or v4 > threshold_v:  # fixme why?
         print("Voice intensity: ", v1, v2, v3, v4)
         return True
     else:
         return False
+
+
+if __name__ == '__main__':
+    # read_wav("G:\SmartWalker\SmartWalker-master\\resource\wav\online\\1.wav")
+    de_noise('G:\SmartWalker\SmartWalker-master\\resource\wav\online\\1.wav',
+             'G:\SmartWalker\SmartWalker-master\\resource\wav\online\\1.wav')

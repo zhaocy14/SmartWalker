@@ -1,151 +1,191 @@
 """
     RL online training Part
 """
+import platform
 
 import tensorflow as tf
 import math
 import numpy as np
 import warnings
 import os
+from ssl_setup import *
+import tensorflow as tf
+import tensorflow.keras.backend as K
+import tensorflow.keras as keras
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Flatten, Dense, Dropout
+from tensorflow.keras.optimizers import Adam
 
-warnings.filterwarnings('ignore')
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-gpu_options = tf.GPUOptions(allow_growth=True)
+EPS = np.finfo(float).eps
 
+sysstr = platform.system()
+if (sysstr == "Windows"):
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    print(gpus)
+    tf.config.experimental.set_visible_devices(gpus[0], 'GPU')
+    tf.config.experimental.set_memory_growth(gpus[0], True)
+    K.set_image_data_format('channels_first')
+elif (sysstr == "Linux"):
+    pass
+else:
+    pass
 
-class Actor:
-    def __init__(self, n_features, n_actions, lr):
-        self.n_features = n_features
+    
+class ActorCriticNetwork:
+    def __init__(self, n_actions=ACTION_SPACE, name='actor_critic', ini_model=None, actor_lr=0.003, critic_lr=0.004,
+                 actor_optimizer=None, critic_optimizer=None, gamma=0.99,
+                 ini_model_dir='./model/EEGNet/ckpt', save_model_dir='./actor_critic_model/ckpt'):
+        super(ActorCriticNetwork, self).__init__()
+        
         self.n_actions = n_actions
-        self.lr = lr
-
-        self.s = tf.placeholder(tf.float32, [None, self.n_features], name='state')  # [1, n_F]
-        self.a = tf.placeholder(tf.int32, None, name='action')  # None
-        self.td_error = tf.placeholder(tf.float32, None, name='td-error')  # None
-
-        # restore from supervised learning model
-        with tf.variable_scope('Supervised'):
-            l1 = tf.layers.dense(
-                inputs=self.s,
-                units=int(math.sqrt(self.n_actions * self.n_features)),
-                activation=tf.nn.leaky_relu,
-                kernel_initializer=tf.random_normal_initializer(mean=0, stddev=0.01),
-                bias_initializer=tf.constant_initializer(0.1),
-                name='l1'
-            )
-
-            self.acts_prob = tf.layers.dense(
-                inputs=l1,
-                units=self.n_actions,
-                activation=tf.nn.softmax,
-                kernel_initializer=tf.random_normal_initializer(mean=0, stddev=0.01),
-                bias_initializer=tf.constant_initializer(0.1),
-                name='acts_prob'
-            )
-
-        # define new loss function for actor
-        with tf.variable_scope('actor_loss'):
-            log_prob = tf.log(self.acts_prob[0, self.a] + 0.0000001)  # self.acts_prob[0, self.a]
-            self.exp_v = tf.reduce_mean(log_prob * self.td_error)
-
-        # when load all variables in, we need reset optimizer
-        with tf.variable_scope('adam_optimizer'):
-            optimizer = tf.train.AdamOptimizer(self.lr)
-            self.train_op = optimizer.minimize(-self.exp_v)
-
-            self.reset_optimizer = tf.variables_initializer(optimizer.variables())
-
-        self.sess = tf.Session()
-        # self.sess.run(tf.global_variables_initializer())
-        self.saver = tf.train.Saver()
-
-    def load_trained_model(self, model_path):
-        # when load models, variables are transmit: layers, adam (not placeholder and op)
-        self.saver.restore(self.sess, model_path)
-        # load l1, acts_prob and adam vars
-        self.sess.run(self.reset_optimizer)
-
-    # invalid indicates action index
-    def output_action(self, s, invalid_actions):
-        acts = self.sess.run(self.acts_prob, feed_dict={self.s: s})
-        # mask invalid actions based on invalid actions
-        p = acts.ravel()
-        p = np.array(p)
-
-        for i in range(self.n_actions):
-            if i in invalid_actions:
-                p[i] = 0
-
-        # choose invalid action with possible 1
-        if p.sum() == 0:
-            print("determine invalid action")
-            act = np.random.choice(np.arange(acts.shape[1]))
-            exit(1)
-        else:
-            p /= p.sum()
-            # act = np.random.choice(np.arange(acts.shape[1]), p=p)
-            act = np.argmax(p)
-
-        return act, p
-
-    def learn(self, s, a, td):
-        # may modify s
-        # s = s[np.newaxis, :]
-        feed_dict = {self.s: s, self.a: a, self.td_error: td}
-        _, exp_v = self.sess.run([self.train_op, self.exp_v], feed_dict=feed_dict)
-
-
-class Critic:
-    def __init__(self, n_features, n_actions, lr, gamma):
-        self.n_features = n_features
-        self.n_actions = n_actions
-        self.lr = lr
+        self.model_name = name
+        self.ini_model = ini_model
+        self.ini_model_dir = ini_model_dir
+        self.save_model_dir = save_model_dir
+        self.model = self.__load_model__()
+        self.actor_lr = actor_lr
+        self.critic_lr = critic_lr
+        self.actor_optimizer = actor_optimizer if (actor_optimizer is not None) else tf.keras.optimizers.Adam(
+            learning_rate=actor_lr)
+        self.critic_optimizer = critic_optimizer if (critic_optimizer is not None) else tf.keras.optimizers.Adam(
+            learning_rate=actor_lr)
+        
         self.gamma = gamma
+        self.value = None
+        self.value_ = None
+        self.act_prob = None
+        self.act_prob_ = None
+        self.state = None
+        self.state_ = None
+        self.action = None  # store actual action (delete invalid directions)
+        self.action_ = None
+        self.reward = None
+        self.reward_ = None
+        self.reward_sum = 0
+        self.td_error = None
+    
+    def __load_model__(self):
+        if self.ini_model is None:
+            model = keras.models.load_model(self.ini_model_dir)
+        else:
+            model = self.ini_model
+        model.summary()
+        
+        inputs = model.inputs
+        outputs = model.get_layer(index=(-3)).output
+        feature_exaction_block = keras.Model(inputs=inputs, outputs=outputs, name='feature_exaction')
+        features = feature_exaction_block(inputs, training=False)
+        for i in range(len(feature_exaction_block.layers)):
+            feature_exaction_block.layers[i].trainable = False
+        
+        value = Dense(1, activation=None, kernel_initializer='random_uniform',
+                      bias_initializer='zeros', name='value_dense', )(features)
+        act_prob = model.output
+        
+        ac_model = keras.Model(inputs=inputs, outputs=(value, act_prob))
+        ac_model.summary()
+        
+        return ac_model
+    
+    def cal_actor_loss(self, act_prob):
+        log_prob = tf.math.log(act_prob[:, self.action] + EPS)
+        exp_v = tf.reduce_mean(log_prob * self.td_error)
+        return -exp_v
+    
+    def cal_critic_loss(self, value, value_, reward):
+        self.td_error = reward + self.gamma * value_ - value
+        
+        return tf.math.square(self.td_error)
+    
+    def learn(self, state, state_, reward):
+        if state is None:
+            state = state_
+        state = np.array([state])
+        state_ = np.array([state_])
+        with tf.GradientTape() as tape:
+            (value, act_prob) = self.model(state, training=True)  # Logits for this minibatch
+            (value_, act_prob_) = self.model(state_, training=False)  # Logits for this minibatch
+            critic_ls = self.cal_critic_loss(value, value_, reward)
+        critic_grads = tape.gradient(critic_ls, self.model.trainable_weights)
+        self.critic_optimizer.apply_gradients(zip(critic_grads, self.model.trainable_weights))
+        
+        with tf.GradientTape() as tape:
+            (_, act_prob) = self.model(state, training=True)  # Logits for this minibatch
+            actor_ls = self.cal_actor_loss(act_prob)
+        actor_grads = tape.gradient(actor_ls, self.model.trainable_weights)
+        self.actor_optimizer.apply_gradients(zip(actor_grads, self.model.trainable_weights))
+    
+    def predict(self, state, invalid_classes=None):
+        state = np.array([state])
+        (value, class_prob) = self.model.predict(state)
+        
+        if invalid_classes is not None:
+            class_prob[:, invalid_classes] = 0
+            class_prob = class_prob / class_prob.mean(axis=1)
+        class_cate = np.argmax(class_prob, axis=1)
+        
+        return class_prob, class_cate
 
-        self.s = tf.placeholder(tf.float32, [None, self.n_features], name='state')
-        self.v_ = tf.placeholder(tf.float32, [None, 1], name='v_next')  # [1,1]
-        self.r = tf.placeholder(tf.float32, None, name='reward')
 
-        with tf.variable_scope('Critic'):
-            l1 = tf.layers.dense(
-                inputs=self.s,
-                units=int(math.sqrt(1 * self.n_features)),
-                activation=tf.nn.leaky_relu,
-                kernel_initializer=tf.random_normal_initializer(0, 0.1),
-                bias_initializer=tf.constant_initializer(0.1),
-                name='l1'
-            )
+#
+# class Agent:
+#     def __init__(self, alpha=0.0003, gamma=0.99, n_actions=2):
+#         self.gamma = gamma
+#         self.n_actions = n_actions
+#         self.action = None
+#         self.action_space = [i for i in range(self.n_actions)]
+#
+#         self.actor_critic = ActorCriticNetwork(n_actions=n_actions)
+#
+#         self.actor_critic.compile(optimizer=Adam(learning_rate=alpha))
+#
+#     def choose_action(self, observation):
+#         state = tf.convert_to_tensor([observation])
+#         _, probs = self.actor_critic(state)
+#
+#         action_probabilities = tfp.distributions.Categorical(probs=probs)
+#         action = action_probabilities.sample()
+#         log_prob = action_probabilities.log_prob(action)
+#         self.action = action
+#
+#         return action.numpy()[0]
+#
+#     def save_models(self):
+#         print('... saving models ...')
+#         self.actor_critic.save_weights(self.actor_critic.checkpoint_file)
+#
+#     def load_models(self):
+#         print('... loading models ...')
+#         self.actor_critic.load_weights(self.actor_critic.checkpoint_file)
+#
+#     def learn(self, state, reward, state_, done):
+#         state = tf.convert_to_tensor([state], dtype=tf.float32)
+#         state_ = tf.convert_to_tensor([state_], dtype=tf.float32)
+#         reward = tf.convert_to_tensor(reward, dtype=tf.float32)  # not fed to NN
+#         with tf.GradientTape(persistent=True) as tape:
+#             state_value, probs = self.actor_critic(state)
+#             state_value_, _ = self.actor_critic(state_)
+#             state_value = tf.squeeze(state_value)
+#             state_value_ = tf.squeeze(state_value_)
+#
+#             action_probs = tfp.distributions.Categorical(probs=probs)
+#             log_prob = action_probs.log_prob(self.action)
+#
+#             delta = reward + self.gamma * state_value_ * (1 - int(done)) - state_value
+#             actor_loss = -log_prob * delta
+#             critic_loss = delta ** 2
+#             total_loss = actor_loss + critic_loss
+#
+#         gradient = tape.gradient(total_loss, self.actor_critic.trainable_variables)
+#         self.actor_critic.optimizer.apply_gradients(zip(
+#             gradient, self.actor_critic.trainable_variables))
+#
 
-            self.v = tf.layers.dense(
-                inputs=l1,
-                units=1,
-                activation=None,
-                kernel_initializer=tf.random_normal_initializer(0, 0.1),
-                bias_initializer=tf.constant_initializer(0.1),
-                name='v'
-            )
+if __name__ == '__main__':
+    n_features, n_actions, lr, gamma = 10, 3, 0.001, 0.2
+    gcc_feature = np.zeros((1, 6, 61))
+    AC = ActorCriticNetwork()
+    print(AC.predict(gcc_feature))
 
-        with tf.variable_scope('td_error'):
-            self.td_error = self.r + gamma * self.v_ - self.v
-            self.loss = tf.square(self.td_error)
-
-        with tf.variable_scope('critic_optimizer'):
-            self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
-
-        self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-
-        # global will init actor vars, partly init
-        # need init: layer, optimizer (placeholder and op init is unnecessary)
-        # self.sess.run(tf.global_variables_initializer())
-        uninitialized_vars = [var for var in tf.global_variables() if 'critic' in var.name or 'Critic' in var.name]
-
-        initialize_op = tf.variables_initializer(uninitialized_vars)
-        self.sess.run(initialize_op)
-
-    def learn(self, s, r, s_):
-        # need modify s, s_
-        # s, s_ = s[np.newaxis, :], s_[np.newaxis, :]
-        v_ = self.sess.run(self.v, feed_dict={self.s: s_})
-        td_error, _ = self.sess.run([self.td_error, self.train_op],
-                                    feed_dict={self.s: s, self.v_: v_, self.r: r})
-        return td_error
+# Actor(n_features, n_actions, lr)
+# Critic(n_features, n_actions, lr, gamma)

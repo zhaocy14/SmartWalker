@@ -20,25 +20,30 @@ class SERVER:
         
         context = zmq.Context()
         sl_port = "5454"
+        wk_port = "5455"
         self.transmit_topic = "NAV_WALKER_POSE"
         self.receive_topic = "NAV_SL_LOCATION"
         
         self.transmit_socket = context.socket(zmq.PUB)
-        self.transmit_socket.bind("tcp://*:5455")
+        self.transmit_socket.bind("tcp://*:%s" % sl_port)
         
         self.receive_socket = context.socket(zmq.SUB)
-        self.receive_socket.connect("tcp://127.0.0.1:%s" % sl_port)
+        self.receive_socket.connect("tcp://127.0.0.1:%s" % wk_port)
         self.receive_socket.setsockopt_string(zmq.SUBSCRIBE, self.receive_topic)
     
     def transmit(self, message):
+        message = json.dumps(message)
         msg = "%s%s" % (self.transmit_topic, message)
         self.transmit_socket.send_string(msg)
         print("Sending data: %s" % msg)
     
     def transmit_forever(self, message):
+        i = 0
         while True:
-            self.transmit(message)
-            time.sleep(1)
+            self.transmit(str(i))
+            i += 1
+            i %= 100000
+            # time.sleep(1)
     
     def receive(self):
         message = self.receive_socket.recv_string()
