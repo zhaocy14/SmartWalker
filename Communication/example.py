@@ -14,11 +14,11 @@ if __name__ == "__main__":
         Start map drawing example
         **If wanted to use the latest map file, can use map_file="latest"
     '''
-    cco.start_navigation(stdout=False, driver_ctrl=False, ir_sensor=False, map_file="map.2021-09-25.070808")
-    recvObj = Receiver(mode="local")
-    # recvObj.start_DriverControl()
-    for _ in recvObj.start_Pose():
-        print("testing", _)
+    # cco.start_navigation(stdout=False, driver_ctrl=False, ir_sensor=False, map_file="map.2021-09-25.070808")
+    # recvObj = Receiver(mode="local")
+    # # recvObj.start_DriverControl()
+    # for _ in recvObj.start_Pose():
+    #     print("testing", _)
     
     '''
         Start map drawing example
@@ -28,4 +28,10 @@ if __name__ == "__main__":
     '''
         Start sensors command example
     '''
+    cco.start_sensors(stdout=True)
+    # cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="map.2021-09-25.070808")
+
     # cco.start_sensors(stdout=True)
+    # import time
+    # time.sleep(5)
+    # cco.start_drawing(stdout=True)
