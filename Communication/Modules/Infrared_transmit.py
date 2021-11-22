@@ -8,7 +8,6 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 
-import numpy as np
 import time
 import threading
 import json
@@ -34,19 +33,25 @@ class InfraredTransmit(object):
             thread_infrared.start()
     
 
-    def start(self):
-        while True:
-            if self.mode == "online" and self.IRSensor.distance_data.size > 0:
-                msg = json.dumps(self.IRSensor.distance_data.tolist())
-                tzo.send(self.topic, msg)
-                time.sleep(0.2)
+    def start(self, use_thread=False):
+        def _start():
+            while True:
+                if self.mode == "online" and self.IRSensor.distance_data.size > 0:
+                    msg = json.dumps(self.IRSensor.distance_data.tolist())
+                    tzo.send(self.topic, msg)
+                    time.sleep(0.2)
 
-            else:
-                # msg = "[150.0, 105.4296875, 90.98307291666666, 150.0, 133.90625, 150.0, 150]"
-                msg = datetime.now().strftime("%H:%M:%S")
-                tzo.send(self.topic, msg)
-                time.sleep(1)
-
+                else:
+                    # msg = "[150.0, 105.4296875, 90.98307291666666, 150.0, 133.90625, 150.0, 150]"
+                    msg = datetime.now().strftime("%H:%M:%S")
+                    tzo.send(self.topic, msg)
+                    time.sleep(1)
+                    
+        if use_thread:
+            th1 = threading.Thread(target=_start)
+            th1.start()
+        else:
+            _start()
 
 
 if __name__ == "__main__":

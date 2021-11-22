@@ -49,7 +49,8 @@ def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
 class lidar(rplidar.RPLidar):
 
     def __init__(self):
-        super().__init__(detect_serials(description="CP2102 USB"))
+        self.port_name = detect_serials(description="CP2102 USB")
+        super().__init__(self.port_name)
         self.scan_data_list = []
 
     def scan_procedure(self,is_show:bool=False):
