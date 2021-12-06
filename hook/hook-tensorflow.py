@@ -1,4 +1,4 @@
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 
 def hook(hook_api):
