@@ -19,9 +19,9 @@ class CppCommand(object):
     _draw_running = False
     
     @staticmethod
-    def get_instance():
+    def get_instance(mode="online"):
         if CppCommand._instance is None:
-            CppCommand() 
+            CppCommand(mode=mode) 
         return CppCommand._instance
 
 
@@ -44,18 +44,19 @@ class CppCommand(object):
           time.sleep(1)
 
 
-    def __init__(self):
+    def __init__(self, mode="online"):
         if CppCommand._instance is not None:
             raise Exception('only one instance can exist')
         else:
             self._id = id(self)
             CppCommand._instance = self
-        imuObj = IMU()
-        lidarObj = lidar()
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
-        self.lidar_port = lidarObj.port_name
-        self.imu_port = imuObj.port_name
+        if mode == "online":
+            imuObj = IMU()
+            lidarObj = lidar()
+            self.lidar_port = lidarObj.port_name
+            self.imu_port = imuObj.port_name
         # Initialize the driver receiver object
         self.drvObj = DriverRecv(mode="offline")
         self.program_path = "/app/smartwalker_cartomap/build"
