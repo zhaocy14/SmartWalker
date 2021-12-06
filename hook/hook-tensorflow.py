@@ -1,3 +1,5 @@
+# https://github.com/pyinstaller/pyinstaller/issues/4400
+
 from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 
