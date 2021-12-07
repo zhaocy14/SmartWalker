@@ -6,8 +6,8 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules
 def hook(hook_api):
     packages = [
         'tensorflow',
-        'tensorflow_core',
-        'astor'
+        'keras',
+        'sklearn'
     ]
     for package in packages:
         datas, binaries, hiddenimports = collect_all(package)
