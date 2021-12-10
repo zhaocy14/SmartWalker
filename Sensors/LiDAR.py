@@ -70,8 +70,8 @@ class lidar(rplidar.RPLidar):
                         print(self.scan_data_list)
             except BaseException as be:
                 self.clean_input()
-                self.stop()
-                self.stop_motor()
+                # self.stop()
+                # self.stop_motor()
 
 if __name__ == "__main__":
     lidar_instance = lidar()
