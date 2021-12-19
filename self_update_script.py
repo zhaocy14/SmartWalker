@@ -53,6 +53,7 @@ status_codes = {
     }
 }
 
+
 def update(version_url="https://owenyip.com/smartwalker.json", app_path="/Users/owen/Documents/APP/Python/SmartWalker/dist/testupdate", force_update=False):
     """
     Attempts to download the update url in order to find if an update is needed.
