@@ -31,6 +31,10 @@ status_codes = {
         "result": False,
         "message": "Failed to start the program"
     },
+    302: {
+        "result": False,
+        "message": "Unable to stop the program"
+    },
     400: {
         "result": False,
         "message": "Unable to parse version datad"
@@ -141,9 +145,10 @@ def update(version_url="https://owenyip.com/smartwalker.json", app_path="/Users/
             return 300
     
     # Todo: Stop the walker program
-    stop_walker_program()
+    if not stop_walker_program():
+        return 302
     # Todo: Change walker state to "Updating"
-    change_walker_state("Updating")
+    # change_walker_state("Updating")
     
     # Replace the old program with the new
     replace_program_result = replace_program(app_path, dl_path, backup_path)
