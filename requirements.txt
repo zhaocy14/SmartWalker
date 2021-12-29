@@ -31,3 +31,4 @@ zipp
 pyzmq==22.3.0
 docker
 sklearn
+psutil==5.8.0

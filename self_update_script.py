@@ -1,14 +1,13 @@
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import re
-from subprocess import call
-from operator import eq
 import os
 import sys
-import stat
 import requests
 from requests.exceptions import HTTPError
 import time
+import Communication.State_client as csc
+from global_variables import WalkerState
 
 status_codes = {
     200: {
@@ -52,6 +51,8 @@ status_codes = {
         "message": "Cannot update -- unable to rename the program file"
     }
 }
+
+state_client = csc.StateClient.get_instance()
 
 
 def update(version_url="https://owenyip.com/smartwalker.json", app_path="/Users/owen/Documents/APP/Python/SmartWalker/dist/testupdate", force_update=False):
@@ -145,11 +146,10 @@ def update(version_url="https://owenyip.com/smartwalker.json", app_path="/Users/
         if retry_count >= 6: # max retry 6 times
             return 300
     
-    # Todo: Stop the walker program
     if not stop_walker_program():
         return 302
-    # Todo: Change walker state to "Updating"
-    # change_walker_state("Updating")
+    # Change walker state to "Updating"
+    state_client.change_walker_state(WalkerState.UPDATE.UPDATING)
     
     # Replace the old program with the new
     replace_program_result = replace_program(app_path, dl_path, backup_path)
@@ -230,19 +230,16 @@ def download(source_path, target_path, download_url):
     return True
 
 
-# Todo: Check walker idle state
+# Check walker idle state
 def is_walker_idle():
-    return True
+    state = state_client.get_walker_state()
+    return state in WalkerState.IDLE
 
 
-# Todo: Check walker in power station
+# Check walker in power station
 def is_walker_in_power_station():
-    return True
-
-
-# Todo: Check walker in power station
-def change_walker_state(state=""):
-    return True
+    state = state_client.get_walker_state()
+    return state == WalkerState.IDLE.CHARGING
 
 
 # Todo (Owen): Check walker in power station
