@@ -179,12 +179,12 @@ def update(version_url="https://owenyip.com/smartwalker.json", app_path="/Users/
         return 202
 
 
-def download(source_path, target_path):
+def download(source_path, target_path, download_url):
     if not os.access(source_path, os.W_OK):
         print("Cannot update -- unable to write to %s" % source_path)
         return 500
         
-    req = Request(dl_url)
+    req = Request(download_url)
     try:
         http_stream = urlopen(req)
         dl_file = open(target_path, 'wb')
@@ -283,9 +283,8 @@ def replace_program(source_path, target_path, backup_path):
 
 if __name__ == "__main__":
     version_url = "https://owenyip.com/smartwalker.json"
-    dl_url = "https://owenyip.com/smartwalker.app"
     app_path = "/Users/owen/Documents/APP/Python/SmartWalker/dist/testupdate"
 
-    result_code = update()
+    result_code = update(version_url, app_path)
     if result_code:
         print(status_codes[result_code])
