@@ -245,12 +245,12 @@ def change_walker_state(state=""):
     return True
 
 
-# Todo: Check walker in power station
+# Todo (Owen): Check walker in power station
 def stop_walker_program():
     return True
 
 
-# Todo: Start the walker program
+# Todo (Owen): Start the walker program
 def start_walker_program():
     return True
 
