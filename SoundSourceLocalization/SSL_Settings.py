@@ -1,16 +1,27 @@
-import pyaudio
 import os, sys
+import pyaudio
 
+# sample audio
+RECORD_DEVICE_NAME = "USB Camera-B4.09.24.1"
+SAMPLE_RATE = 16000
+CHANNELS = 4
+RECORD_WIDTH = 2
+CHUNK = 1024
+CHUNK_SIZE = 16  # 1ms的采样点数，此参数可以使得语音队列中每一个值对应1ms的音频
+
+# KeyWord Spotting
+MAX_COMMAND_SECONDS = 3
+CLIP_MS = 1000
+WINDOW_STRIDE_MS = 100
+
+# Noise Suppression
+RECORD_SECONDS = 1.1  # 1
+
+# Reinforcement Learning
 GCC_LENG = 366
 GCC_BIAS = 6
 ACTION_SPACE = 8
-CHUNK = 1024
-RECORD_DEVICE_NAME = "USB Camera-B4.09.24.1"
-RECORD_WIDTH = 2
-CHANNELS = 4
-SAMPLE_RATE = 16000
 
-RECORD_SECONDS = 1.1  # 1
 FORMAT = pyaudio.paInt16
 
 FORWARD_SECONDS = 3
