@@ -1,11 +1,16 @@
 # !/usr/bin/env python3
-import os
+import os, sys
+
+crt_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(crt_dir)
+# print('sys.path:', sys.path)
+
 import argparse
 import numpy as np
 import soundfile as sf
 from pathlib import Path
 import onnxruntime as ort
-import ns_featurelib
+import SoundSourceLocalization.SpeechEnhancement.ns_featurelib as ns_featurelib
 
 
 class NSnet2Enhancer(object):

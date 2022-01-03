@@ -13,7 +13,7 @@ import random
 import warnings
 import numpy as np
 from copy import deepcopy
-from ssl_map import Map_graph, ONLINE_Map_graph
+from SoundSourceLocalization.Map.ssl_map import Map_graph, ONLINE_Map_graph
 import pickle
 
 

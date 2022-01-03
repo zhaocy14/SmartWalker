@@ -7,45 +7,41 @@
 # @Time: 2021/11/11/21:51
 # @Software: PyCharm
 import os, sys
-
-CRT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(CRT_DIR)
-# print('sys.path:', sys.path)
-
-import time
 import json
-import numpy as np
 import threading
-import multiprocessing
-
-from pyaudio import PyAudio
+import time
 from collections import deque  # , BlockingQueue
-from queue import Queue
-from SoundSourceLocalization.SSL_Settings import *
-from SoundSourceLocalization.lib.utils import standard_normalizaion
+# from queue import Queue
+import ctypes
+from multiprocessing import Queue, Value, Process
+import numpy as np
 # from SoundSourceLocalization.lib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
 #     audio_energy_ratio_over_threshold, audio_energy_over_threshold, audiowrite, audioread
 import tensorflow.compat.v1 as tf
+from pyaudio import PyAudio
+from scipy.special import softmax as scipy_softmax
+
+from SoundSourceLocalization.SSL_Settings import *
+from SoundSourceLocalization.lib.utils import standard_normalizaion
 from kws_streaming.layers import modes
 from kws_streaming.models import models
 from kws_streaming.models import utils
 from kws_streaming.train import inference
-from scipy.special import softmax as scipy_softmax
 
-WORD_QUEUE_MAX_LENGTH = None
-WORD_QUEUE = deque()  # 最大长度将在KWS中获得检测步长后修正
-WORD_QUEUE_UPDATA = False
+WORD_QUEUE_MAX_LENGTH = Value(ctypes.c_void_p, None)
+WORD_QUEUE = Queue()  # 最大长度将在KWS中获得检测步长后修正
+WORD_QUEUE_UPDATA = Value(ctypes.c_bool, False)
 
 AUDIO_QUEUE = Queue()  # (maxsize=3 * self.clip_duration_ms)   # TODO 存在内存溢出风险
 
-SSL_AUDIO = []
-SSL_AUDIO_UPDATE = False
+
+# SSL_AUDIO = []
+# SSL_AUDIO_UPDATE = Value(ctypes.c_bool, False)
 
 
 class VoiceMenu(object):
     def __init__(self):
         super(VoiceMenu, self).__init__()
-        # print('-' * 20, 'init VoiceMenu class', '-' * 20)
         self.keyword_ls = ['walker', 'voice', 'menu', 'redraw', 'the', 'map', 'charge', 'start', 'sleep',
                            'off', 'hand', 'operation', 'yes', 'no', ]
         self.walker_name = 'walker'
@@ -232,27 +228,30 @@ class VoiceMenu(object):
             self.run()
 
 
+class KWS_FLAGS_DictStruct(object):
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+
 class KeyWordSpotting(object):
     def __init__(self, use_stream=False):
         super(KeyWordSpotting, self).__init__()
-        # print('-' * 20, 'init KeyWordSpotting class', '-' * 20)
         self.use_stream = use_stream
         assert self.use_stream == False  # 暂时不考虑流式模型
         
         self.model_name = 'ds_tc_resnet_cpu_causal_20211231-200734'
-        self.model_dir = os.path.abspath(os.path.join(CRT_DIR, '../model', self.model_name, ))
+        self.model_dir = os.path.join('../model', self.model_name, )
         self.flags_path = os.path.join(self.model_dir, 'flags.json')
         self.flags = self.__load__flags__()
         self.flags.batch_size = 1
         
-        print('-' * 20, 'Loading KWS non_stream_model...', '-' * 20, )
         self.non_stream_model = self.__load_non_stream_model__(weights_name='last_weights')
         if self.use_stream:  # TODO 保存流式模型，直接加载？而非每次都要转换，还挺耗时的
             self.stream_model = self.__convert_2_stream_model__()
         self.labels = np.array(['silence', 'unknown', ] + self.flags.wanted_words.split(','))
         self.walker_name = self.labels[2]
-        print('-' * 20, 'KWS labels:', ' '.join(self.labels), '-' * 20)
-        print('-' * 20, 'walker_name:', self.walker_name, '-' * 20)
+        print('-' * 10, 'labels:', str(self.labels), '-' * 10)
+        print('-' * 10, 'walker_name:', str(self.walker_name), '-' * 10)
         
         self.clip_duration_ms = int(self.flags.clip_duration_ms)
         assert self.clip_duration_ms == int(CLIP_MS)
@@ -263,19 +262,16 @@ class KeyWordSpotting(object):
         
         global WORD_QUEUE, WORD_QUEUE_MAX_LENGTH
         WORD_QUEUE_MAX_LENGTH = MAX_COMMAND_SECONDS * 1000 // self.window_stride_ms
-        WORD_QUEUE = deque(maxlen=WORD_QUEUE_MAX_LENGTH)
+        WORD_QUEUE = Queue(maxsize=WORD_QUEUE_MAX_LENGTH)
     
     def __load__flags__(self, ):
+        # with tf.compat.v1.gfile.Open(self.flags_path, 'r') as fd:
+        #     flags_json = json.load(fd)
+        #
         with open(self.flags_path, 'r') as load_f:
             flags_json = json.load(load_f)
         
-        class DictStruct(object):
-            def __init__(self, **entries):
-                self.__dict__.update(entries)
-        
-        self.flags = DictStruct(**flags_json)
-        
-        return self.flags
+        return KWS_FLAGS_DictStruct(**flags_json)
     
     def __load_non_stream_model__(self, weights_name):
         tf.reset_default_graph()
@@ -286,12 +282,11 @@ class KeyWordSpotting(object):
         # self.audio_processor = input_data.AudioProcessor(self.flags)
         tf.keras.backend.set_learning_phase(0)
         # tf.disable_eager_execution()
-        # print('tf.keras.backend.image_data_format():', tf.keras.backend.image_data_format())
-        tf.keras.backend.set_image_data_format('channels_last')
+        
         non_stream_model = models.MODELS[self.flags.model_name](self.flags)
-        weight_path = os.path.join(self.model_dir, weights_name, )
-        non_stream_model.load_weights(weight_path).expect_partial()
-        # non_stream_model.summary()
+        print('non_stream_model_weight:', os.path.join(self.model_dir, weights_name, ))
+        non_stream_model.load_weights(os.path.join(self.model_dir, weights_name, )).expect_partial()
+        non_stream_model.summary()
         
         # tf.keras.utils.plot_model(
         #     non_stream_model,
@@ -307,7 +302,7 @@ class KeyWordSpotting(object):
         self.flags.data_shape = modes.get_input_data_shape(self.flags, modes.Modes.STREAM_INTERNAL_STATE_INFERENCE)
         stream_model = utils.to_streaming_inference(
             self.non_stream_model, self.flags, modes.Modes.STREAM_INTERNAL_STATE_INFERENCE)
-        # stream_model.summary()
+        stream_model.summary()
         
         # tf.keras.utils.plot_model(
         #     stream_model,
@@ -330,8 +325,8 @@ class KeyWordSpotting(object):
         
         return label, y_pred[:, label].squeeze(axis=0)
     
-    def run(self, ):
-        global WORD_QUEUE, WORD_QUEUE_UPDATA, AUDIO_QUEUE, SSL_AUDIO, SSL_AUDIO_UPDATE
+    def run(self):
+        # global WORD_QUEUE, WORD_QUEUE_UPDATA, AUDIO_QUEUE  # , SSL_AUDIO, SSL_AUDIO_UPDATE
         
         if not self.use_stream:
             local_audio_frames = deque(maxlen=self.clip_duration_ms)
@@ -346,15 +341,15 @@ class KeyWordSpotting(object):
                 x = np.array(audio[0], dtype=np.float64)[np.newaxis, :]
                 y, prob = self.predict(x, use_stream=self.use_stream)
                 y, prob = self.labels[y[0]], prob[0]
-                WORD_QUEUE.append((y, prob))
+                WORD_QUEUE.put((y, prob))
                 WORD_QUEUE_UPDATA = True
-                # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
-                #     # print('y & prob:', y, round(prob, 3), end='\t')
-                #     print(y, round(prob, 3), end='\t')
-                if y == self.walker_name:  # 监听到 walker_name，将音频传给声源定位模块
+                if (y not in ['silence', 'unknown', ]) and prob > 0.70:
+                    # print('y & prob:', y, round(prob, 3), end='\t')
+                    print(y, round(prob, 3), end='\t')
+                if y == self.walker_name:  # TODO 监听到 walker_name，使用 Pipe 将音频传给声源定位模块
                     print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
-                    SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
-                    SSL_AUDIO_UPDATE = True
+                    # SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
+                    # SSL_AUDIO_UPDATE = True
         else:
             local_audio_frames = deque(maxlen=self.window_stride_ms)
             while True:
@@ -368,42 +363,40 @@ class KeyWordSpotting(object):
                 x = np.array(audio[0], dtype=np.float64)[np.newaxis, :]
                 y, prob = self.predict(x, use_stream=self.use_stream)
                 y, prob = self.labels[y[0]], prob[0]
-                WORD_QUEUE.append((y, prob))
+                WORD_QUEUE.put((y, prob))
                 WORD_QUEUE_UPDATA = True
                 # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
                 #     # print('y & prob:', y, round(prob, 3), end='\t')
                 #     print(y, round(prob, 3), end='\t')
-                if y == self.walker_name:  # 监听到 walker_name，将音频传给声源定位模块
+                if y == self.walker_name:  # TODO 监听到 walker_name，使用 Pipe 将音频传给声源定位模块
                     print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
-                    SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
-                    SSL_AUDIO_UPDATE = True
+                    # SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
+                    # SSL_AUDIO_UPDATE = True
 
 
 class MonitorVoice(object):
     def __init__(self, MappingMicro=False):
         super(MonitorVoice, self).__init__()
-        # print('-' * 20, 'init MonitorVoice class', '-' * 20)
+        print('-' * 20 + 'init MonitorVoice class' + '-' * 20)
         self.MappingMicro = MappingMicro
         self.micro_mapping = np.arange(CHANNELS)
         self.CompleteMappingMicro = False
         
         self.device_index = self.__get_device_index__()
         assert CHUNK_SIZE == 16  # 1ms的采样点数，此参数可以使得语音队列中每一个值对应1ms的音频
-        self.audio_queue = AUDIO_QUEUE
         self.init_micro_mapping_deque_len = 1000
         self.init_micro_mapping_deque = deque(maxlen=self.init_micro_mapping_deque_len)
     
     def __get_device_index__(self):
-        # print('-' * 20 + 'Looking for microphones...' + '-' * 20)
         device_index = -1
         
         # scan to get usb device
         p = PyAudio()
-        # print('num_device:', p.get_device_count())
+        print('num_device:', p.get_device_count())
         for index in range(p.get_device_count()):
             info = p.get_device_info_by_index(index)
             device_name = info.get("name")
-            # print("device_name: ", device_name)
+            print("device_name: ", device_name)
             
             # find mic usb device
             if device_name.find(RECORD_DEVICE_NAME) != -1:
@@ -411,11 +404,11 @@ class MonitorVoice(object):
                 break
         
         if device_index != -1:
-            print('-' * 20, 'Find the microphones:', p.get_device_info_by_index(device_index)['name'], '-' * 20, )
+            print('-' * 20 + 'Find the device' + '-' * 20 + '\n', p.get_device_info_by_index(device_index), '\n')
             del p
         else:
-            print('-' * 20, 'Cannot find the microphones', '-' * 20)
-            exit(-1)
+            print('-' * 20 + 'Cannot find the device' + '-' * 20 + '\n')
+            exit()
         
         return device_index
     
@@ -476,13 +469,13 @@ class MonitorVoice(object):
             if self.CompleteMappingMicro:
                 audio = self.split_channels_from_frame(frame=in_data,
                                                        mapping_flag=True, micro_mapping=self.micro_mapping)
-                self.audio_queue.put(audio, block=False, )
+                AUDIO_QUEUE.put(audio, block=False, )
             else:
                 audio = self.split_channels_from_frame(frame=in_data, mapping_flag=False)
                 self.init_micro_mapping_deque.append(audio, )
             # except Exception as e:
             #     print('Capture error:', e)
-            #     print('-' * 20, 'audio_queue is FULL', '-' * 20)
+            #     print('-' * 20, 'AUDIO_QUEUE is FULL', '-' * 20)
             #     exit(-1)
             return (None, pyaudio.paContinue)
         
@@ -496,9 +489,9 @@ class MonitorVoice(object):
                         stream_callback=PyAudioCallback,
                         start=True)
         while stream.is_active():
-            time.sleep(1)
+            time.sleep(1.)
             # print('Monitoring', )
-            # print('Len of AUDIO_QUEUE', AUDIO_QUEUE.qsize())
+            print('Len of AUDIO_QUEUE', AUDIO_QUEUE.qsize())
             # try:
             #     print('Len of init_micro_mapping_deque', len(self.init_micro_mapping_deque))
             # except:
@@ -525,24 +518,24 @@ if __name__ == '__main__':
     
     mv = MonitorVoice(MappingMicro=False)
     kws = KeyWordSpotting(use_stream=False)
-    vm = VoiceMenu()
+    # vm = VoiceMenu()
     
     p1 = threading.Thread(target=mv.run, args=())
     p1.start()
     p2 = threading.Thread(target=kws.run, args=())
     p2.start()
-    p3 = threading.Thread(target=vm.run_forever, args=())
-    p3.start()
-    # p1 = multiprocessing.Process(target=mv.run, args=())
+    # p3 = threading.Thread(target=vm.run_forever, args=())
+    # p3.start()
+    # p1 = Process(target=mv.run, args=())
     # p1.start()
-    # p2 = multiprocessing.Process(target=kws.run, args=())
+    # p2 = Process(target=kws.run, args=())
     # p2.start()
-    # p3 = multiprocessing.Process(target=vm.run_forever, args=())
+    # p3 = Process(target=vm.run_forever, args=())
     # p3.start()
     
-    K.image_data_format()
     p1.join()
     # p2.join()
     # # p3.join()
     
     print('-' * 20, 'Brand-new World!', '-' * 20)
+    exit(0)

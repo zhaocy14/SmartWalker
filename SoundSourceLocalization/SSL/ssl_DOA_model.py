@@ -1,35 +1,39 @@
-import os
-import argparse
+import os, sys
+
+crt_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(crt_dir)
+# print('sys.path:', sys.path)
+
+import shutil
 import platform
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow import keras
 from tensorflow.python.keras.losses import Loss
 from tensorflow.keras.losses import sparse_categorical_crossentropy
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, Callback, TensorBoard
-from lib import utils, models_tf
-from lib.mi_data import load_hole_dataset, one_hot_encoder
-import shutil
-from ssl_feature_extractor import FeatureExtractor
-from lib.utils import wise_standard_normalizaion
+
+from SoundSourceLocalization.lib import utils, models_tf
+from SoundSourceLocalization.lib.mi_data import load_hole_dataset, one_hot_encoder
+from SoundSourceLocalization.SSL.ssl_feature_extractor import FeatureExtractor
+from SoundSourceLocalization.lib.utils import wise_standard_normalizaion
 
 
 class DOA:
     def __init__(self, model_dir, fft_len, num_gcc_bin=128, num_mel_bin=128, fs=16000, gcc_norm='sample-wise'):
         super(DOA, self).__init__()
         # setting keras
-        sysstr = platform.system()
-        if (sysstr == "Windows"):
-            gpus = tf.config.experimental.list_physical_devices('GPU')
-            tf.config.experimental.set_visible_devices(gpus[0], 'GPU')
-            tf.config.experimental.set_memory_growth(gpus[0], True)
-            K.set_image_data_format('channels_first')
-        elif (sysstr == "Linux"):
-            pass
-        else:
-            pass
+        # sysstr = platform.system()
+        # if (sysstr == "Windows"):
+        #     # gpus = tf.config.experimental.list_physical_devices('GPU')
+        #     # tf.config.experimental.set_visible_devices(gpus[0], 'GPU')
+        #     # tf.config.experimental.set_memory_growth(gpus[0], True)
+        #     K.set_image_data_format('channels_first')
+        # elif (sysstr == "Linux"):
+        #     pass
+        # else:
+        #     pass
         
         self.md_dir = model_dir
         self.model = self.__load_model__()
