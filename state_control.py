@@ -79,12 +79,10 @@ class StateControl():
         self.current_state = state
 
     # Todo: Check Power Level
-
     def get_power_level():
         return 75
 
     # Todo: monitor the main process health status
-
     def monitor_main_process(self):
         for process in psutil.process_iter():
             # get all process info in one shot
@@ -110,7 +108,6 @@ class StateControl():
         return True
 
     # Todo (Owen): Check walker in power station
-
     def stop_walker_program():
         return True
 

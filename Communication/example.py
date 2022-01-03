@@ -7,11 +7,14 @@ import time
 
 from Communication.Cpp_command import CppCommand
 from Communication.Receiver import Receiver
+import Communication.State_client as csc
+from global_variables import WalkerState
 # cco = CppCommand.get_instance(lidar_port="/dev/ttyUSB2", imu_port="/dev/ttyUSB1")
 # cco = CppCommand.get_instance()
 if __name__ == "__main__":
+    '''C++ Demo'''
     with CppCommand.get_instance() as cco:
-        cco.start_navigation(mode="offline", testing="local", stdout=False, map_file="map.2021-09-25.070808")
+        # cco.start_navigation(mode="offline", testing="local", stdout=False, map_file="map.2021-09-25.070808")
         '''
             Start navigation example
             **If wanted to use the latest map file, can use map_file="latest"
@@ -35,3 +38,9 @@ if __name__ == "__main__":
         '''
         # cco.start_sensors(stdout=False)
         # cco.start_drawing(stdout=True)
+        print("C++ ended")
+        
+    '''State Client Demo'''
+    state_client = csc.StateClient.get_instance()
+        # print(state_client.change_walker_state(WalkerState.IDLE.CHARGING))
+    print(WalkerState.IDLE.CHARGING is WalkerState.IDLE.CHARGING)
