@@ -7,40 +7,54 @@
 # @Time: 2021/11/11/21:51
 # @Software: PyCharm
 import os, sys
-import json
-import threading
+
+CRT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(CRT_DIR)
+# print('sys.path:', sys.path)
+
 import time
-from collections import deque  # , BlockingQueue
-# from queue import Queue
-import ctypes
-from multiprocessing import Queue, Value, Process
+import json
 import numpy as np
-# from SoundSourceLocalization.lib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
-#     audio_energy_ratio_over_threshold, audio_energy_over_threshold, audiowrite, audioread
-import tensorflow.compat.v1 as tf
-from pyaudio import PyAudio
+import threading
+import ctypes
+from multiprocessing import Process, Value, Pipe, Queue
+# from queue import Queue
+from collections import deque  # , BlockingQueue
 from scipy.special import softmax as scipy_softmax
+from pyaudio import PyAudio
 
 from SoundSourceLocalization.SSL_Settings import *
 from SoundSourceLocalization.lib.utils import standard_normalizaion
+
+# KWS
+import tensorflow.compat.v1 as tf
 from kws_streaming.layers import modes
 from kws_streaming.models import models
 from kws_streaming.models import utils
 from kws_streaming.train import inference
 
-WORD_QUEUE_MAX_LENGTH = Value(ctypes.c_void_p, None)
-WORD_QUEUE = Queue()  # 最大长度将在KWS中获得检测步长后修正
-WORD_QUEUE_UPDATA = Value(ctypes.c_bool, False)
+# from SoundSourceLocalization.lib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
+#     audio_energy_ratio_over_threshold, audio_energy_over_threshold, audiowrite, audioread
 
-AUDIO_QUEUE = Queue()  # (maxsize=3 * self.clip_duration_ms)   # TODO 存在内存溢出风险
+GLOBAL_AUDIO_QUEUE = Queue(maxsize=2000)  # 每个 item 代表 1ms
+GLOBAL_AUDIO_QUEUE_CLEAR = Value(ctypes.c_bool, False)
+# 永远最多只有这么长，再多了直接清空，并将 AUDIO_QUEUE_CLEAR 置True; 如此也可以限制声音采集方面的延迟最多只有这么多
 
+
+# GLOBAL_WORD_QUEUE_MAX_LENGTH = Value(ctypes.c_void_p, None)
+GLOBAL_WORD_QUEUE = Queue()  # 最大长度将由 KWS 识别速度决定，只要 VoiveMenu 在不断消费就不会溢出
+GLOBAL_WORD_QUEUE_UPDATA = Value(ctypes.c_bool, False)
+GLOBAL_WORD_QUEUE_CLEAR = Value(ctypes.c_bool, False)
 
 # SSL_AUDIO = []
 # SSL_AUDIO_UPDATE = Value(ctypes.c_bool, False)
 
+GLOBAL_OUT_PIPE, GLOBAL_IN_PIPE = Pipe(duplex=False)
+
 
 class VoiceMenu(object):
     def __init__(self):
+        # print('-' * 20, 'init VoiceMenu class', '-' * 20)
         super(VoiceMenu, self).__init__()
         self.keyword_ls = ['walker', 'voice', 'menu', 'redraw', 'the', 'map', 'charge', 'start', 'sleep',
                            'off', 'hand', 'operation', 'yes', 'no', ]
@@ -58,22 +72,54 @@ class VoiceMenu(object):
         self.last_command_time = None
         global MAX_COMMAND_SECONDS
         self.command_interval = MAX_COMMAND_SECONDS + 0.1  # s
+        self.kws_stride_second = KWS_WINDOW_STRIDE_MS / 1000
+        self.local_word_queue_max_length = MAX_COMMAND_SECONDS * 1000 // KWS_WINDOW_STRIDE_MS
+        self.local_word_queue = deque(maxlen=self.local_word_queue_max_length)
+    
+    def clear_WORD_QUEUE(self, WORD_QUEUE):
+        while not WORD_QUEUE.empty():
+            try:
+                WORD_QUEUE.get_nowait()
+            except:
+                pass
+        print('-' * 20, 'WORD_QUEUE is cleared as AUDIO_QUEUE is cleared.', '-' * 20)
+    
+    def get_WORD(self, WORD_QUEUE):
+        while not WORD_QUEUE.empty():
+            try:
+                self.local_word_queue.append(WORD_QUEUE.get_nowait())
+            except:
+                pass
+        return self.local_word_queue
     
     def detect_command(self, command_ls, wait_time):
-        # menu_name is detected by default, even if it isn't in command_ls
-        global WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_MAX_LENGTH
-        # command_ls = command_ls if ('voice menu off' in command_ls) else command_ls + ['voice menu off']
+        # 初始化
         start_time = time.time()
         returnCommand = False
-        waiting_off = False  # 用来区分 'voice menu' 和 'voice menu off'
+        waiting_for_off = False  # 用来区分 'voice menu' 和 'voice menu off'
         
         while True:
-            if (wait_time != 'inf') and (time.time() - start_time > wait_time):
+            if (wait_time != 'inf') and (time.time() - start_time > wait_time):  # timeout
                 return None
-            if not (WORD_QUEUE_UPDATA and (len(WORD_QUEUE) == WORD_QUEUE_MAX_LENGTH)):
-                time.sleep(0.1)
-            WORD_QUEUE_UPDATA = False
-            word_ls = list(WORD_QUEUE)
+            if self.WORD_QUEUE_CLEAR.value:  # 因语音序列满被清零，导致 word 序列相应被清零
+                self.clear_WORD_QUEUE(self.WORD_QUEUE)
+                self.WORD_QUEUE_CLEAR.value = False
+                self.WORD_QUEUE_UPDATA.value = False
+                # 清空之后，一切初始化
+                start_time = time.time()
+                returnCommand = False
+                waiting_for_off = False  # 用来区分 'voice menu' 和 'voice menu off'
+                continue
+            elif (not self.WORD_QUEUE_UPDATA.value):  # 若 word 无无更新
+                time.sleep(self.kws_stride_second)
+                continue
+            
+            self.WORD_QUEUE_UPDATA.value = False
+            if self.WORD_QUEUE.empty():
+                continue
+            self.get_WORD(self.WORD_QUEUE)
+            # print('len(self.local_word_queue):', len(self.local_word_queue))
+            word_ls = list(self.local_word_queue)
             # 生成命令
             command = self.convert_word_to_command(word_ls, command_ls)
             # 重复命令处理
@@ -81,15 +127,14 @@ class VoiceMenu(object):
                 if command != self.last_command:
                     returnCommand = True
                 else:
-                    assert self.last_command_time is not None, ('param {last_command_time} was not updated by mistake')
                     if time.time() - self.last_command_time > self.command_interval:
                         returnCommand = True
                     else:
                         continue
             elif command == self.menu_name:
-                waiting_off = True
+                waiting_for_off = True
             elif command is None:
-                if waiting_off:  # 未等到off，已结束输入
+                if waiting_for_off:  # 未等到off，已结束输入
                     returnCommand = True
                     command = self.menu_name
                 else:
@@ -100,7 +145,7 @@ class VoiceMenu(object):
             if returnCommand:
                 self.last_command = command
                 self.last_command_time = time.time()
-                WORD_QUEUE.clear()
+                self.local_word_queue.clear()
                 print('command:', command)
                 return command
     
@@ -174,8 +219,9 @@ class VoiceMenu(object):
         else:
             print('-' * 20, f'Warning: Unknow command -> {command}!', '-' * 20)
     
-    def run(self):
-        # streaming KWS model detects keywords all the time
+    def run(self, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, ):
+        # KWS model detects keywords all the time
+        self.WORD_QUEUE, self.WORD_QUEUE_UPDATA, self.WORD_QUEUE_CLEAR = WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR
         while True:
             time.sleep(0.1)
             name = self.detect_command([self.menu_name, ], 'inf')
@@ -223,53 +269,50 @@ class VoiceMenu(object):
                 else:
                     print(f'Warning: Error detection -> \'{action}\' while detecing action({self.action_ls})')
     
-    def run_forever(self, ):
+    def run_forever(self, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, ):
         while True:
-            self.run()
-
-
-class KWS_FLAGS_DictStruct(object):
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
+            self.run(WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR)
 
 
 class KeyWordSpotting(object):
     def __init__(self, use_stream=False):
+        
+        # print('-' * 20, 'init KeyWordSpotting class', '-' * 20)
         super(KeyWordSpotting, self).__init__()
+        
         self.use_stream = use_stream
-        assert self.use_stream == False  # 暂时不考虑流式模型
+        assert self.use_stream == False, 'Streaming model has not been tested'  # 暂时不考虑流式模型
         
         self.model_name = 'ds_tc_resnet_cpu_causal_20211231-200734'
-        self.model_dir = os.path.join('../model', self.model_name, )
+        self.model_dir = os.path.abspath(os.path.join(CRT_DIR, '../model', self.model_name, ))
+        print('KWS_model_dir:', self.model_dir)
         self.flags_path = os.path.join(self.model_dir, 'flags.json')
         self.flags = self.__load__flags__()
         self.flags.batch_size = 1
         
+        print('-' * 20, 'Loading KWS non_stream_model...', '-' * 20, )
         self.non_stream_model = self.__load_non_stream_model__(weights_name='last_weights')
         if self.use_stream:  # TODO 保存流式模型，直接加载？而非每次都要转换，还挺耗时的
             self.stream_model = self.__convert_2_stream_model__()
         self.labels = np.array(['silence', 'unknown', ] + self.flags.wanted_words.split(','))
         self.walker_name = self.labels[2]
-        print('-' * 10, 'labels:', str(self.labels), '-' * 10)
-        print('-' * 10, 'walker_name:', str(self.walker_name), '-' * 10)
+        print('-' * 20, 'KWS labels:', ' '.join(self.labels), '-' * 20)
+        print('-' * 20, 'KWS walker_name:', self.walker_name, '-' * 20)
         
         self.clip_duration_ms = int(self.flags.clip_duration_ms)
         assert self.clip_duration_ms == int(CLIP_MS)
         if self.use_stream:
             self.window_stride_ms = int(self.flags.window_stride_ms)
         else:
-            self.window_stride_ms = WINDOW_STRIDE_MS
-        
-        global WORD_QUEUE, WORD_QUEUE_MAX_LENGTH
-        WORD_QUEUE_MAX_LENGTH = MAX_COMMAND_SECONDS * 1000 // self.window_stride_ms
-        WORD_QUEUE = Queue(maxsize=WORD_QUEUE_MAX_LENGTH)
+            self.window_stride_ms = KWS_WINDOW_STRIDE_MS
     
     def __load__flags__(self, ):
-        # with tf.compat.v1.gfile.Open(self.flags_path, 'r') as fd:
-        #     flags_json = json.load(fd)
-        #
         with open(self.flags_path, 'r') as load_f:
             flags_json = json.load(load_f)
+        
+        class KWS_FLAGS_DictStruct(object):
+            def __init__(self, **entries):
+                self.__dict__.update(entries)
         
         return KWS_FLAGS_DictStruct(**flags_json)
     
@@ -282,11 +325,12 @@ class KeyWordSpotting(object):
         # self.audio_processor = input_data.AudioProcessor(self.flags)
         tf.keras.backend.set_learning_phase(0)
         # tf.disable_eager_execution()
-        
+        # print('tf.keras.backend.image_data_format():', tf.keras.backend.image_data_format())
+        tf.keras.backend.set_image_data_format('channels_last')
         non_stream_model = models.MODELS[self.flags.model_name](self.flags)
-        print('non_stream_model_weight:', os.path.join(self.model_dir, weights_name, ))
-        non_stream_model.load_weights(os.path.join(self.model_dir, weights_name, )).expect_partial()
-        non_stream_model.summary()
+        weight_path = os.path.join(self.model_dir, weights_name, )
+        non_stream_model.load_weights(weight_path).expect_partial()
+        # non_stream_model.summary()
         
         # tf.keras.utils.plot_model(
         #     non_stream_model,
@@ -302,7 +346,7 @@ class KeyWordSpotting(object):
         self.flags.data_shape = modes.get_input_data_shape(self.flags, modes.Modes.STREAM_INTERNAL_STATE_INFERENCE)
         stream_model = utils.to_streaming_inference(
             self.non_stream_model, self.flags, modes.Modes.STREAM_INTERNAL_STATE_INFERENCE)
-        stream_model.summary()
+        # stream_model.summary()
         
         # tf.keras.utils.plot_model(
         #     stream_model,
@@ -325,14 +369,20 @@ class KeyWordSpotting(object):
         
         return label, y_pred[:, label].squeeze(axis=0)
     
-    def run(self):
-        # global WORD_QUEUE, WORD_QUEUE_UPDATA, AUDIO_QUEUE  # , SSL_AUDIO, SSL_AUDIO_UPDATE
-        
+    def run(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, IN_PIPE, ):
+        print('-' * 20, 'KWS is running', '-' * 20)
         if not self.use_stream:
             local_audio_frames = deque(maxlen=self.clip_duration_ms)
             while True:
                 for i in range(self.window_stride_ms):
-                    local_audio_frames.append(AUDIO_QUEUE.get(block=True, timeout=None))
+                    if AUDIO_QUEUE_CLEAR.value:
+                        AUDIO_QUEUE_CLEAR.value = False
+                        WORD_QUEUE_CLEAR.value = True
+                        local_audio_frames.clear()
+                    try:
+                        local_audio_frames.append(AUDIO_QUEUE.get_nowait())
+                    except:
+                        pass
                 if len(local_audio_frames) != self.clip_duration_ms:
                     continue
                 ################################ predict ########################################
@@ -341,16 +391,19 @@ class KeyWordSpotting(object):
                 x = np.array(audio[0], dtype=np.float64)[np.newaxis, :]
                 y, prob = self.predict(x, use_stream=self.use_stream)
                 y, prob = self.labels[y[0]], prob[0]
-                WORD_QUEUE.put((y, prob))
-                WORD_QUEUE_UPDATA = True
-                if (y not in ['silence', 'unknown', ]) and prob > 0.70:
-                    # print('y & prob:', y, round(prob, 3), end='\t')
-                    print(y, round(prob, 3), end='\t')
+                # print('y, prob:', y, prob)
+                WORD_QUEUE.put((y, prob), block=True, timeout=3)
+                WORD_QUEUE_UPDATA.value = True
+                # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
+                #     # print('y & prob:', y, round(prob, 3), end='\t')
+                #     print(y, round(prob, 3), end='\t')
                 if y == self.walker_name:  # TODO 监听到 walker_name，使用 Pipe 将音频传给声源定位模块
-                    print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
+                    IN_PIPE.send((audio, y, prob))
+                    # print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
                     # SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
                     # SSL_AUDIO_UPDATE = True
         else:
+            assert False, 'Streaming model has not been tested'
             local_audio_frames = deque(maxlen=self.window_stride_ms)
             while True:
                 for i in range(self.window_stride_ms):
@@ -363,8 +416,8 @@ class KeyWordSpotting(object):
                 x = np.array(audio[0], dtype=np.float64)[np.newaxis, :]
                 y, prob = self.predict(x, use_stream=self.use_stream)
                 y, prob = self.labels[y[0]], prob[0]
-                WORD_QUEUE.put((y, prob))
-                WORD_QUEUE_UPDATA = True
+                # WORD_QUEUE.put((y, prob))
+                # WORD_QUEUE_UPDATA = True
                 # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
                 #     # print('y & prob:', y, round(prob, 3), end='\t')
                 #     print(y, round(prob, 3), end='\t')
@@ -376,8 +429,8 @@ class KeyWordSpotting(object):
 
 class MonitorVoice(object):
     def __init__(self, MappingMicro=False):
+        # print('-' * 20, 'init MonitorVoice class', '-' * 20)
         super(MonitorVoice, self).__init__()
-        print('-' * 20 + 'init MonitorVoice class' + '-' * 20)
         self.MappingMicro = MappingMicro
         self.micro_mapping = np.arange(CHANNELS)
         self.CompleteMappingMicro = False
@@ -387,16 +440,17 @@ class MonitorVoice(object):
         self.init_micro_mapping_deque_len = 1000
         self.init_micro_mapping_deque = deque(maxlen=self.init_micro_mapping_deque_len)
     
-    def __get_device_index__(self):
+    def __get_device_index__(self, ):
+        # print('-' * 20 + 'Looking for microphones...' + '-' * 20)
         device_index = -1
         
         # scan to get usb device
         p = PyAudio()
-        print('num_device:', p.get_device_count())
+        # print('num_device:', p.get_device_count())
         for index in range(p.get_device_count()):
             info = p.get_device_info_by_index(index)
             device_name = info.get("name")
-            print("device_name: ", device_name)
+            # print("device_name: ", device_name)
             
             # find mic usb device
             if device_name.find(RECORD_DEVICE_NAME) != -1:
@@ -404,11 +458,11 @@ class MonitorVoice(object):
                 break
         
         if device_index != -1:
-            print('-' * 20 + 'Find the device' + '-' * 20 + '\n', p.get_device_info_by_index(device_index), '\n')
+            print('-' * 20, 'Find the microphones:', p.get_device_info_by_index(device_index)['name'], '-' * 20, )
             del p
         else:
-            print('-' * 20 + 'Cannot find the device' + '-' * 20 + '\n')
-            exit()
+            print('-' * 20, 'Cannot find the microphones', '-' * 20)
+            exit(-1)
         
         return device_index
     
@@ -456,7 +510,23 @@ class MonitorVoice(object):
             self.CompleteMappingMicro = True
             del self.init_micro_mapping_deque, self.init_micro_mapping_deque_len
     
-    def monitor_from_4mics(self, ):
+    def split_channels_from_frame(self, frame, num_channel=CHANNELS, mapping_flag=False, micro_mapping=None):
+        audio = np.frombuffer(frame, dtype=np.short)
+        audio = np.reshape(audio, (-1, num_channel)).T
+        if mapping_flag:
+            audio = audio[micro_mapping]
+        audio = np.asarray(audio, dtype=np.float64) / 32768.
+        return audio
+    
+    def clear_AUDIO_QUEUE(self, AUDIO_QUEUE):
+        while not AUDIO_QUEUE.empty():
+            try:
+                AUDIO_QUEUE.get_nowait()
+            except:
+                pass
+        print('-' * 20, 'AUDIO_QUEUE is cleared as it is full.', '-' * 20)
+    
+    def monitor_from_4mics(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, ):
         '''
         采集声音信号，若麦克风未完成初始化，则将采集到的语音放入 self.init_micro_mapping_queue 中；
         否则，放入全局变量 AUDIO_QUEUE 中.
@@ -469,7 +539,10 @@ class MonitorVoice(object):
             if self.CompleteMappingMicro:
                 audio = self.split_channels_from_frame(frame=in_data,
                                                        mapping_flag=True, micro_mapping=self.micro_mapping)
-                AUDIO_QUEUE.put(audio, block=False, )
+                if AUDIO_QUEUE.full():
+                    self.clear_AUDIO_QUEUE(AUDIO_QUEUE, )
+                    AUDIO_QUEUE_CLEAR.value = True
+                AUDIO_QUEUE.put_nowait(audio, )
             else:
                 audio = self.split_channels_from_frame(frame=in_data, mapping_flag=False)
                 self.init_micro_mapping_deque.append(audio, )
@@ -489,53 +562,84 @@ class MonitorVoice(object):
                         stream_callback=PyAudioCallback,
                         start=True)
         while stream.is_active():
-            time.sleep(1.)
+            time.sleep(1)
             # print('Monitoring', )
-            print('Len of AUDIO_QUEUE', AUDIO_QUEUE.qsize())
+            # print('Len of AUDIO_QUEUE', AUDIO_QUEUE.qsize())
             # try:
             #     print('Len of init_micro_mapping_deque', len(self.init_micro_mapping_deque))
             # except:
             #     pass
     
-    def split_channels_from_frame(self, frame, num_channel=CHANNELS, mapping_flag=False, micro_mapping=None):
-        audio = np.frombuffer(frame, dtype=np.short)
-        audio = np.reshape(audio, (-1, num_channel)).T
-        if mapping_flag:
-            audio = audio[micro_mapping]
-        audio = np.asarray(audio, dtype=np.float64) / 32768.
-        return audio
-    
-    def run(self):
+    def run(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, ):
         init_micro_thread = threading.Thread(target=self.__init_micro_mapping__, args=())
         init_micro_thread.start()
         
-        self.monitor_from_4mics()
+        self.monitor_from_4mics(AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, )
 
+
+class MonitorVoice_Process(object):
+    def __init__(self, MappingMicro=False):
+        super(MonitorVoice_Process, self).__init__()
+        self.MappingMicro = MappingMicro
+    
+    def run(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, ):
+        mv = MonitorVoice(MappingMicro=self.MappingMicro)
+        mv.run(AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, )
+
+
+class KeyWordSpotting_Process(object):
+    def __init__(self, use_stream=False):
+        super(KeyWordSpotting_Process, self).__init__()
+        self.use_stream = use_stream
+    
+    def run(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, IN_PIPE):
+        kws = KeyWordSpotting(use_stream=self.use_stream)
+        kws.run(AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, IN_PIPE)
+
+
+class VoiceMenu_Process(object):
+    def __init__(self, ):
+        super(VoiceMenu_Process, self).__init__()
+    
+    def run_forever(self, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, ):
+        vm = VoiceMenu()
+        vm.run_forever(WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR)
+
+
+class SSL(object):
+    def run(self, OUT_PIPE):
+        self.OUT_PIPE = OUT_PIPE
+        while True:
+            msg = self.OUT_PIPE.recv()
+            (audio, y, prob) = msg
+            print('SSL: walker data is received~', )
+            
 
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     
-    mv = MonitorVoice(MappingMicro=False)
-    kws = KeyWordSpotting(use_stream=False)
-    # vm = VoiceMenu()
+    mv = MonitorVoice_Process(MappingMicro=False)
+    kws = KeyWordSpotting_Process(use_stream=False)
+    vm = VoiceMenu_Process()
+    ssl = SSL()
     
-    p1 = threading.Thread(target=mv.run, args=())
+    p1 = Process(target=mv.run, args=(GLOBAL_AUDIO_QUEUE, GLOBAL_AUDIO_QUEUE_CLEAR,))
     p1.start()
-    p2 = threading.Thread(target=kws.run, args=())
+    p2 = Process(target=kws.run, args=(GLOBAL_AUDIO_QUEUE, GLOBAL_AUDIO_QUEUE_CLEAR,
+                                       GLOBAL_WORD_QUEUE, GLOBAL_WORD_QUEUE_UPDATA, GLOBAL_WORD_QUEUE_CLEAR,
+                                       GLOBAL_IN_PIPE,))
     p2.start()
-    # p3 = threading.Thread(target=vm.run_forever, args=())
-    # p3.start()
-    # p1 = Process(target=mv.run, args=())
-    # p1.start()
-    # p2 = Process(target=kws.run, args=())
-    # p2.start()
-    # p3 = Process(target=vm.run_forever, args=())
-    # p3.start()
+    p3 = Process(target=vm.run_forever, args=(GLOBAL_WORD_QUEUE, GLOBAL_WORD_QUEUE_UPDATA, GLOBAL_WORD_QUEUE_CLEAR,))
+    p3.start()
+    p4 = Process(target=ssl.run, args=(GLOBAL_OUT_PIPE,))
+    p4.start()
+    
+    GLOBAL_IN_PIPE.close()
+    GLOBAL_OUT_PIPE.close()
     
     p1.join()
     # p2.join()
     # # p3.join()
     
     print('-' * 20, 'Brand-new World!', '-' * 20)
-    exit(0)

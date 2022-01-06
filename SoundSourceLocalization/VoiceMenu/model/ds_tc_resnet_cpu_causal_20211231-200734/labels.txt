@@ -1,0 +1,16 @@
+silence
+unknown
+walker
+voice
+menu
+redraw
+the
+map
+charge
+start
+sleep
+off
+hand
+operation
+yes
+no

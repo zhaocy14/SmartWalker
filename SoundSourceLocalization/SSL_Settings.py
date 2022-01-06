@@ -12,7 +12,7 @@ CHUNK_SIZE = 16  # 1ms的采样点数，此参数可以使得语音队列中每�
 # KeyWord Spotting
 MAX_COMMAND_SECONDS = 3
 CLIP_MS = 1000
-WINDOW_STRIDE_MS = 100
+KWS_WINDOW_STRIDE_MS = 100
 
 # Noise Suppression
 RECORD_SECONDS = 1.1  # 1

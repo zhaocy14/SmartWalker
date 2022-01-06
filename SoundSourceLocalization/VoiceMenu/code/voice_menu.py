@@ -44,8 +44,8 @@ SSL_AUDIO_UPDATE = False
 
 class VoiceMenu(object):
     def __init__(self):
-        super(VoiceMenu, self).__init__()
         # print('-' * 20, 'init VoiceMenu class', '-' * 20)
+        super(VoiceMenu, self).__init__()
         self.keyword_ls = ['walker', 'voice', 'menu', 'redraw', 'the', 'map', 'charge', 'start', 'sleep',
                            'off', 'hand', 'operation', 'yes', 'no', ]
         self.walker_name = 'walker'
@@ -234,8 +234,8 @@ class VoiceMenu(object):
 
 class KeyWordSpotting(object):
     def __init__(self, use_stream=False):
-        super(KeyWordSpotting, self).__init__()
         # print('-' * 20, 'init KeyWordSpotting class', '-' * 20)
+        super(KeyWordSpotting, self).__init__()
         self.use_stream = use_stream
         assert self.use_stream == False  # 暂时不考虑流式模型
         
@@ -252,7 +252,7 @@ class KeyWordSpotting(object):
         self.labels = np.array(['silence', 'unknown', ] + self.flags.wanted_words.split(','))
         self.walker_name = self.labels[2]
         print('-' * 20, 'KWS labels:', ' '.join(self.labels), '-' * 20)
-        print('-' * 20, 'walker_name:', self.walker_name, '-' * 20)
+        print('-' * 20, 'KWS walker_name:', self.walker_name, '-' * 20)
         
         self.clip_duration_ms = int(self.flags.clip_duration_ms)
         assert self.clip_duration_ms == int(CLIP_MS)
@@ -381,8 +381,8 @@ class KeyWordSpotting(object):
 
 class MonitorVoice(object):
     def __init__(self, MappingMicro=False):
-        super(MonitorVoice, self).__init__()
         # print('-' * 20, 'init MonitorVoice class', '-' * 20)
+        super(MonitorVoice, self).__init__()
         self.MappingMicro = MappingMicro
         self.micro_mapping = np.arange(CHANNELS)
         self.CompleteMappingMicro = False
@@ -540,7 +540,6 @@ if __name__ == '__main__':
     # p3 = multiprocessing.Process(target=vm.run_forever, args=())
     # p3.start()
     
-    K.image_data_format()
     p1.join()
     # p2.join()
     # # p3.join()
