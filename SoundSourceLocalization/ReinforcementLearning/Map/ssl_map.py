@@ -298,7 +298,9 @@ class ONLINE_Map_graph(object):
                    [515, 210, 545, 250],  # 18
                    [None, None, None, None],  # 19
                    [500, 12, 800, 42]]  # 20
-        map_adj_ls = np.load('./map_data/adjacency_list.npz')['adjacency_list']
+        crt_dir = os.path.dirname(os.path.abspath(__file__))
+        adjacency_list_path = os.path.abspath(os.path.join(crt_dir, '../map_data/adjacency_list.npz'))
+        map_adj_ls = np.load(adjacency_list_path)['adjacency_list']
         self.num_node = len(coordinates)
         self.coordinates = np.array(coordinates)
         self.regions = np.array(regions)

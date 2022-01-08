@@ -17,6 +17,10 @@ KWS_WINDOW_STRIDE_MS = 100
 # Noise Suppression
 RECORD_SECONDS = 1.1  # 1
 
+# SSL
+KWS_TIMEOUT_SECONDS = 0.5
+# 在SSL模块接收KWS识别的关键词时，由于会在一个（可能）连续的时间内，传来多段语音。此参数集用来表征用户说一次关键词，SSL收集持续多长时间内的关键词语音
+
 # Reinforcement Learning
 GCC_LENG = 366
 GCC_BIAS = 6

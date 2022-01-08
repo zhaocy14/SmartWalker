@@ -398,7 +398,7 @@ class KeyWordSpotting(object):
                 #     # print('y & prob:', y, round(prob, 3), end='\t')
                 #     print(y, round(prob, 3), end='\t')
                 if y == self.walker_name:  # TODO 监听到 walker_name，使用 Pipe 将音频传给声源定位模块
-                    IN_PIPE.send((audio, y, prob))
+                    IN_PIPE.send((audio, y, prob, time.time()))
                     # print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
                     # SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
                     # SSL_AUDIO_UPDATE = True
@@ -542,7 +542,7 @@ class MonitorVoice(object):
                 if AUDIO_QUEUE.full():
                     self.clear_AUDIO_QUEUE(AUDIO_QUEUE, )
                     AUDIO_QUEUE_CLEAR.value = True
-                AUDIO_QUEUE.put_nowait(audio, )
+                AUDIO_QUEUE.put(audio, block=True, timeout=3)
             else:
                 audio = self.split_channels_from_frame(frame=in_data, mapping_flag=False)
                 self.init_micro_mapping_deque.append(audio, )
@@ -606,14 +606,28 @@ class VoiceMenu_Process(object):
         vm.run_forever(WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR)
 
 
-class SSL(object):
+class SSL_test(object):
     def run(self, OUT_PIPE):
         self.OUT_PIPE = OUT_PIPE
         while True:
             msg = self.OUT_PIPE.recv()
             (audio, y, prob) = msg
             print('SSL: walker data is received~', )
-            
+
+
+class MonitorVoice_VoiceMenu_Process():
+    def __init__(self, MappingMicro=False):
+        super(MonitorVoice_VoiceMenu_Process, self).__init__()
+        self.MappingMicro = MappingMicro
+    
+    def run_forever(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, ):
+        vm = VoiceMenu()
+        vm_thread = threading.Thread(target=vm.run_forever, args=(WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR,))
+        vm_thread.start()
+        
+        mv = MonitorVoice(MappingMicro=self.MappingMicro)
+        mv.run(AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, )
+
 
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
@@ -622,7 +636,7 @@ if __name__ == '__main__':
     mv = MonitorVoice_Process(MappingMicro=False)
     kws = KeyWordSpotting_Process(use_stream=False)
     vm = VoiceMenu_Process()
-    ssl = SSL()
+    ssl = SSL_test()
     
     p1 = Process(target=mv.run, args=(GLOBAL_AUDIO_QUEUE, GLOBAL_AUDIO_QUEUE_CLEAR,))
     p1.start()

@@ -10,7 +10,7 @@ import numpy as np
 import soundfile as sf
 from pathlib import Path
 import onnxruntime as ort
-import SoundSourceLocalization.SpeechEnhancement.ns_featurelib as ns_featurelib
+import SoundSourceLocalization.SpeechEnhancement.code.ns_featurelib as ns_featurelib
 
 
 class NSnet2Enhancer(object):
