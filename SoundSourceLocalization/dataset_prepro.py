@@ -7,9 +7,9 @@ import librosa
 import random
 import tempfile
 import shutil
-from lib.audiolib import audioread, audiowrite, audio_segmenter_4_numpy, normalize_single_channel_to_target_level, \
+from mylib.audiolib import audioread, audiowrite, audio_segmenter_4_numpy, normalize_single_channel_to_target_level, \
     audio_segmenter_4_file
-from lib.utils import get_files_by_suffix, get_dirs_by_prefix, plot_curve
+from mylib.utils import get_files_by_suffix, get_dirs_by_prefix, plot_curve
 from ns_enhance_onnx import load_onnx_model, denoise_nsnet2
 from ssl_gcc_generator import GccGenerator
 

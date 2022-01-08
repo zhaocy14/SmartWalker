@@ -19,7 +19,7 @@ from pyaudio import PyAudio
 import threading
 from collections import deque  # , BlockingQueue
 from queue import Queue
-from SoundSourceLocalization.lib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
+from SoundSourceLocalization.mylib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
     audio_energy_ratio_over_threshold, audio_energy_over_threshold, audiowrite, audioread
 
 sys.path.append("./kws_streaming/train")

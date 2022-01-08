@@ -22,7 +22,7 @@ from pyaudio import PyAudio
 from collections import deque  # , BlockingQueue
 from queue import Queue
 from SoundSourceLocalization.SSL_Settings import *
-from SoundSourceLocalization.lib.utils import standard_normalizaion
+from SoundSourceLocalization.mylib.utils import standard_normalizaion
 # from SoundSourceLocalization.lib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
 #     audio_energy_ratio_over_threshold, audio_energy_over_threshold, audiowrite, audioread
 import tensorflow.compat.v1 as tf

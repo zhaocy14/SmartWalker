@@ -23,9 +23,9 @@ import threading
 from multiprocessing import Process, Value, Pipe, Queue
 
 # general lib
-from SoundSourceLocalization.lib import utils
-from SoundSourceLocalization.lib.utils import standard_normalizaion
-from SoundSourceLocalization.lib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
+from SoundSourceLocalization.mylib import utils
+from SoundSourceLocalization.mylib.utils import standard_normalizaion
+from SoundSourceLocalization.mylib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
     audio_energy_ratio_over_threshold, audio_energy_over_threshold, audioread, audiowrite
 
 # independent systems

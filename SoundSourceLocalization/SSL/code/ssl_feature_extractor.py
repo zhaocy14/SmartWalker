@@ -4,7 +4,7 @@
 
 from numpy.fft import fft, ifft, rfft, irfft
 import wave
-from lib.utils import plot_curve, plot_hist
+from mylib.utils import plot_curve, plot_hist
 import os
 import numpy as np
 import scipy.io.wavfile as wav

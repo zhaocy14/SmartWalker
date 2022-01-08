@@ -25,9 +25,9 @@ import multiprocessing
 from pyaudio import PyAudio, paInt16
 
 # general lib
-from lib import utils
-from lib.utils import standard_normalizaion
-from lib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
+from mylib import utils
+from mylib.utils import standard_normalizaion
+from mylib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
     audio_energy_ratio_over_threshold, audio_energy_over_threshold, audiowrite, audioread, write_frames
 
 # independent systems

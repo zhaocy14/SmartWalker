@@ -24,7 +24,7 @@ from tensorflow.keras.constraints import max_norm
 from tensorflow.keras.utils import plot_model
 import tensorflow_probability as tfp
 import warnings
-from lib.actor_critic import ActorCriticNetwork
+from mylib.actor_critic import ActorCriticNetwork
 
 
 class Agent:

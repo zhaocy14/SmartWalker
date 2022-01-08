@@ -14,10 +14,10 @@ from tensorflow.python.keras.losses import Loss
 from tensorflow.keras.losses import sparse_categorical_crossentropy
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, Callback, TensorBoard
 
-from SoundSourceLocalization.lib import utils, models_tf
-from SoundSourceLocalization.lib.mi_data import load_hole_dataset, one_hot_encoder
+from SoundSourceLocalization.mylib import utils, models_tf
+from SoundSourceLocalization.mylib.mi_data import load_hole_dataset, one_hot_encoder
 from SoundSourceLocalization.SSL.code.ssl_feature_extractor import FeatureExtractor
-from SoundSourceLocalization.lib.utils import wise_standard_normalizaion
+from SoundSourceLocalization.mylib.utils import wise_standard_normalizaion
 
 
 class DOA:

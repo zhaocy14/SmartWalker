@@ -19,9 +19,9 @@ import os
 import json
 import threading
 import random
-from lib import utils
-from lib.utils import standard_normalizaion, add_prefix_and_suffix_4_basename
-from lib.audiolib import normalize_single_channel_to_target_level, audio_segmenter_4_numpy, \
+from mylib import utils
+from mylib.utils import standard_normalizaion, add_prefix_and_suffix_4_basename
+from mylib.audiolib import normalize_single_channel_to_target_level, audio_segmenter_4_numpy, \
     audio_energy_ratio_over_threshold, audio_energy_over_threshold, audiowrite, audioread
 import ns_enhance_onnx
 

@@ -24,7 +24,7 @@ from scipy.special import softmax as scipy_softmax
 from pyaudio import PyAudio
 
 from SoundSourceLocalization.SSL_Settings import *
-from SoundSourceLocalization.lib.utils import standard_normalizaion
+from SoundSourceLocalization.mylib.utils import standard_normalizaion
 
 # KWS
 import tensorflow.compat.v1 as tf
