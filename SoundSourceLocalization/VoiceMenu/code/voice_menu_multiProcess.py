@@ -54,7 +54,7 @@ GLOBAL_OUT_PIPE, GLOBAL_IN_PIPE = Pipe(duplex=False)
 
 class VoiceMenu(object):
     def __init__(self):
-        # print('-' * 20, 'init VoiceMenu class', '-' * 20)
+        print('-' * 20, 'init VoiceMenu class', '-' * 20)
         super(VoiceMenu, self).__init__()
         self.keyword_ls = ['walker', 'voice', 'menu', 'redraw', 'the', 'map', 'charge', 'start', 'sleep',
                            'off', 'hand', 'operation', 'yes', 'no', ]
@@ -429,7 +429,7 @@ class KeyWordSpotting(object):
 
 class MonitorVoice(object):
     def __init__(self, MappingMicro=False):
-        # print('-' * 20, 'init MonitorVoice class', '-' * 20)
+        print('-' * 20, 'init MonitorVoice class', '-' * 20)
         super(MonitorVoice, self).__init__()
         self.MappingMicro = MappingMicro
         self.micro_mapping = np.arange(CHANNELS)
@@ -621,6 +621,7 @@ class MonitorVoice_VoiceMenu_Process():
         self.MappingMicro = MappingMicro
     
     def run_forever(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, ):
+        
         vm = VoiceMenu()
         vm_thread = threading.Thread(target=vm.run_forever, args=(WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR,))
         vm_thread.start()
