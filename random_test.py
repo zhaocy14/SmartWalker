@@ -1,45 +1,56 @@
 import threading
-import os
-import sys
 import time
-import matplotlib.pyplot as plt
-import rplidar
-import serial.tools.list_ports
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-sys.path.append(father_path)
-data_path = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
-    os.path.sep + "data")
+#
+#
+# class A(object):
+#     def __init__(self):
+#         self.threading_flag = True
+#
+# a = A()
+#
+# def loop_1(A):
+#     while True:
+#         if A.threading_flag:
+#             print("hello")
+#             pass
+#         else:
+#             print("wait for the flag")
+#             time.sleep(1)
+#
+# t = threading.Thread(target=loop_1, args=(a,))
+# t.start()
+# time.sleep(1)
+# a.threading_flag = False
+# print("thread_flag is set to False")
+# time.sleep(5)
+# a.threading_flag = True
+# print("thread_flag is set to False")
 
 
-def print_serial(port):
-    print("---------------[ %s ]---------------" % port.name)
-    print("Path: %s" % port.device)
-    print("Descript: %s" % port.description)
-    print("HWID: %s" % port.hwid)
-    if not None == port.manufacturer:
-        print("Manufacture: %s" % port.manufacturer)
-    if not None == port.product:
-        print("Product: %s" % port.product)
-    if not None == port.interface:
-        print("Interface: %s" % port.interface)
-    if not None == port.vid:
-        print("Vid:",port.vid)
-    if not None == port.pid:
-        print("Pid:",port.pid)
-    print()
+e1 = threading.Event()
+e2 = threading.Event()
+
+def loop(e:threading.Event,s:str):
+    while True:
+        e.wait()
+        print("running %s"%s)
 
 
-def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
-    ports = serial.tools.list_ports.comports()
-    for port in ports:
-        print_serial(port)
-        if port.description.__contains__(description):
-            port_path = port.device
-            return port_path
-        else:
-            print("Cannot find the target device: %s" % description)
-    return None
+t1 = threading.Thread(target=loop,args=(e1,"1"))
+t2 = threading.Thread(target=loop,args=(e1,"2"))
+t1.start()
+t2.start()
 
-detect_serials()
+print("main start!")
+time.sleep(1)
+e1.set()
+e1.set()
+e1.set()
+e1.set()
+time.sleep(2)
+e1.clear()
+time.sleep(1)
+e2.set()
+time.sleep(2)
+e2.clear()
+print(e1.is_set(),e2.is_set())
