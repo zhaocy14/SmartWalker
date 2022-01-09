@@ -239,7 +239,8 @@ def is_walker_idle():
 # Check walker in power station
 def is_walker_in_power_station():
     state = state_client.get_walker_state()
-    return state == WalkerState.IDLE.CHARGING
+    power_level = state_client.get_power_level()
+    return state == WalkerState.IDLE.CHARGING and int(power_level) >= 70
 
 
 # Todo (Owen): Check walker in power station

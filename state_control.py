@@ -11,6 +11,7 @@ import psutil
 class StateControl():
     _instance = None
     current_state = WalkerState.IDLE.NOT_CHARGING
+    power_level = 0
 
     @staticmethod
     def get_instance():
@@ -49,6 +50,17 @@ class StateControl():
                             WalkerState.getByValue(args[1]))
                         msg = 'success'
                 self.socket.send_string(msg)
+            elif 'state_control.get_power_level' in recv_msg:
+                msg = self.get_power_level()
+                self.socket.send_string(msg)
+            elif 'state_control.update_power_level' in recv_msg:
+                args = recv_msg.split("::")
+                msg = 'fail'
+                if len(args) > 1:
+                    if args[1]:
+                        self.update_power_level(int(args[1]))
+                        msg = 'success'
+                self.socket.send_string(msg)
         # poller = zmq.Poller()
         # # Create socket to receive command
         # state_req = self.context.socket(zmq.REQ)
@@ -78,9 +90,11 @@ class StateControl():
     def update_walker_state(self, state):
         self.current_state = state
 
-    # Todo: Check Power Level
-    def get_power_level():
-        return 75
+    def get_power_level(self):
+        return int(self.power_level)
+    
+    def update_power_level(self, power_level):
+        self.power_level = int(power_level)
 
     # Todo: monitor the main process health status
     def monitor_main_process(self):
@@ -90,7 +104,7 @@ class StateControl():
                 # get the process id
                 pid = process.pid
                 name = process.name()
-                if 'Postman' in name:
+                if 'SmartWalker' in name:
                     print(name, process.cpu_percent(), process.status())
                     parent = psutil.Process(pid)
                     children = parent.children(recursive=True)
