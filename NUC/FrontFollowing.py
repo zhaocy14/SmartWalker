@@ -9,44 +9,22 @@ data_path = os.path.abspath(
 import time
 import threading
 
-from Sensors import IRCamera, IMU
+from Sensors import IRCamera, IMU, Infrared_Sensor, softskin
 from Following.Preprocessing import Leg_detector
 from Following.Network import FrontFollowingNetwork as FFL
 from Driver import ControlOdometryDriver as cd
-
 """portal num"""
 
-camera_portal = '/dev/ttyUSB0'
-lidar_portal = '/dev/ttyUSB3'
-# IMU_walker_portal = '/dev/ttyUSB0'
-IMU_human_portal = '/dev/ttyUSB1'
-# IMU_left_leg_portal = '/dev/ttyUSB6'
-# IMU_right_leg_portal = '/dev/ttyUSB3'
-# IMU_human_portal = '/dev/ttyUSB5'
-# IMU_left_leg_portal = '/dev/ttyUSB6'
-# IMU_right_leg_portal = '/dev/ttyUSB7'
-
-
 Camera = IRCamera.IRCamera()
-LD = Leg_detector.Leg_detector(lidar_portal)
+LD = Leg_detector.Leg_detector()
 CD = cd.ControlDriver(record_mode=True, left_right=0)
 win_width = 10
 FrontFollowingModel = FFL.FrontFollowing_Model(win_width=win_width)
 weight_path = "./checkpoints_combine/Combine"
 FrontFollowingModel.combine_net.load_weights(weight_path)
-
-# IMU_walker = IMU.IMU(name="walker")
-# IMU_walker.open_serial(IMU_walker_portal)
-# IMU_right_leg = IMU.IMU(name="right_leg")
-# IMU_right_leg.open_serial(IMU_right_leg_portal)
-# IMU_left_leg = IMU.IMU(name="left_leg")
-# IMU_left_leg.open_serial(IMU_left_leg_portal)
-
 IMU_human = IMU.IMU(name="human")
-IMU_human.open_serial(IMU_human_portal)
-
-# IMU_human = IMU.IMU(name="human")
-# IMU_human.open_serial(IMU_human_portal)
+infrared = Infrared_Sensor.Infrared_Sensor()
+skin = softskin.SoftSkin()
 
 """recording output"""
 file_path = os.path.abspath(data_path+os.path.sep+"output.txt")
@@ -70,7 +48,9 @@ def position_calculation(left_leg: np.ndarray, right_leg: np.ndarray,
 
 
 
-def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.IRCamera, FFL_Model:FFL.FrontFollowing_Model, file_path, IMU:IMU.IMU):
+def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.IRCamera,
+             FFL_Model:FFL.FrontFollowing_Model, file_path, IMU:IMU.IMU,
+             Skin:softskin.SoftSkin, Infrared:Infrared_Sensor.Infrared_Sensor):
     # weight buffer for lidar detection
     position_buffer_length = 3
     position_buffer = np.zeros((position_buffer_length, 6))
@@ -90,10 +70,15 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
     buffer = np.zeros((buffer_length * (ir_data_width + additional_data_width), 1))
 
     file_record = open(file_path,'w')
-
     while True:
+        if Skin.max_pressure >= 120:
+            CD.speed = CD.omega = CD.radius = 0
+            IR.get_irdata_once()
+            print("Abnormal Pressure!")
+            continue
         IR.get_irdata_once()
         if len(IR.temperature) == 768:
+
             # update buffer and predict
             normalized_temperature = np.array(IR.temperature).reshape((ir_data_width, 1))
             normalized_temperature = (normalized_temperature - min_ir) / (max_ir - min_ir)
@@ -128,6 +113,7 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
             center_right_boundry = 0.3
             left_boundry = 8.5   #change gwz
             right_boundry = -7
+            # print(current_left_leg,current_right_leg,current_position)
             if backward_boundry > current_position[4] > -40:
                 CD.speed = -0.1
                 CD.omega = 0
@@ -138,6 +124,10 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                         and current_position[0] > current_position[2] \
                         and current_position[1] > left_boundry :
                           # and action_label==2 :
+                    if LD.obstacle_array[0,0] > 1 or LD.obstacle_array[0,3] > 1 or Infrared.distance_data[0] < 25:
+                        str1 = "left but obstacle"
+                        CD.speed = CD.omega = CD.radius = 0
+                        continue
                     CD.speed = 0
                     radius = 30+abs(50*(max_boundary-current_position[1])/(max_boundary-left_boundry))
                     if radius < 50 :
@@ -150,6 +140,10 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                         and current_position[2] > current_position[0] \
                         and current_position[3] < right_boundry :
                         # and action_label== 3 :
+                    if LD.obstacle_array[0, 2] > 1 or LD.obstacle_array[0, 4] > 1 or Infrared.distance_data[4] < 25:
+                        str1 = "right but obstacle"
+                        CD.spe = CD.omegaed = CD.radius = 0
+                        continue
                     CD.speed = 0
                     radius = 30+abs(50*(current_position[3]-min_boundary)/(right_boundry-min_boundary))
                     if radius < 50 :
@@ -159,11 +153,19 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                     str1 = "right"
                     time.sleep(0.1)
                 else:
+                    if LD.obstacle_array[0, 1] > 1 or Infrared.distance_data[1:4].min() < 25:
+                        str1 = "forward but obstacle"
+                        CD.spe = CD.omegaed = CD.radius = 0
+                        continue
                     CD.speed = 0.1
                     CD.omega = 0
                     CD.radius = 0
                     str1 = "forward"
             elif  action_label== 4 :
+                if LD.obstacle_array[0, 0] > 1 or LD.obstacle_array[0, 3] > 1 or Infrared.distance_data[0] < 25:
+                    str1 = "left in space but obstacle"
+                    CD.speed = CD.omega = CD.radius = 0
+                    continue
                 CD.speed = 0
                 radius = abs(20*(center_left_boundry-current_position[1])/(max_boundary-center_left_boundry))
                 if radius < 10:
@@ -173,6 +175,10 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
                 str1 = "left in space"
                 time.sleep(0.1)
             elif  action_label== 5:
+                if LD.obstacle_array[0, 2] > 1 or LD.obstacle_array[0, 4] > 1 or Infrared.distance_data[4] < 25:
+                    str1 = "right in place but obstacle"
+                    CD.spe = CD.omegaed = CD.radius = 0
+                    continue
                 CD.speed = 0
                 radius = abs(20*(current_position[3]-min_boundary)/(center_left_boundry-min_boundary))
                 if radius < 10 :
@@ -198,21 +204,20 @@ def main_FFL(CD: cd.ControlDriver, LD: Leg_detector.Leg_detector, IR: IRCamera.I
 
 
 thread_leg = threading.Thread(target=LD.scan_procedure, args=(False,True,))
+thread_leg.start()
 thread_cd = threading.Thread(target=CD.control_part, args=())
-thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel,file_path,IMU_human))
+thread_main = threading.Thread(target=main_FFL, args=(CD, LD, Camera, FrontFollowingModel,file_path,IMU_human,skin,infrared))
 # thread_IMU_walker = threading.Thread(target=IMU_walker.read_record,args=())
 thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
-
-thread_IMU_human = threading.Thread(target=IMU_human.read_record,args=())
-
+thread_infrared = threading.Thread(target=infrared.read_data,args=())
+thread_skin = threading.Thread(target=skin.read_and_record,args=())
+thread_skin.start()
+thread_infrared.start()
 # thread_IMU_left = threading.Thread(target=IMU_left_leg.read_record,args=())
 # thread_IMU_right = threading.Thread(target=IMU_right_leg.read_record,args=())
 
-
-
-thread_leg.start()
-time.sleep(3)
-thread_cd.start()
+time.sleep(2)
+# thread_cd.start()
 thread_main.start()
 # thread_IMU_human.start()
 # thread_IMU_walker.start()
