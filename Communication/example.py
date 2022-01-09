@@ -2,7 +2,6 @@ import os, sys
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
-
 import time
 
 from Communication.Cpp_command import CppCommand
