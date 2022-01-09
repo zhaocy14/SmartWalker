@@ -270,8 +270,7 @@ class IRCamera(object):
 
 if __name__ == '__main__':
     ir_data = IRCamera()
-    while True:
-        ir_data.get_irdata_once()
+    ir_data.record_write()
     # # portname, baudrate = ir_data.get_portname_baudrate()
     # # print(portname, baudrate)
     # for i in range(100):

@@ -27,22 +27,25 @@ def print_serial(port):
     print()
 
 
-def detect_serials(location="1-3.2:1.0", vid=0x10c4, pid=0xea60):
+def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print_serial(port)
 
-        if port.location.__contains__(location):
+        if port.description.__contains__(description):
             port_path = port.device
             return port_path
         else:
-            print("Cannot find the target device: %s" % location)
+            print("Cannot find the target device: %s" % description)
     return None
 
 
 class Infrared_Sensor(object):
-    def __init__(self, sensor_num: int = 5, baud_rate: int = 115200, is_windows: bool = False):
-        port_name = detect_serials()
+    def __init__(self, sensor_num: int = 1, baud_rate: int = 14400, is_windows: bool = False):
+        if is_windows:
+            port_name = detect_serials(description="Arduino Mega 2560")
+        else:
+            port_name = detect_serials(description="ttyACM0")
         print(port_name, baud_rate)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
         self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
@@ -144,7 +147,7 @@ class Infrared_Sensor(object):
                         print(self.distance_data)
                         # self.count()
                     if is_record:
-                        write_data = self.distance_data.tolist()
+                        write_data = self.distance_data[0].tolist()
                         write_data.insert(0, time.time())
                         file.write(str(write_data)+"\n")
                         file.flush()
@@ -163,6 +166,6 @@ class Infrared_Sensor(object):
         print(self.count_num)
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
+    infrared = Infrared_Sensor(sensor_num=5,baud_rate=115200, is_windows=False)
     infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()

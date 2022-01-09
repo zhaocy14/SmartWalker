@@ -30,22 +30,22 @@ def print_serial(port):
     print()
 
 
-def detect_serials(location="1-1.1:1.0", vid=0x10c4, pid=0xea60):
+def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print_serial(port)
 
-        if port.location.__contains__(location):
+        if port.description.__contains__(description):
             port_path = port.device
             return port_path
         else:
-            print("Cannot find the target device: %s" % location)
+            print("Cannot find the target device: %s" % description)
     return None
 
 
 class SoftSkin(object):
     def __init__(self):
-        port_name = detect_serials()  # Arduino Mega 2560 ttyACM0
+        port_name = detect_serials(description="ttyACM0")  # Arduino Mega 2560 ttyACM0
         baud_rate = 115200
         print(port_name, baud_rate)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
@@ -55,10 +55,6 @@ class SoftSkin(object):
         self.base_data = []  # 建立一组基准值用于初始化
         self.temp_data = []
         self.port_num = 32
-        self.average_length = 10
-        self.average_buffer = np.zeros((self.average_length,self.port_num))
-        self.max_pressure = 0
-        self.build_base_line_data()
 
         pass
 
@@ -120,16 +116,14 @@ class SoftSkin(object):
                     temp_data = np.array(self.raw_data) - np.array(self.base_data)
                     if show:
                         print(temp_data)
-                        print(self.max_pressure)
+                    time_index = time.time()
+                    write_data = temp_data.tolist()
+                    write_data.insert(0,time_index)
                     if record:
-                        time_index = time.time()
-                        write_data = temp_data.tolist()
-                        write_data.insert(0, time_index)
                         file.write(str(write_data) + '\n')
                         file.flush()
                     self.temp_data = temp_data
-                    self.max_pressure = max(self.temp_data)
-                    time.sleep(0.1)
+                    # time.sleep(0.08)
                     if plot:
                         # plt.ion()
                         plot_array[0:plot_num - 1, :] = plot_array[1:plot_num, :]
@@ -142,40 +136,16 @@ class SoftSkin(object):
                         # plt.ioff()
                         # plt.show()
                         # plt.draw()
-                        plt.pause(0.0000000001)
+                        plt.pause(0.0001)
             except BaseException as be:
                 print("Data Error:", be)
 
 
 if __name__ == '__main__':
-    from Driver import ControlOdometryDriver as CD
-
-
     softskin = SoftSkin()
     softskin.build_base_line_data()
     # while True:
     #     softskin.read_data(0)
     #     print(np.array(softskin.raw_data) - np.array(softskin.base_data))
-    def little_test(sk:SoftSkin, driver:CD.ControlDriver):
-        while True:
-            # print(sk.max_pressure)
-            # if sk.max_pressure>=70:
-            #     driver.speed = 0
-            #     time.sleep(5)
-            # driver.speed = 0.3
-            # time.sleep(0.5)
-            driver.speed = 0.3
-            time.sleep(3)
-            driver.speed = 0
-            time.sleep(3)
-
-
-    driver = CD.ControlDriver(left_right=0)
-    thread_test = threading.Thread(target=little_test,args=(softskin,driver,))
-    thread_test.start()
-
-    # driver.start()
-    softskin.read_and_record(show=True, record=True,plot=False)
+    softskin.read_and_record(show=True, record=True)
     # softskin.record_label()
-
-
