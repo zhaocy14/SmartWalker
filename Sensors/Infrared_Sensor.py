@@ -27,36 +27,35 @@ def print_serial(port):
     print()
 
 
-def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
+def detect_serials(location="1-3.2:1.0", vid=0x10c4, pid=0xea60):
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print_serial(port)
 
-        if port.description.__contains__(description):
+        if port.location.__contains__(location):
             port_path = port.device
             return port_path
         else:
-            print("Cannot find the target device: %s" % description)
+            print("Cannot find the target device: %s" % location)
     return None
 
 
 class Infrared_Sensor(object):
-    def __init__(self, sensor_num: int = 1, baud_rate: int = 14400, is_windows: bool = False):
-        if is_windows:
-            port_name = detect_serials(description="Arduino Mega 2560")
-        else:
-            port_name = detect_serials(description="ttyACM0")
-        print(port_name, baud_rate)
-        self.pwd = os.path.abspath(os.path.abspath(__file__))
-        self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-        self.serial = serial.Serial(port_name, baud_rate, timeout=None)
+
+    def __init__(self, sensor_num: int = 5, baud_rate: int = 115200, is_STM32: bool = True):
+        if not is_STM32:
+            # if not STM32, then use the USB serial
+            port_name = detect_serials()
+            print(port_name, baud_rate)
+            self.pwd = os.path.abspath(os.path.abspath(__file__))
+            self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+            self.serial = serial.Serial(port_name, baud_rate, timeout=None)
         # sensor_num is the number of the sensors
         self.sensor_num = sensor_num
         self.distance_data = np.zeros((sensor_num))
         # buffer is a time window for filtering data
         self.buffer_length = 50
         self.buffer = np.zeros((self.buffer_length, self.sensor_num))
-        self.average_weight = np.ones((1, self.buffer_length)) / self.buffer_length
         # status: whether the sensor is out of range
         self.status = np.zeros((1, self.sensor_num))
         # table: first row is voltage, second row is distance
@@ -68,17 +67,8 @@ class Infrared_Sensor(object):
         self.table_80 = np.array(self.table_80)
         pass
 
-    def check_stability(self):
-        mean = np.mean(self.buffer,axis=0)
-        print(mean)
-        print(self.buffer)
-        for i in range(self.sensor_num):
-            print(self.buffer[:, i] - mean[i])
-            self.status[0, i] = np.mean((self.buffer[:, i] - mean[i]) ** 2)
-        self.status = np.sqrt(self.status)
-        print("status:", self.status)
-
     def my_inter(self, x, x0, x1, y0, y1):
+        #
         return (x - x1) / (x0 - x1) * y0 + (x - x0) / (x1 - x0) * y1
 
     def turn_to_distance(self, sensor_range: int = 150):
@@ -110,34 +100,24 @@ class Infrared_Sensor(object):
                                                           self.table_80[1, i],
                                                           self.table_80[0, i - 1], self.table_80[0, i])
 
-
     def read_data(self, is_shown:bool=False, is_record:bool=False, is_average:bool=False):
-        # current_time = time.time()
         if is_record:
             file_path = data_path + os.path.sep + "infrared.txt"
             file = open(file_path, "w")
         while True:
             try:
-                # self.serial.flushInput()
+                # read data from the Arduino
                 one_line_data = self.serial.readline().decode("utf-8")
-                # print("original:",one_line_data)
                 one_line_data = one_line_data.strip('\n')
                 one_line_data = one_line_data.strip('\r')
                 one_line_data = one_line_data.split('|')
-                # print("strip:",one_line_data)
                 if len(one_line_data) == self.sensor_num:
                     one_line_data = list(map(float, one_line_data))
                     self.buffer[0:-1, :] = self.buffer[1:self.buffer_length, :]
                     self.buffer[-1, :] = np.array(one_line_data).reshape(self.distance_data.shape)
                     if is_average:
-                        # self.distance_data = np.matmul(self.average_weight,self.buffer)[0]
                         self.distance_data = np.mean(self.buffer,axis=0)
-                        # or use exponential average
-                        # alpha = 2 / (self.buffer_length + 1)
-                        # self.distance_data = alpha * np.array(one_line_data).reshape(self.distance_data.shape) + (
-                        #             1 - alpha) * self.distance_data
                     else:
-                        # one_line_data = list(map(int, one_line_data))
                         self.distance_data = np.array(one_line_data).reshape(self.distance_data.shape)
                     # change the value into real voltage:
                     self.turn_to_distance()
@@ -147,25 +127,25 @@ class Infrared_Sensor(object):
                         print(self.distance_data)
                         # self.count()
                     if is_record:
-                        write_data = self.distance_data[0].tolist()
+                        write_data = self.distance_data.tolist()
                         write_data.insert(0, time.time())
                         file.write(str(write_data)+"\n")
                         file.flush()
-
-
-                # new_time = time.time()
-                # print("frequency:%f"%(1/(new_time-current_time)))
-                # current_time=new_time
             except BaseException as be:
                 print("Data Error:", be)
 
-    def count(self):
-        for i in range(self.sensor_num):
-            if self.distance_data[i] <= 70:
-                self.count_num[0,i] += 1;
-        print(self.count_num)
+    def update_from_STM32(self, STM32_data:np.ndarray, is_average:bool = True):
+        try:
+            self.buffer[0:-1, :] = self.buffer[1:self.buffer_length, :]
+            self.buffer[-1, :] = STM32_data.reshape(self.distance_data.shape)
+            if is_average:
+                self.distance_data = np.mean(self.buffer, axis=0)
+            else:
+                self.distance_data = STM32_data
+        except:
+            pass
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=5,baud_rate=115200, is_windows=False)
+    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
     infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()

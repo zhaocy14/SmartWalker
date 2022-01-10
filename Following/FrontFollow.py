@@ -39,10 +39,12 @@ class network_data(object):
 
 
 class FFL(object):
+
     def __init__(self, camera: IRCamera.IRCamera, leg_detector: Leg_detector.Leg_detector,
                  control_driver: ControlOdometryDriver.ControlDriver, infrared_sensor: Infrared_Sensor.Infrared_Sensor,
                  soft_skin: softskin.SoftSkin,
                  win_width: int = 10):
+
         super().__init__()
         self.Camera = camera
         self.LD = leg_detector
@@ -59,14 +61,17 @@ class FFL(object):
         self.leg_center_data = np.zeros((1, 6))  # left_leg(x,y) right_leg(x,y) center(x,y)
         self.ir_data_width = 768
         self.ir_data = np.zeros((1, self.ir_data_width))
+
         # this is the buffer for storing the leg positional information
         self.position_buffer_length = 3
         self.position_buffer = np.array((6, self.position_buffer_length))
+
         # threshold settings
         self.max_ir = 40
         self.min_ir = 10
         self.leg_threshold = 40
         self.leg_bias = 0.4
+
         # lidar_detection boundary
         self.forward_boundary = 8
         self.backward_boundary = -5
@@ -90,10 +95,14 @@ class FFL(object):
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
         self.thread_main = threading.Thread(target=self.main_FFL, args=(True,))
 
+        # thread event
+        self.FFLevent = threading.Event()
+        self.FFLevent.clear()
+
     def load_weight(self, weight_path: str = "./checkpoints_combine/Combine"):
         self.FFLNet.combine_net.load_weights(weight_path)
 
-    def updata_position_buffer(self, is_average: bool = True):
+    def update_position_buffer(self, is_average: bool = True):
         """just use a average buffer"""
         human_position = (self.leg_data[0:2, 0] + self.leg_data[2:4, 0]) / 2
         self.position_buffer[:, 0:-1] = self.position_buffer[:, 1:self.position_buffer_length]
@@ -189,9 +198,12 @@ class FFL(object):
         self.CD.speed = self.CD.omega = self.CD.radius = 0
         while True:
             try:
+                self.FFLevent.wait()
                 self.Camera.get_irdata_once()
                 if self.Softskin.max_pressure > 120:
                     # Abnormal pressure detected
+                    # run the unlock pattern
+                    self.Softskin.unlock()
                     if show:
                         print("Abnormal Pressure:", self.Softskin.max_pressure)
                     continue
@@ -209,7 +221,7 @@ class FFL(object):
                     max_possibility = result.max()
                     action_label = np.unravel_index(np.argmax(result), result.shape)[1]
                     # lidar_position
-                    current_position = self.updata_position_buffer(is_average=True)
+                    current_position = self.update_position_buffer(is_average=True)
                     # first detect backward
                     if -40 < current_position[4] < self.backward_boundary:
                         self.go_backward(show=show)
@@ -248,11 +260,15 @@ class FFL(object):
                 print("Error:", error)
                 pass
 
-    def start_thread(self):
+    def start_sensor(self):
         self.thread_CD.start()
         self.thread_Infrared.start()
         self.thread_Softskin.start()
         self.thread_Leg.start()
+
+    def start_FFL(self):
+        # self.start_sensor()
+        # time.sleep(1)
         self.thread_main.start()
 
 

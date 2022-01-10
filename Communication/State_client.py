@@ -53,4 +53,19 @@ class StateClient():
         if result == 'success':
             return True
         else:
-            return False 
+            return False
+        
+        
+    def get_power_level(self):
+        self.socket.send_string("state_control.get_power_level")
+        result = self.socket.recv_string()
+        return int(result)
+        
+    
+    def update_power_level(self, power_level):
+        self.socket.send_string("state_control.update_power_level::{}".format(power_level))
+        result = self.socket.recv_string()
+        if result == 'success':
+            return True
+        else:
+            return False

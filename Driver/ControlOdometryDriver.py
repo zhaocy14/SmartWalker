@@ -277,6 +277,19 @@ class ControlDriver(Thread):
         else:
             read_byte_r += self.ser_r.read(27)
 
+    def startMotor(self):  # 开启电机
+        start = [0x00, 0x00, 0x01, 0x01]
+        pc_mode = [0x02, 0x00, 0xc4, 0xc6]
+        end = [0x00, 0x00, 0x00, 0x00]
+        self.ser_l.write(bytes(start))
+        self.ser_l.read(2)
+        self.ser_r.write(bytes(start))
+        self.ser_r.read(2)
+        self.ser_l.write(bytes(pc_mode))
+        self.ser_l.read(2)
+        self.ser_r.write(bytes(pc_mode))
+        self.ser_r.read(2)
+
     def run(self):
         self.control_part()
     pass
