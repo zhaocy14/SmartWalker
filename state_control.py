@@ -98,9 +98,21 @@ class StateControl():
         #             self.socket.send_string(msg)
 
     def get_walker_state(self):
+        """Speical handling for IDLE state: check charging status"""
+        if self.current_state in WalkerState.IDLE:
+            if self.get_charging():
+                self.current_state = WalkerState.IDLE.CHARGING
+            else:
+                self.current_state = WalkerState.IDLE.NOT_CHARGING
         return self.current_state
 
     def set_walker_state(self, state):
+        """Speical handling for IDLE state: check charging status"""
+        if state in WalkerState.IDLE:
+            if self.get_charging():
+                state = WalkerState.IDLE.CHARGING
+            else:
+                state = WalkerState.IDLE.NOT_CHARGING
         self.current_state = state
 
     def get_power_level(self):

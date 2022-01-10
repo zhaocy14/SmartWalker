@@ -41,8 +41,10 @@ if __name__ == "__main__":
         
     '''State Client Demo'''
     state_client = csc.StateClient.get_instance()
-        # print(state_client.change_walker_state(WalkerState.IDLE.CHARGING))
-    # print(WalkerState.IDLE.CHARGING is WalkerState.IDLE.CHARGING)
     state_client.set_charging(True)
-    print(state_client.get_charging())
+    state_client.set_walker_state(WalkerState.IDLE.DEFAULT)
+    print(state_client.get_walker_state().value)
+    
+    # state_client.set_charging(True)
+    # print(state_client.get_charging())
     

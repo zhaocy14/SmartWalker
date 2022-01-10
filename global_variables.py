@@ -19,6 +19,7 @@ class MyEnumMeta(enum.EnumMeta):
 
 @enum.unique
 class _IDLE(Enum, metaclass=MyEnumMeta):
+    DEFAULT = 'idle'
     NOT_CHARGING = 'not_charging'
     CHARGING = 'charging'
     
