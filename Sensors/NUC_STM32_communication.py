@@ -10,6 +10,8 @@ data_path = os.path.abspath(
 
 from Sensors import softskin, Infrared_Sensor
 from Driver import ControlOdometryDriver
+import Communication.State_client as csc
+from global_variables import WalkerState
 
 class STM32_communication(object):
 
@@ -31,6 +33,7 @@ class STM32_communication(object):
         self.vehicle_on_off = False
         # camera no use
         self.camera_data = []
+        self.state_client = csc.StateClient.get_instance()
 
     """Print the port information"""
     def print_serial(self, port):
@@ -153,6 +156,16 @@ class STM32_communication(object):
             data = self.serial.read(32)
             self.infrared_sensor_data = data.hex()
             return data
+        
+    def GetChargingState(self):
+        # Todo: Get the charging state
+        is_charging = False
+        self.state_client.set_charging(is_charging)
+        
+    def GetPowerLevel(self):
+        # Todo: Get the power level
+        power_level = 75
+        self.state_client.set_power_level(power_level)
 
     def main_communicate(self,):
         try:

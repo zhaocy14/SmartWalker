@@ -6,12 +6,14 @@
 from global_variables import WalkerState, WalkerPort
 import zmq
 import psutil
+from distutils import util
 
 
 class StateControl():
     _instance = None
     current_state = WalkerState.IDLE.NOT_CHARGING
     power_level = 0
+    is_charging = False
 
     @staticmethod
     def get_instance():
@@ -41,24 +43,35 @@ class StateControl():
             if 'state_control.get_walker_state' in recv_msg:
                 msg = self.get_walker_state().value
                 self.socket.send_string(msg)
-            elif 'state_control.update_walker_state' in recv_msg:
+            elif 'state_control.set_walker_state' in recv_msg:
                 args = recv_msg.split("::")
                 msg = 'fail'
                 if len(args) > 1:
                     if WalkerState.getByValue(args[1]):
-                        self.update_walker_state(
+                        self.set_walker_state(
                             WalkerState.getByValue(args[1]))
                         msg = 'success'
                 self.socket.send_string(msg)
             elif 'state_control.get_power_level' in recv_msg:
                 msg = self.get_power_level()
                 self.socket.send_string(msg)
-            elif 'state_control.update_power_level' in recv_msg:
+            elif 'state_control.set_power_level' in recv_msg:
                 args = recv_msg.split("::")
                 msg = 'fail'
                 if len(args) > 1:
                     if args[1]:
-                        self.update_power_level(int(args[1]))
+                        self.set_power_level(int(args[1]))
+                        msg = 'success'
+                self.socket.send_string(msg)
+            elif 'state_control.get_charging' in recv_msg:
+                msg = str(self.get_charging())
+                self.socket.send_string(msg)
+            elif 'state_control.set_charging' in recv_msg:
+                args = recv_msg.split("::")
+                msg = 'fail'
+                if len(args) > 1:
+                    if args[1]:
+                        self.set_charging(util.strtobool(args[1]))
                         msg = 'success'
                 self.socket.send_string(msg)
         # poller = zmq.Poller()
@@ -75,26 +88,32 @@ class StateControl():
         #             msg = self.current_state().value
         #             self.socket.send_string(msg)
 
-        #         elif 'state_control.update_walker_state' in recv_msg:
+        #         elif 'state_control.set_walker_state' in recv_msg:
         #             args = recv_msg.split("::")
         #             msg = 'fail'
         #             if len(args) > 1:
         #                 if WalkerState.getByValue(args[1]):
-        #                     self.update_walker_state(WalkerState.getByValue(args[1]))
+        #                     self.set_walker_state(WalkerState.getByValue(args[1]))
         #                     msg = 'success'
         #             self.socket.send_string(msg)
 
     def get_walker_state(self):
         return self.current_state
 
-    def update_walker_state(self, state):
+    def set_walker_state(self, state):
         self.current_state = state
 
     def get_power_level(self):
         return int(self.power_level)
     
-    def update_power_level(self, power_level):
+    def set_power_level(self, power_level):
         self.power_level = int(power_level)
+    
+    def get_charging(self):
+        return self.is_charging
+    
+    def set_charging(self, charging):
+        self.is_charging = charging
 
     # Todo: monitor the main process health status
     def monitor_main_process(self):
@@ -128,4 +147,5 @@ class StateControl():
 
 if __name__ == "__main__":
     state_control = StateControl().get_instance()
-    state_control.monitor_main_process()
+    # state_control.monitor_main_process()
+    state_control.start()

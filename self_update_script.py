@@ -149,7 +149,7 @@ def update(version_url="https://owenyip.com/smartwalker.json", app_path="/Users/
     if not stop_walker_program():
         return 302
     # Change walker state to "Updating"
-    state_client.change_walker_state(WalkerState.UPDATE.UPDATING)
+    state_client.set_walker_state(WalkerState.UPDATE.UPDATING)
     
     # Replace the old program with the new
     replace_program_result = replace_program(app_path, dl_path, backup_path)

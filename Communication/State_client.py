@@ -4,6 +4,7 @@
 # Mail: me@owenyip.com
 #
 import zmq
+from distutils import util
 from enum import Enum
 from global_variables import WalkerPort, WalkerState
 
@@ -39,7 +40,7 @@ class StateClient():
         return WalkerState.getByValue(result)
     
     
-    def change_walker_state(self, state):
+    def set_walker_state(self, state):
         state_string = ''
         if isinstance(state, Enum):
             state_string = state.value
@@ -48,7 +49,7 @@ class StateClient():
         else:
             print('only Enum or str allowed')
             return False
-        self.socket.send_string("state_control.update_walker_state::{}".format(state_string))
+        self.socket.send_string("state_control.set_walker_state::{}".format(state_string))
         result = self.socket.recv_string()
         if result == 'success':
             return True
@@ -62,8 +63,23 @@ class StateClient():
         return int(result)
         
     
-    def update_power_level(self, power_level):
-        self.socket.send_string("state_control.update_power_level::{}".format(power_level))
+    def set_power_level(self, power_level):
+        self.socket.send_string("state_control.set_power_level::{}".format(power_level))
+        result = self.socket.recv_string()
+        if result == 'success':
+            return True
+        else:
+            return False
+        
+        
+    def get_charging(self):
+        self.socket.send_string("state_control.get_charging")
+        result = self.socket.recv_string()
+        return util.strtobool(result)
+        
+    
+    def set_charging(self, charging):
+        self.socket.send_string("state_control.set_charging::{}".format(charging))
         result = self.socket.recv_string()
         if result == 'success':
             return True
