@@ -294,7 +294,6 @@ class ControlDriver(Thread):
         self.control_part()
     pass
 
-
 if __name__ == '__main__':
 
     cd = ControlDriver(record_mode=False,left_right=0)

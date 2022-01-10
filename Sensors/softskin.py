@@ -67,6 +67,8 @@ class SoftSkin(object):
         self.emergency_change_rate = 50
         self.detect_length = 10
         self.detect_buffer = np.zeros((self.detect_length, self.port_num))
+        self.skin_unlock_event = threading.Event()
+        self.skin_unlock_event.clear()
         pass
 
     def read_data(self, is_shown=1):
@@ -156,36 +158,15 @@ class SoftSkin(object):
             change_rate = change_rate.max()
             if self.safe_change_rate <= change_rate < self.emergency_change_rate:
                 break
+            time.sleep(0.1)
 
 
 if __name__ == '__main__':
-    from Driver import ControlOdometryDriver as CD
-
-    softskin = SoftSkin()
-    softskin.build_base_line_data()
+    skin = SoftSkin()
+    thread_reading = threading.Thread(target=skin.read_and_record, args=())
 
 
-    # while True:
-    #     softskin.read_data(0)
-    #     print(np.array(softskin.raw_data) - np.array(softskin.base_data))
-    def little_test(sk: SoftSkin, driver: CD.ControlDriver):
-        while True:
-            # print(sk.max_pressure)
-            # if sk.max_pressure>=70:
-            #     driver.speed = 0
-            #     time.sleep(5)
-            # driver.speed = 0.3
-            # time.sleep(0.5)
-            driver.speed = 0.3
-            time.sleep(3)
-            driver.speed = 0
-            time.sleep(3)
+    thread_reading.start()
 
+    skin.unlock()
 
-    driver = CD.ControlDriver(left_right=0)
-    thread_test = threading.Thread(target=little_test, args=(softskin, driver,))
-    thread_test.start()
-
-    # driver.start()
-    softskin.read_and_record(show=True, record=True, plot=False)
-    # softskin.record_label()
