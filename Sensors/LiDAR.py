@@ -46,25 +46,26 @@ def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
     return None
 
 
-class lidar(rplidar.RPLidar):
+class lidar(object):
 
-    def __init__(self):
+    def __init__(self,is_zmq:bool=False):
+        super().__init__()
         self.port_name = detect_serials(description="CP2102 USB")
-        super().__init__(self.port_name)
+        if not is_zmq:
+            self.rplidar = rplidar.RPLidar(self.port_name)
+        else:
+            self.rplidar = []
         self.scan_data_list = []
 
-    def scan_procedure(self,is_show:bool=False):
+    def rplidar_scan_procedure(self,is_show:bool=False):
         # present_time = time.time()
         while True:
             try:
-                info = self.get_info()
+                info = self.rplidar.get_info()
+                health = self.rplidar.get_health()
                 print(info)
-                health = self.get_health()
                 print(health)
                 for i, scan in enumerate(self.iter_scans(max_buf_meas=5000)):
-                    # new_time = time.time()
-                    # print("frequency:",1/(new_time-present_time))
-                    # present_time = new_time
                     self.scan_data_list = scan
                     if is_show:
                         print(self.scan_data_list)
@@ -72,6 +73,13 @@ class lidar(rplidar.RPLidar):
                 self.clean_input()
                 # self.stop()
                 # self.stop_motor()
+
+    def zmq_scan(self,is_show:bool=False):
+        while True:
+            try:
+                pass
+            except Exception as be:
+                pass
 
 if __name__ == "__main__":
     lidar_instance = lidar()

@@ -39,34 +39,42 @@ class network_data(object):
 
 
 class FFL(object):
+
     def __init__(self, camera: IRCamera.IRCamera, leg_detector: Leg_detector.Leg_detector,
                  control_driver: ControlOdometryDriver.ControlDriver, infrared_sensor: Infrared_Sensor.Infrared_Sensor,
                  soft_skin: softskin.SoftSkin,
                  win_width: int = 10):
+
         super().__init__()
         self.Camera = camera
         self.LD = leg_detector
         self.CD = control_driver
         self.Infrared = infrared_sensor
         self.Softskin = soft_skin
+
         # initialize the Front-Following
         self.FFLNet = FrontFollowingNetwork.FrontFollowing_Model(win_width=win_width)
         self.load_weight()
+
         # this is the serial input buffer for the FFLNet
         self.data_buffer = network_data(buffer_len=win_width)
+
         # store the latest frame of img data and leg data
         self.leg_data = np.zeros((1, 4))  # left_leg(x,y) right_leg(x,y)
         self.leg_center_data = np.zeros((1, 6))  # left_leg(x,y) right_leg(x,y) center(x,y)
         self.ir_data_width = 768
         self.ir_data = np.zeros((1, self.ir_data_width))
+
         # this is the buffer for storing the leg positional information
         self.position_buffer_length = 3
         self.position_buffer = np.array((6, self.position_buffer_length))
+
         # threshold settings
         self.max_ir = 40
         self.min_ir = 10
         self.leg_threshold = 40
         self.leg_bias = 0.4
+
         # lidar_detection boundary
         self.forward_boundary = 8
         self.backward_boundary = -5
@@ -90,10 +98,17 @@ class FFL(object):
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
         self.thread_main = threading.Thread(target=self.main_FFL, args=(True,))
 
+        # thread event
+        self.FFLevent = threading.Event()
+        self.FFLevent.clear()
+
+        # control driver manager
+        self.isDriverChangeAllow = True
+
     def load_weight(self, weight_path: str = "./checkpoints_combine/Combine"):
         self.FFLNet.combine_net.load_weights(weight_path)
 
-    def updata_position_buffer(self, is_average: bool = True):
+    def update_position_buffer(self, is_average: bool = True):
         """just use a average buffer"""
         human_position = (self.leg_data[0:2, 0] + self.leg_data[2:4, 0]) / 2
         self.position_buffer[:, 0:-1] = self.position_buffer[:, 1:self.position_buffer_length]
@@ -105,10 +120,20 @@ class FFL(object):
             current_position = self.position_buffer[:, -1]
         return current_position
 
+    def TurnOnDriver(self):
+        self.isDriverChangeAllow = True
+
+    def TurnOffDriver(self):
+        self.isDriverChangeAllow = False
+
+    def updateDriver(self, Speed:float = 0, Omega:float = 0, Radius:float = 0):
+        if self.isDriverChangeAllow:
+            self.CD.speed = Speed
+            self.CD.radius = Radius
+            self.CD.omega = Omega
+
     def go_backward(self, show: bool = False):
-        self.CD.speed = self.bspeed
-        self.CD.omega = 0
-        self.CD.radius = 0
+        self.updateDriver(Speed=self.bspeed,Omega=0,Radius=0)
         if show:
             print("go backward!")
 
@@ -117,14 +142,12 @@ class FFL(object):
             self.stop()
             if show:
                 print("forward but obstacle")
-        self.CD.speed = self.fspeed
-        self.CD.omega = 0
-        self.CD.radius = 0
+        else:
+            self.updateDriver(Speed=self.fspeed,Omega=0,Radius=0)
         if show:
             print("go forward!")
 
     def turn_left(self, left_foot_position: float, is_in_place: bool = False, show: bool = False):
-        self.CD.speed = 0
         if is_in_place:
             # if there is an obstacle
             if self.LD.obstacle_array[0, 0] > 1 or self.LD.obstacle_array[0, 3] > 1 or self.Infrared.distance_data[
@@ -133,8 +156,7 @@ class FFL(object):
                 if show:
                     print("left in space but obstacle")
             else:
-                self.CD.omega = self.lomega
-                self.CD.radius = 0
+                self.updateDriver(Speed=0, Omega=self.lomega, Radius=0)
                 if show:
                     print("turn left in place!")
         else:
@@ -145,14 +167,14 @@ class FFL(object):
                 if show:
                     print("left but obstacle")
             else:
-                self.CD.radius = max(50, 30 + abs(
+                radius = max(50, 30 + abs(
                     50 * (self.left_max_boundary - left_foot_position) / (self.left_max_boundary - self.left_boundary)))
-                self.CD.omega = 10 / self.CD.radius
+                omega = 10 / radius
+                self.updateDriver(Speed=0, Omega=omega, Radius=radius)
                 if show:
                     print("turn left!")
 
     def turn_right(self, right_foot_position: float, is_in_place: bool = False, show: bool = False):
-        self.CD.speed = 0
         if is_in_place:
             if self.LD.obstacle_array[0, 2] > 1 or self.LD.obstacle_array[0, 4] > 1 or self.Infrared.distance_data[
                 4] < 25:
@@ -161,8 +183,7 @@ class FFL(object):
                 if show:
                     print("right in place but obstacle")
             else:
-                self.CD.omega = self.romega
-                self.CD.radius = 0
+                self.updateDriver(Speed=0, Omega=self.romega, Radius=0)
                 if show:
                     print("turn right in place!")
         else:
@@ -173,25 +194,31 @@ class FFL(object):
                 if show:
                     print("right but obstacle")
             else:
-                self.CD.radius = max(50, 30 + abs(50 * (right_foot_position - self.right_max_boundary) / (
+                radius = max(50, 30 + abs(50 * (right_foot_position - self.right_max_boundary) / (
                             self.right_boundary - self.right_max_boundary)))
-                self.CD.omega = -10 / self.CD.radius
+                omega = -10 / radius
+                self.updateDriver(Speed=0, Omega=omega, Radius=radius)
                 if show:
                     print("turn right!")
 
     def stop(self, show: bool = False):
-        self.CD.speed = self.CD.omega = self.CD.radius = 0
+        self.updateDriver(Speed=0, Omega=0, Radius=0)
         if show:
             print("stop!")
 
+
+
     def main_FFL(self, show: bool = False):
         # first make sure the CD is stopped
-        self.CD.speed = self.CD.omega = self.CD.radius = 0
+        self.updateDriver(Speed=0,Omega=0,Radius=0)
         while True:
             try:
+                self.FFLevent.wait()
                 self.Camera.get_irdata_once()
                 if self.Softskin.max_pressure > 120:
                     # Abnormal pressure detected
+                    # run the unlock pattern
+                    self.Softskin.unlock()
                     if show:
                         print("Abnormal Pressure:", self.Softskin.max_pressure)
                     continue
@@ -199,8 +226,7 @@ class FFL(object):
                     # normalize data
                     self.ir_data = np.array(self.Camera.temperature).reshape((self.ir_data_width, 1))
                     self.ir_data = (self.ir_data - self.min_ir) / (self.max_ir - self.min_ir)
-                    self.leg_data = np.array(self.LD.left_leg[0], self.LD.left_leg[1],
-                                             self.LD.right_leg[0], self.LD.right_leg[1]).reshape((4, 1))
+                    self.leg_data = np.array(self.LD.left_leg[0], self.LD.left_leg[1], self.LD.right_leg[0], self.LD.right_leg[1]).reshape((4, 1))
                     self.leg_data = self.leg_data / self.leg_threshold + self.leg_bias
                     # update the network input buffer
                     self.data_buffer.update(self.ir_data, self.leg_data)
@@ -209,7 +235,7 @@ class FFL(object):
                     max_possibility = result.max()
                     action_label = np.unravel_index(np.argmax(result), result.shape)[1]
                     # lidar_position
-                    current_position = self.updata_position_buffer(is_average=True)
+                    current_position = self.update_position_buffer(is_average=True)
                     # first detect backward
                     if -40 < current_position[4] < self.backward_boundary:
                         self.go_backward(show=show)
@@ -248,11 +274,15 @@ class FFL(object):
                 print("Error:", error)
                 pass
 
-    def start_thread(self):
+    def start_sensor(self):
         self.thread_CD.start()
         self.thread_Infrared.start()
         self.thread_Softskin.start()
         self.thread_Leg.start()
+
+    def start_FFL(self):
+        # self.start_sensor()
+        # time.sleep(1)
         self.thread_main.start()
 
 
