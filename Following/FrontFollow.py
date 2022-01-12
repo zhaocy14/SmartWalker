@@ -92,7 +92,8 @@ class FFL(object):
         self.romega = -0.1  # right omega
 
         # start_thread
-        self.thread_Leg = threading.Thread(target=self.LD.scan_procedure, args=(False, True))
+        # self.thread_Leg = threading.Thread(target=self.LD.scan_procedure, args=(False, True))
+        self.thread_Leg = threading.Thread(target=self.LD.zmq_scan,args=(False,False))
         self.thread_CD = threading.Thread(target=self.CD.control_part, args=())
         self.thread_Infrared = threading.Thread(target=self.Infrared.read_data, args=())
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
@@ -105,7 +106,7 @@ class FFL(object):
         # control driver manager
         self.isDriverChangeAllow = True
 
-    def load_weight(self, weight_path: str = "./checkpoints_combine/Combine"):
+    def load_weight(self, weight_path: str = "../NUC/checkpoints_combine/Combine"):
         self.FFLNet.combine_net.load_weights(weight_path)
 
     def update_position_buffer(self, is_average: bool = True):
@@ -209,8 +210,8 @@ class FFL(object):
 
 
     def main_FFL(self, show: bool = False):
-        # first make sure the CD is stopped
-        self.updateDriver(Speed=0,Omega=0,Radius=0)
+        # # first make sure the CD is stopped
+        # self.updateDriver(Speed=0,Omega=0,Radius=0)
         while True:
             try:
                 self.FFLevent.wait()
@@ -218,11 +219,13 @@ class FFL(object):
                 if self.Softskin.max_pressure > 120:
                     # Abnormal pressure detected
                     # run the unlock pattern
+                    print("EMERGENCY!!!Runing unlock programe")
                     self.Softskin.unlock()
                     if show:
                         print("Abnormal Pressure:", self.Softskin.max_pressure)
                     continue
                 if len(self.Camera.temperature) == 768:
+
                     # normalize data
                     self.ir_data = np.array(self.Camera.temperature).reshape((self.ir_data_width, 1))
                     self.ir_data = (self.ir_data - self.min_ir) / (self.max_ir - self.min_ir)
@@ -275,7 +278,7 @@ class FFL(object):
                 pass
 
     def start_sensor(self):
-        self.thread_CD.start()
+        # self.thread_CD.start()
         self.thread_Infrared.start()
         self.thread_Softskin.start()
         self.thread_Leg.start()
@@ -287,5 +290,13 @@ class FFL(object):
 
 
 if __name__ == "__main__":
-    FrontFollowing_Instance = FFL()
-    FrontFollowing_Instance.start_thread()
+    Camera = IRCamera.IRCamera()
+    Leg_Detector = Leg_detector.Leg_detector(is_zmq=True)
+    Softskin = softskin.SoftSkin()
+    Control = ControlOdometryDriver.ControlDriver()
+    Infrared = Infrared_Sensor.Infrared_Sensor()
+    FrontFollowing_Instance = FFL(camera=Camera,leg_detector=Leg_Detector,control_driver=Control,
+                                  infrared_sensor=Infrared,soft_skin=Softskin)
+    FrontFollowing_Instance.start_sensor()
+    FrontFollowing_Instance.start_FFL()
+    FrontFollowing_Instance.FFLevent.set()
