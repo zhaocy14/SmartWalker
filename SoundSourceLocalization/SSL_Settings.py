@@ -12,7 +12,7 @@ CHUNK_SIZE = 16  # 1ms的采样点数，此参数可以使得语音队列中每�
 # KeyWord Spotting
 MAX_COMMAND_SECONDS = 3
 CLIP_MS = 1000
-KWS_WINDOW_STRIDE_MS = 100
+KWS_WINDOW_STRIDE_MS = 200
 
 # Noise Suppression
 RECORD_SECONDS = 1.1  # 1
@@ -29,7 +29,7 @@ ACTION_SPACE = 8
 FORMAT = pyaudio.paInt16
 
 FORWARD_SECONDS = 3
-STEP_SIZE = 0  # 1
+STEP_SIZE = 1  # 1
 
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")

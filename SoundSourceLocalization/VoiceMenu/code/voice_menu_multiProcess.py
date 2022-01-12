@@ -57,14 +57,14 @@ class VoiceMenu(object):
         print('-' * 20, 'init VoiceMenu class', '-' * 20)
         super(VoiceMenu, self).__init__()
         self.keyword_ls = ['walker', 'voice', 'menu', 'redraw', 'the', 'map', 'charge', 'start', 'sleep',
-                           'off', 'hand', 'operation', 'yes', 'no', ]
+                           'off', 'hand', 'operation', 'yes', 'no', 'help', ]
         self.walker_name = 'walker'
         self.menu_name = 'voice menu'
         self.command_ls = ['voice menu', 'redraw map', 'charge', 'start',
-                           'sleep', 'voice menu off', 'hand operation', 'yes', 'no', ]
+                           'sleep', 'voice menu off', 'hand operation', 'yes', 'no', 'help', ]
         self.affirm_ls = ['yes', 'no']
         self.wait_action_ls = ['redraw map', 'charge', ]  # 不考虑 voice menu
-        self.instant_action_ls = ['start', 'sleep', 'voice menu off', 'hand operation', ]  # 不考虑 voice menu
+        self.instant_action_ls = ['start', 'sleep', 'voice menu off', 'hand operation', 'help', ]  # 不考虑 voice menu
         self.excluded_ls = ['silence', 'unknown', ]
         self.action_ls = self.wait_action_ls + self.instant_action_ls
         self.wait_time = 10  # s  'inf' for waiting forever
@@ -283,7 +283,7 @@ class KeyWordSpotting(object):
         self.use_stream = use_stream
         assert self.use_stream == False, 'Streaming model has not been tested'  # 暂时不考虑流式模型
         
-        self.model_name = 'ds_tc_resnet_cpu_causal_20211231-200734'
+        self.model_name = 'ds_tc_resnet_cpu_causal_20220110-143343'
         self.model_dir = os.path.abspath(os.path.join(CRT_DIR, '../model', self.model_name, ))
         print('KWS_model_dir:', self.model_dir)
         self.flags_path = os.path.join(self.model_dir, 'flags.json')
@@ -621,7 +621,6 @@ class MonitorVoice_VoiceMenu_Process():
         self.MappingMicro = MappingMicro
     
     def run_forever(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR, ):
-        
         vm = VoiceMenu()
         vm_thread = threading.Thread(target=vm.run_forever, args=(WORD_QUEUE, WORD_QUEUE_UPDATA, WORD_QUEUE_CLEAR,))
         vm_thread.start()

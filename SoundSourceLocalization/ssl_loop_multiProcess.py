@@ -34,10 +34,12 @@ from SoundSourceLocalization.SSL.code.ssl_Process import SSL_Process
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
     os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-    isDebug = True
-    useCD = False
+    MappingMicro = True
+    isDebug = False
+    useCD = True
+    left_right = 0
     
-    mv_vm = MonitorVoice_VoiceMenu_Process(MappingMicro=False)
+    mv_vm = MonitorVoice_VoiceMenu_Process(MappingMicro=MappingMicro)
     kws = KeyWordSpotting_Process(use_stream=False)
     ssl = SSL_Process(seg_len='256ms', useDenoise=True, useCD=useCD, isDebug=isDebug)
     
@@ -46,7 +48,7 @@ if __name__ == '__main__':
     p2 = Process(target=kws.run, args=(GLOBAL_AUDIO_QUEUE, GLOBAL_AUDIO_QUEUE_CLEAR,
                                        GLOBAL_WORD_QUEUE, GLOBAL_WORD_QUEUE_UPDATA, GLOBAL_WORD_QUEUE_CLEAR,
                                        GLOBAL_IN_PIPE,))
-    p3 = Process(target=ssl.run, args=(GLOBAL_OUT_PIPE,))
+    p3 = Process(target=ssl.run, args=(GLOBAL_OUT_PIPE, left_right))
     
     p1.start()
     p2.start()

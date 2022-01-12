@@ -289,12 +289,14 @@ class SSL(object):
             
             # calculate features
             gcc_feature_batch = doa.extract_gcc_phat_4_batch(audio_segments)
-            # gcc_feature = np.mean(gcc_feature_batch, axis=0)
+            gcc_feature_batch = np.mean(gcc_feature_batch, axis=0)[np.newaxis, :]
             _, direction = doa.predict(gcc_feature_batch)
             print("Producing action ...\n", 'Direction', direction)
             
             ### 接入Owen的模块，传入aim_loca
             if self.useCD:
+                direction = direction[0] * 45
+                
                 SSLturning(control, direction)
                 control.speed = STEP_SIZE / FORWARD_SECONDS
                 control.radius = 0
@@ -416,8 +418,8 @@ class SSL_Process(object):
         self.useCD = useCD
         self.isDebug = isDebug
     
-    def run(self, RECV_PIPE, ):
-        cd = CD.ControlDriver(left_right=0) if self.useCD else ''
+    def run(self, RECV_PIPE, left_right):
+        cd = CD.ControlDriver(left_right=left_right) if self.useCD else ''
         if self.useCD:
             cd_thread = threading.Thread(target=cd.control_part, args=())
             cd_thread.start()
