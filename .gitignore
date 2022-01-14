@@ -143,4 +143,3 @@ virtualenv/
 
 .vscode/sftp.json*!/SoundSourceLocalization/lib/
 !/SoundSourceLocalization/mylib/
-!/SoundSourceLocalization/mylib/
