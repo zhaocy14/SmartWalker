@@ -129,10 +129,9 @@ class IRCamera(object):
             ir_list.pop(x + y * 32 + 1)
         return ir_list
 
-    def get_irdata_once(self, time_index=False):
+    def get_irdata_once(self, time_index=False, demo:bool=False):
         temperature = []
         rest_num = 5
-
         while True:
             s = self.serial.read(1).hex()
             if s != "":
@@ -171,7 +170,8 @@ class IRCamera(object):
                     self.temperature = temperature
                     # time.sleep(0.2)
                     break
-            self.demonstrate_data()
+            if demo:
+                self.demonstrate_data()
         return temperature
 
     def record_write(self, write = False, time_index=True, file_path=data_path, demo=False):
@@ -270,7 +270,8 @@ class IRCamera(object):
 
 if __name__ == '__main__':
     ir_data = IRCamera()
-    ir_data.record_write()
+    while True:
+        ir_data.get_irdata_once()
     # # portname, baudrate = ir_data.get_portname_baudrate()
     # # print(portname, baudrate)
     # for i in range(100):

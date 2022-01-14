@@ -4,8 +4,8 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 
-from Communication.Cpp_command import CppCommand
-from Communication.Receiver import Receiver
+from Communication_220114.Cpp_command import CppCommand
+from Communication_220114.Receiver import Receiver
 
 cco = CppCommand.get_instance()
 

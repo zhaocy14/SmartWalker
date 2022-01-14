@@ -36,13 +36,14 @@ class network_data(object):
 
 
 if __name__ == "__main__":
-    """portal num"""
-    camera_portal = '/dev/ttyUSB1'
-    lidar_portal = '/dev/ttyUSB0'
+    # LD = Leg_detector.Leg_detector()
+    # thread_leg = threading.Thread(target=LD.scan_procedure,args=())
+    # thread_leg.start()
+    LD = Leg_detector.Leg_detector(is_zmq=True)
     IRCamera = IRCamera.IRCamera()
-    IRSensor = Infrared_Sensor.Infrared_Sensor(sensor_num=1)
-    LD = Leg_detector.Leg_detector(lidar_portal)
+    IRSensor = Infrared_Sensor.Infrared_Sensor(sensor_num=5)
     cd = CD.ControlDriver(left_right=0)
+    skin = softskin.SoftSkin()
 
     # initialize the network
     win_width = 10
@@ -60,17 +61,27 @@ if __name__ == "__main__":
     buffer = np.zeros((buffer_length * (ir_data_width + additional_data_width), 1))
 
     # sensor data reading thread, network output thread and control thread
-    thread_leg = threading.Thread(target=LD.scan_procedure,args=())
+
+    thread_leg = threading.Thread(target=LD.zmq_scan,args=())
     thread_leg.start()
-    thread_infrared = threading.Thread(target=IRSensor.read_data,args=())
-    thread_infrared.start()
+    thread_skin = threading.Thread(target=skin.read_and_record,args=())
+    thread_skin.start()
+
     time.sleep(2) # wait for the start of the lidar
 
     thread_control_driver = threading.Thread(target=cd.control_part, args=())
-    thread_control_driver.start()
+    # thread_control_driver.start()
+    # thread_infrared = threading.Thread(target=IRSensor.read_data, args=())
+    # thread_infrared.start()
+
 
     while True:
         # present_time = time.time()
+        if skin.max_pressure >= 120:
+            CD.speed = CD.omega = CD.radius = 0
+            IRCamera.get_irdata_once()
+            print("Abnormal Pressure!")
+            continue
         IRCamera.get_irdata_once()
         if len(IRCamera.temperature) == 768:
             normalized_temperature = np.array(IRCamera.temperature).reshape((ir_data_width, 1))
@@ -95,17 +106,17 @@ if __name__ == "__main__":
             action_label = np.unravel_index(np.argmax(result), result.shape)[1]
             # print(action_label)
             # print(max_result)
-            backward_boundry = -5
+            backward_boundry = -15
             forward_security_boundry = 0
             still_security_boundry = -40
 
-            far_flag = 100
-            close_flag = 130
+            # far_flag = 80
+            close_flag = 25
             # print(LD.center_point)
             human_position = (LD.left_leg+LD.right_leg)/2
             if backward_boundry>human_position[0]>still_security_boundry:
                 print("\rbackward!",end="")
-                cd.speed = -0.15
+                cd.speed = -0.1
                 cd.omega=0
                 cd.radius=0
             elif max_result == result[0, 0] or human_position[0] < still_security_boundry:
@@ -115,45 +126,52 @@ if __name__ == "__main__":
                 cd.radius = 0
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
-                if IRSensor.distance_data[0] > far_flag:
+                if LD.obstacle_array[0, 1] > 1:
                     print("\r obstacle in forward!!!!",end="")
                     cd.speed = cd.omega = cd.radius = 0
                     continue
                 if human_position[0] > forward_security_boundry:
-                    cd.speed = 0.18
+                    cd.speed = 0.05
                     cd.omega = 0
                     cd.radius = 0
             elif max_result == result[0, 2]:
                 print("\rturn left!",end="")
                 cd.speed = 0
-                cd.omega = 0.15
+                cd.omega = 0.1
                 cd.radius = 70
-                if close_flag > IRSensor.distance_data[0] > far_flag:
+                if LD.obstacle_array[0,0] > 1 or LD.obstacle_array[0,3] > 1 or LD.obstacle_array[0,1]:
                     print("\r obstacle in turning left!!!!",end="")
-                    cd.radius = cd.radius * (200-IRSensor.distance_data[0])/100
+                    # cd.radius = cd.radius * (200-IRSensor.distance_data[0])/100
+                    cd.speed = cd.omega = cd.radius = 0
                     continue
-                elif close_flag<IRSensor.distance_data[0]:
-                    print("\rtoo close",end="")
-                    cd.speed = cd.omega = 0
             elif max_result == result[0, 3]:
                 print("\rturn right!",end="")
                 cd.speed = 0
-                cd.omega = -0.15
+                cd.omega = -0.1
                 cd.radius = 70
-                if IRSensor.distance_data[0] > far_flag:
+                if LD.obstacle_array[0, 2] > 1 or LD.obstacle_array[0, 4] or LD.obstacle_array[0,1] > 1:
                     print("\r obstacle in turning right!!!!",end="")
-                    cd.radius = max(cd.radius-5,0)
+                    # cd.radius = max(cd.radius-5,0)
+                    cd.speed = cd.omega = cd.radius = 0
                     continue
             elif max_result == result[0, 4]:
                 print("\ryuandi left",end="")
                 cd.speed = 0
                 cd.omega = 0.3
                 cd.radius = 0
+                if LD.obstacle_array[0,0] > 1 or LD.obstacle_array[0,3] > 1:
+                    print("\r obstacle in turning left!!!!",end="")
+                    cd.speed = cd.omega = cd.radius = 0
+                    continue
             elif max_result == result[0, 5]:
                 print("\ryuandi right",end="")
                 cd.speed = 0
                 cd.omega = -0.3
                 cd.radius = 0
+                if LD.obstacle_array[0, 2] > 1 or LD.obstacle_array[0, 4] > 1:
+                    print("\r obstacle in turning right in space!!!!",end="")
+                    cd.speed = cd.omega = cd.radius = 0
+                    continue
             # print(1/(time.time()-present_time))
             # present_time = time.time()
     

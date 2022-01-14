@@ -17,16 +17,16 @@ from copy import deepcopy
 if __name__ == '__main__':
     
     
-    from Communication.Transmitter import Transmitter
-    from Communication.Modules.Variables import *
+    from Communication_220114.Transmitter import Transmitter
+    from Communication_220114.Modules.Variables import *
     
     """Transmit demo"""
     transmitterObj = Transmitter()
     transmitterObj.single_send(sl_topic, "content here")
     
 
-    from Communication.Modules.Variables import *
-    from Communication.Modules.Receive import ReceiveZMQ
+    from Communication_220114.Modules.Variables import *
+    from Communication_220114.Modules.Receive import ReceiveZMQ
 
     rzo = ReceiveZMQ.get_instance()
 
