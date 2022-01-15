@@ -90,7 +90,7 @@ class SSL(object):
             },
         }
         self.seg_para = segment_para_set[seg_len]
-        ref_audio, _ = audioread('../resource/wav/reference_wav.wav')
+        ref_audio, _ = audioread(os.path.abspath('./reference_wav.wav'))
         self.ref_audio = normalize_single_channel_audio(ref_audio)
         self.ref_audio_threshold = (self.ref_audio ** 2).sum() / len(self.ref_audio) / 500
         del ref_audio, self.ref_audio,

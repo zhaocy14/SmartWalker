@@ -1,4 +1,5 @@
 import os, sys
+
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
@@ -25,7 +26,7 @@ class VoiceMenu(object):
         self.Second = False
         self.SSLFlag = False
         self.FFLFlag = False
-
+    
     def Voice_procedure(self):
         while True:
             time.sleep(3)
@@ -40,13 +41,13 @@ class SSL(object):
         self.SSLEvent = threading.Event()
         self.SSLEvent.clear()
         self.SSLthread = threading.Thread(target=self.SSLMain, args=())
-
+    
     def SSLMain(self):
         while True:
             self.SSLEvent.wait()
             time.sleep(5)
             # break
-
+    
     def startSSL(self):
         self.SSLthread.start()
 
@@ -54,40 +55,40 @@ class SSL(object):
 class MainProgramme(object):
     def __init__(self):
         super.__init__()
-
+        
         self.camera = IRCamera.IRCamera()
         self.Softskin = softskin.SoftSkin()
         self.infrared_sensor = Infrared_Sensor.Infrared_Sensor()
         self.leg_detector = Leg_detector.Leg_detector(is_zmq=True)
         self.driver = cd.ControlDriver()
-        self.FFL = FrontFollow.FFL(self.camera,self.leg_detector,self.driver,self.infrared_sensor,self.Softskin)
+        self.FFL = FrontFollow.FFL(self.camera, self.leg_detector, self.driver, self.infrared_sensor, self.Softskin)
         self.SSL = SSL()
-
+        
         self.health_state = True
         # self.IMU = IMU.IMU()
         # self.GPS = GPS_Module.GPS()
         # self.HeartRate = heartrate()
-
+        
         self.VoiceMenu = VoiceMenu()
         self.VoiceMenuEvent = threading.Event()
-
+        
         # threading
         self.thread_Leg = threading.Thread(target=self.leg_detector.scan_procedure, args=(False, True))
         self.thread_CD = threading.Thread(target=self.driver.control_part, args=())
         self.thread_Infrared = threading.Thread(target=self.infrared_sensor.read_data, args=())
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
-
+        
         # threading flags and event control
         self.mainEvent = threading.Event()
         self.mainRestartEvent = threading.Event()
         self.is_SSL_pass = False
-
+    
     def start_sensor(self):
         self.thread_CD.start()
         self.thread_Infrared.start()
         self.thread_Softskin.start()
         self.thread_Leg.start()
-
+    
     def start_manual_mode(self):
         self.driver.stopMotor()
         self.FFL.FFLevent.clear()
@@ -95,18 +96,18 @@ class MainProgramme(object):
         self.mainEvent.clear()
         self.mainRestartEvent.set()
         self.is_SSL_pass = True
-
+    
     def start_auto_mode(self):
         self.driver.startMotor()
         self.restart(is_SSL_bypass=True)
-
+    
     def stop_main_procedure(self):
         # set all the thread event as False
         self.mainEvent.clear()
         self.FFL.FFLevent.clear()
         self.SSL.SSLEvent.clear()
-
-    def restart(self,is_SSL_bypass:bool=False):
+    
+    def restart(self, is_SSL_bypass: bool = False):
         self.mainRestartEvent.set()
         if is_SSL_bypass:
             self.is_SSL_pass = False
@@ -117,7 +118,7 @@ class MainProgramme(object):
         self.mainEvent.set()
         self.SSL.SSLEvent.clear()
         self.is_SSL_pass = True
-
+    
     def main_procedure(self):
         """this is the main procedure of different threads"""
         # start the threads
@@ -151,6 +152,3 @@ class MainProgramme(object):
                 self.mainRestartEvent.clear()
             except:
                 pass
-
-
-
