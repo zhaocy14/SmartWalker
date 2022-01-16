@@ -3,10 +3,11 @@ var util = require('util');
 var bleno = require('bleno-mac');
 
 var BlenoCharacteristic = bleno.Characteristic;
+var SetWifi_ControlPoint = 'b7e9e754-1e59-42d4-810f-16ed47244b50';
 
 var EchoCharacteristic = function() {
   EchoCharacteristic.super_.call(this, {
-    uuid: 'ec0e',
+    uuid: SetWifi_ControlPoint,
     properties: ['read', 'write', 'notify'],
     value: null
   });
@@ -26,7 +27,7 @@ EchoCharacteristic.prototype.onReadRequest = function(offset, callback) {
 EchoCharacteristic.prototype.onWriteRequest = function(data, offset, withoutResponse, callback) {
   this._value = data;
 
-  console.log('EchoCharacteristic - onWriteRequest: value = ' + this._value.toString('hex'));
+  console.log('EchoCharacteristic - onWriteRequest: value = ' + this._value.toString('utf8'));
 
   if (this._updateValueCallback) {
     console.log('EchoCharacteristic - onWriteRequest: notifying');
