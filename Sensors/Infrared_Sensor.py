@@ -42,9 +42,15 @@ def detect_serials(location="1-3.2:1.0", vid=0x10c4, pid=0xea60):
 
 class Infrared_Sensor(object):
 
-    def __init__(self, sensor_num: int = 5, baud_rate: int = 115200, is_STM32: bool = True):
+    def __init__(self, sensor_num: int = 5, baud_rate: int = 115200, is_STM32: bool = False):
         if not is_STM32:
             # if not STM32, then use the USB serial
+            port_name = detect_serials()
+            print(port_name, baud_rate)
+            self.pwd = os.path.abspath(os.path.abspath(__file__))
+            self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+            self.serial = serial.Serial(port_name, baud_rate, timeout=None)
+        else:
             port_name = detect_serials()
             print(port_name, baud_rate)
             self.pwd = os.path.abspath(os.path.abspath(__file__))
@@ -146,6 +152,6 @@ class Infrared_Sensor(object):
             pass
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200, is_windows=False)
+    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200)
     infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()
