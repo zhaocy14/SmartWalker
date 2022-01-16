@@ -14,6 +14,7 @@ $Id: rfcomm-server.py 518 2007-08-10 07:20:07Z albert $
 import bluetooth
 
 server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+
 server_sock.bind(("", bluetooth.PORT_ANY))
 server_sock.listen(1)
 
