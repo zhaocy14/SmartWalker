@@ -1,4 +1,4 @@
-var bleno = require('bleno');
+var bleno = require('bleno-mac');
 
 var BlenoPrimaryService = bleno.PrimaryService;
 
