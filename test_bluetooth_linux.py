@@ -69,7 +69,7 @@ async def start():
     adapter = await Adapter.get_first(bus)
 
     # Start an advert that will last for 60 seconds.
-    advert = Advertisement("NUC", ["180D"], 0x0340, 60)
+    advert = Advertisement("NUC Test", ["180D"], 0x0340, 60)
     await advert.register(bus, adapter)
     
     while True:
