@@ -44,7 +44,7 @@ import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
+    def __init__(self, useDenoise=True, useCD=False, seg_len='256ms', isDebug=False):
         print('-' * 20 + 'init SSL class' + '-' * 20)
         self.isDebug = isDebug
         self.doDrop = False
@@ -250,7 +250,7 @@ class SSL(object):
         self.client.transmit(message=message)
         print('End sending: ', message)
     
-    def get_audio_from_pipe(self, ):
+    def get_audio_from_pipe(self, RECV_PIPE):
         ''' 简单起见，目前只选取最新的数据，且距离发送时间不超过0.5s
         实际测试发现，KWS传过来的声音对于单个单词持续时间在 [0.2, 0.5]s 之间
         :return audio
@@ -259,8 +259,8 @@ class SSL(object):
         noData = True
         while noData:
             start_time = time.time()
-            while self.RECV_PIPE.poll():
-                msg = self.RECV_PIPE.recv()
+            while RECV_PIPE.poll():
+                msg = RECV_PIPE.recv()
                 (audio, y, prob, send_time) = msg
                 if abs(start_time - send_time) < KWS_TIMEOUT_SECONDS:
                     res.append(msg)
@@ -268,8 +268,7 @@ class SSL(object):
         print('SSL: walker data is received~', )
         return res[-1][0]
     
-    def run(self, RECV_PIPE, control, ):
-        self.RECV_PIPE = RECV_PIPE
+    def run(self, walker_server, SSL_AUDIO_QUEUE, ):
         # initialize models
         doa = self.doa
         num_step = 0
@@ -277,7 +276,8 @@ class SSL(object):
         # steps
         while True:
             # Detecting for walker_name
-            ini_signals = self.get_audio_from_pipe()
+            # ini_signals = self.get_audio_from_pipe(RECV_PIPE)
+            ini_signals = SSL_AUDIO_QUEUE.get(block=True, timeout=None)[0]
             # preprocess initial audios
             audio_segments, drop_flag = self.preprocess_ini_signal(ini_signals)
             print('Number of preprocessed audio segments: ', len(audio_segments))
@@ -292,22 +292,9 @@ class SSL(object):
             gcc_feature_batch = np.mean(gcc_feature_batch, axis=0)[np.newaxis, :]
             _, direction = doa.predict(gcc_feature_batch)
             print("Producing action ...\n", 'Direction', direction)
-            
-            ### 接入Owen的模块，传入aim_loca
-            if self.useCD:
-                direction = direction[0] * 45
-                
-                SSLturning(control, direction)
-                control.speed = STEP_SIZE / FORWARD_SECONDS
-                control.radius = 0
-                control.omega = 0
-                time.sleep(FORWARD_SECONDS)
-                control.speed = 0
-                print("movement done.")
-            else:
-                pass
+            walker_server.send(data=direction, subtopic=SSL_COMMUNICATION_TOPIC)
     
-    def run_RL(self, RECV_PIPE, control, ):
+    def run_RL(self, walker_server, SSL_AUDIO_QUEUE, ):
         # initialize models
         doa = self.doa
         # configuration for RL
@@ -411,17 +398,12 @@ class SSL(object):
 
 
 class SSL_Process(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
+    def __init__(self, useDenoise=True, seg_len='256ms', isDebug=False, ):
         super(SSL_Process, self).__init__()
         self.seg_len = seg_len
         self.useDenoise = useDenoise
-        self.useCD = useCD
         self.isDebug = isDebug
     
-    def run(self, RECV_PIPE, left_right):
-        cd = CD.ControlDriver(left_right=left_right) if self.useCD else ''
-        if self.useCD:
-            cd_thread = threading.Thread(target=cd.control_part, args=())
-            cd_thread.start()
-        ssl = SSL(seg_len=self.seg_len, useDenoise=self.useDenoise, useCD=self.useCD, isDebug=self.isDebug, )
-        ssl.run(RECV_PIPE, cd, )
+    def run(self, walker_server, SSL_AUDIO_QUEUE, ):
+        ssl = SSL(seg_len=self.seg_len, useDenoise=self.useDenoise, isDebug=self.isDebug, )
+        ssl.run(walker_server, SSL_AUDIO_QUEUE, )

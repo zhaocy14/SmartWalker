@@ -1,9 +1,21 @@
-#
-# Created on Sat Oct 09 2021
-# Author: Owen Yip
-# Mail: me@owenyip.com
-#
+# !/usr/bin/env python
+# -*- coding:utf-8 _*-
+# @Author: swang
+# @Contact: wang00sheng@gmail.com
+# @Project Name: SmartWalker-master
+# @File: temp3.py
+# @Time: 2022/01/17/11:47
+# @Software: PyCharm
+
 import os, sys
+
+CRT_DIR = os.path.dirname(os.path.abspath(__file__))
+F_PATH = os.path.dirname(CRT_DIR)
+FF_PATH = os.path.dirname(F_PATH)
+FFF_PATH = os.path.dirname(FF_PATH)
+sys.path.extend([CRT_DIR, F_PATH, FF_PATH, FFF_PATH, ])
+# print('sys.path:', sys.path)
+
 import time
 import zmq
 import json
@@ -11,11 +23,9 @@ import threading
 import numpy as np
 import msgpack
 import msgpack_numpy as msgnp
+from collections import deque  # , BlockingQueue
 from CommunicationPeer import CommunicationPeer
-
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-sys.path.append(father_path)
+from SoundSourceLocalization.SSL_Settings import *
 
 
 class WalkerClient(CommunicationPeer):
@@ -36,6 +46,57 @@ class WalkerClient(CommunicationPeer):
                                            send_socket=self.send_socket,
                                            recv_port=self.recv_port, recv_topic=self.recv_topic,
                                            recv_socket=self.recv_socket)
+        
+        self.subtopic_buffer_dict = {
+            # AUDIO_COMMUNICATION_TOPIC           : None,
+            KWS_COMMUNICATION_TOPIC             : None,
+            WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC: False,
+            SSL_COMMUNICATION_TOPIC             : None,
+        }
+    
+    def recv(self, subtopic='', ):
+        '''
+        overload the corresponding function of its parent.
+        take different recv actions based on the subtopics.
+        KWS_COMMUNICATION_TOPIC: only audio_receiver will block until an audio frame is received and all the other messages will be stored in the class.
+        WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC: only check this class's buffer for messages
+        Args:
+            subtopic:
+                '': self.recv_topic will be used as the default topic
+                string: the conjecture ('/') of self.recv_topic and subtopic will be used as the topic
+        Returns:
+            the received data
+        '''
+        if subtopic == KWS_COMMUNICATION_TOPIC:
+            while True:
+                by_message = self.recv_bytes(subtopic='', )
+                subtopic_key = ''
+                for subtopic_key in self.subtopic_buffer_dict.keys():
+                    subtopic_prefix = ('/' + subtopic_key).encode('utf-8')
+                    if by_message.startswith(subtopic_prefix):
+                        by_message = by_message[len(subtopic_prefix):]
+                        data = msgpack.loads(by_message, object_hook=msgnp.decode, use_list=False, raw=True)
+                        self.subtopic_buffer_dict[subtopic_key] = \
+                            data  # will rewrite the data even if the last data is not used.
+                        break
+                    else:
+                        continue
+                if subtopic_key == KWS_COMMUNICATION_TOPIC:
+                    return self.subtopic_buffer_dict[subtopic_key]
+        
+        elif subtopic == WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC:
+            data = self.subtopic_buffer_dict[WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC]
+            self.subtopic_buffer_dict[WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC] = False
+            return data
+        
+        elif subtopic == SSL_COMMUNICATION_TOPIC:
+            data = self.subtopic_buffer_dict[SSL_COMMUNICATION_TOPIC]
+            self.subtopic_buffer_dict[SSL_COMMUNICATION_TOPIC] = None
+            return data
+        
+        else:
+            raise ValueError(
+                'Warning: Unknown subtopic is found to receive message. And audio message might be dropped by it.')
     
     def send_forever(self, message='', subtopic='', ):
         '''
@@ -48,12 +109,13 @@ class WalkerClient(CommunicationPeer):
         '''
         i = 0
         while True:
-            data = np.full(shape=(2, 2), fill_value=i, dtype=int, )
+            data = i
+            # data = np.full(shape=(2, 2), fill_value=i, dtype=int, )
             self.send(data=data, subtopic=subtopic)
-            print('Send data:', data)
+            # print('Send data:', data)
             i += 1
-            i %= 100000
-            time.sleep(1)
+            # i %= 100000
+            # time.sleep(1)
     
     def recv_forever(self, subtopic='', ):
         '''
@@ -67,8 +129,15 @@ class WalkerClient(CommunicationPeer):
             the received message
         '''
         
+        last_data = None
+        count = 0
         while True:
             data = self.recv(subtopic=subtopic, )
+            # if (last_data is not None) and (data - last_data != 1):
+            #     print(f'data is lost. last_data: {last_data} ---- data: {data}')
+            #     count += 1
+            # last_data = data
+            # print("ratio of lost data:{}%".format(count / data * 100))
             print("Received data:", data)
 
 

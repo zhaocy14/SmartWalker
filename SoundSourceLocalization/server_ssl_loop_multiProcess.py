@@ -18,44 +18,42 @@ import time
 import numpy as np
 import threading
 from multiprocessing import Process, Value, Pipe, Queue
+from multiprocessing.managers import BaseManager
 
 # general lib
 
 # independent systems
 from SoundSourceLocalization.SSL_Settings import *
-
-from SoundSourceLocalization.VoiceMenu.code.voice_menu_multiProcess import \
-    MonitorVoice_Process, KeyWordSpotting_Process, MonitorVoice_VoiceMenu_Process, VoiceMenu_Process, \
-    GLOBAL_AUDIO_QUEUE, GLOBAL_AUDIO_QUEUE_CLEAR, \
-    GLOBAL_WORD_QUEUE, GLOBAL_WORD_QUEUE_UPDATA, GLOBAL_WORD_QUEUE_CLEAR, GLOBAL_IN_PIPE, GLOBAL_OUT_PIPE
-
-from SoundSourceLocalization.SSL.code.ssl_Process import SSL_Process
+from SoundSourceLocalization.SSL_Communication.WalkerServer import WalkerServer
+from SoundSourceLocalization.VoiceMenu.code.server_voice_menu_multiProcess import \
+    MonitorVoice_Process, KeyWordSpotting_Process, SSL_test, \
+    SHARED_AUDIO_QUEUE, SHARED_AUDIO_QUEUE_CLEAR, SHARED_SSL_AUDIO_QUEUE
+from SoundSourceLocalization.SSL.code.server_ssl_Process import SSL_Process
 
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
     os.environ["CUDA_VISIBLE_DEVICES"] = '0'
     MappingMicro = False
     isDebug = True
-    useCD = False
-    left_right = 0
     
-    mv_vm = MonitorVoice_VoiceMenu_Process(MappingMicro=MappingMicro)
-    kws = KeyWordSpotting_Process(use_stream=False)
-    ssl = SSL_Process(seg_len='256ms', useDenoise=True, useCD=useCD, isDebug=isDebug)
+    manager = BaseManager()
+    # 一定要在start前注册，不然就注册无效
+    manager.register('WalkerServer', WalkerServer)  # 第一个参数为类型id，通常和第二个参数传入的类的类名相同，直观并且便于阅读
+    manager.start()
+    walker_server = manager.WalkerServer()
+    mv = MonitorVoice_Process(MappingMicro=False, )
+    kws = KeyWordSpotting_Process(use_stream=False, )
+    ssl = SSL_Process(seg_len='256ms', useDenoise=True, isDebug=isDebug)
+    # ssl = SSL_test(seg_len='256ms', useDenoise=True, isDebug=isDebug)
     
-    p1 = Process(target=mv_vm.run_forever, args=(GLOBAL_AUDIO_QUEUE, GLOBAL_AUDIO_QUEUE_CLEAR,
-                                                 GLOBAL_WORD_QUEUE, GLOBAL_WORD_QUEUE_UPDATA, GLOBAL_WORD_QUEUE_CLEAR,))
-    p2 = Process(target=kws.run, args=(GLOBAL_AUDIO_QUEUE, GLOBAL_AUDIO_QUEUE_CLEAR,
-                                       GLOBAL_WORD_QUEUE, GLOBAL_WORD_QUEUE_UPDATA, GLOBAL_WORD_QUEUE_CLEAR,
-                                       GLOBAL_IN_PIPE,))
-    p3 = Process(target=ssl.run, args=(GLOBAL_OUT_PIPE, left_right))
+    p1 = Process(target=mv.run, args=(walker_server, SHARED_AUDIO_QUEUE, SHARED_AUDIO_QUEUE_CLEAR,))
+    p2 = Process(target=kws.run,
+                 args=(walker_server, SHARED_AUDIO_QUEUE, SHARED_AUDIO_QUEUE_CLEAR, SHARED_SSL_AUDIO_QUEUE,))
+    p3 = Process(target=ssl.run, args=(walker_server, SHARED_SSL_AUDIO_QUEUE,))
     
     p1.start()
     p2.start()
     p3.start()
-    
-    GLOBAL_IN_PIPE.close()
-    GLOBAL_OUT_PIPE.close()
     
     p1.join()
     # p2.join()
