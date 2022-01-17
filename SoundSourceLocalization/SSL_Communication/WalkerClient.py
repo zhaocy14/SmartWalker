@@ -30,6 +30,7 @@ from SoundSourceLocalization.SSL_Settings import *
 
 class WalkerClient(CommunicationPeer):
     def __init__(self, ):
+        print('-' * 20, 'init a WalkerClient class', '-' * 20, )
         context = zmq.Context()
         self.send_port = 6016
         self.send_topic = 'WalkerClient Sends...'
@@ -53,6 +54,8 @@ class WalkerClient(CommunicationPeer):
             WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC: False,
             SSL_COMMUNICATION_TOPIC             : None,
         }
+    
+        print('-' * 20, 'Finish initializing a WalkerClient class', '-' * 20, )
     
     def recv(self, subtopic='', ):
         '''
