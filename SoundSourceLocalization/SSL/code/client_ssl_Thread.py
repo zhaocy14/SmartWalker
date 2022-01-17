@@ -44,10 +44,10 @@ import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
         super(SSL, self).__init__()
         self.seg_len = seg_len
-        self.useDenoise = useDenoise
+        self.doDenoise = doDenoise
         self.useCD = useCD
         self.isDebug = isDebug
     
@@ -73,10 +73,10 @@ class SSL(object):
 
 
 class SSL_Thread(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False, left_right=0, ):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False, left_right=0, ):
         super(SSL_Thread, self).__init__()
         self.seg_len = seg_len
-        self.useDenoise = useDenoise
+        self.doDenoise = doDenoise
         self.useCD = useCD
         self.isDebug = isDebug
         self.left_right = left_right
@@ -86,5 +86,5 @@ class SSL_Thread(object):
         if self.useCD:
             cd_thread = threading.Thread(target=cd.control_part, args=())
             cd_thread.start()
-        ssl = SSL(seg_len=self.seg_len, useDenoise=self.useDenoise, useCD=self.useCD, isDebug=self.isDebug, )
+        ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, useCD=self.useCD, isDebug=self.isDebug, )
         ssl.run(walker_client=walker_client, control_driver=cd, )
