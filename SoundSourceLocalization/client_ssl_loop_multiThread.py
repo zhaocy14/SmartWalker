@@ -31,14 +31,17 @@ from SoundSourceLocalization.SSL.code.client_ssl_Thread import SSL_Thread
 
 
 class Voice_Process(object):
-    def __init__(self, MappingMicro=False, isDebug=True, useCD=False, left_right=0, ):
+    def __init__(self, VoiceMenu_Command_Queue, SSL_Event, MappingMicro=False, isDebug=True, useCD=False,
+                 left_right=0, ):
         super(Voice_Process, self).__init__()
+        self.SHARED_COMMAND_QUEUE = VoiceMenu_Command_Queue
+        self.SSL_Event = SSL_Event
         self.MappingMicro = MappingMicro
         self.isDebug = isDebug
         self.useCD = useCD
         self.left_right = left_right
     
-    def run(self, ):
+    def start(self, ):
         # class TunnelBuilder(object):
         #     def __init__(self, ):
         #         super(TunnelBuilder, self).__init__()
@@ -64,14 +67,14 @@ class Voice_Process(object):
         walker_client = WalkerClient()
         mv = MonitorVoice(MappingMicro=False)
         kws = KeyWordSpotting()
-        vm = VoiceMenu()
+        vm = VoiceMenu(SHARED_COMMAND_QUEUE=self.SHARED_COMMAND_QUEUE)
         ssl = SSL_Thread(seg_len='256ms', doDenoise=True, useCD=self.useCD, isDebug=self.isDebug,
                          left_right=self.left_right, )
         
         p1 = Thread(target=mv.run, args=(walker_client,))
         p2 = Thread(target=kws.run, args=(walker_client,))
         p3 = Thread(target=vm.run_forever, args=())
-        p4 = Thread(target=ssl.run, args=(walker_client,))
+        p4 = Thread(target=ssl.run, args=(walker_client, self.SSL_Event))
         
         p1.start()
         p2.start()
@@ -93,7 +96,7 @@ if __name__ == '__main__':
     left_right = 0
     
     vp = Voice_Process(MappingMicro=MappingMicro, isDebug=isDebug, useCD=useCD, left_right=left_right, )
-    p1 = Process(target=vp.run, args=())
+    p1 = Process(target=vp.start, args=())
     p1.start()
     p1.join()
     

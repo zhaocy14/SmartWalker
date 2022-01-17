@@ -272,9 +272,16 @@ class SSL(object):
         # initialize models
         doa = self.doa
         num_step = 0
-        
+        Event_Wait = True  # control the running state of SSL
         # steps
         while True:
+            temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
+            if temp_wait is not None:
+                Event_Wait = temp_wait
+            if Event_Wait:
+                time.sleep(0.1)
+                continue
+            
             # Detecting for walker_name
             # ini_signals = self.get_audio_from_pipe(RECV_PIPE)
             ini_signals = SSL_AUDIO_QUEUE.get(block=True, timeout=None)[0]
@@ -292,7 +299,7 @@ class SSL(object):
             gcc_feature_batch = np.mean(gcc_feature_batch, axis=0)[np.newaxis, :]
             _, direction = doa.predict(gcc_feature_batch)
             print("Producing action ...\n", 'Direction', direction)
-            walker_server.send(data=direction, subtopic=SSL_COMMUNICATION_TOPIC)
+            walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
     
     def run_RL(self, walker_server, SSL_AUDIO_QUEUE, ):
         # initialize models

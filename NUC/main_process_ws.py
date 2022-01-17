@@ -21,7 +21,7 @@ import time
 import numpy as np
 import threading
 from threading import Thread
-import multiprocessing
+import multiprocessing  # Event
 from multiprocessing import Process, Value, Pipe, Queue, Event
 
 # independent systems
@@ -31,48 +31,14 @@ from Following.Preprocessing import Leg_detector
 from Following.Network import FrontFollowingNetwork as FFLNetwork
 from Following import FrontFollow
 from Driver import ControlOdometryDriver as cd
-from Communication.Cpp_command import CppCommand
+# from Communication.Cpp_command import CppCommand
 from SoundSourceLocalization.SSL_Settings import *
 from SoundSourceLocalization.client_ssl_loop_multiThread import Voice_Process
 
 
-class VoiceMenu_chongyu(object):
-    def __init__(self):
-        super().__init__()
-        self.SSL = []
-        self.Top = True
-        self.Second = False
-        self.SSLFlag = False
-        self.FFLFlag = False
-    
-    def Voice_procedure(self):
-        while True:
-            time.sleep(3)
-
-
-class SSL_chongyu(object):
-    def __init__(self):
-        super().__init__()
-        self.SSL = []
-        self.Top = True
-        self.Second = False
-        self.SSLEvent = threading.Event()
-        self.SSLEvent.clear()
-        self.SSLthread = threading.Thread(target=self.SSLMain, args=())
-    
-    def SSLMain(self):
-        while True:
-            self.SSLEvent.wait()
-            time.sleep(5)
-            # break
-    
-    def startSSL(self):
-        self.SSLthread.start()
-
-
-class MainProgramme_chongyu(object):
-    def __init__(self):
-        super.__init__()
+class MainProgramme_ws(object):
+    def __init__(self, ):
+        super(MainProgramme_ws, self).__init__()
         
         self.camera = IRCamera.IRCamera()
         self.Softskin = softskin.SoftSkin()
@@ -80,15 +46,11 @@ class MainProgramme_chongyu(object):
         self.leg_detector = Leg_detector.Leg_detector(is_zmq=True)
         self.driver = cd.ControlDriver()
         self.FFL = FrontFollow.FFL(self.camera, self.leg_detector, self.driver, self.infrared_sensor, self.Softskin)
-        self.SSL = SSL()
         
         self.health_state = True
         # self.IMU = IMU.IMU()
         # self.GPS = GPS_Module.GPS()
         # self.HeartRate = heartrate()
-        
-        self.VoiceMenu = VoiceMenu()
-        self.VoiceMenuEvent = threading.Event()
         
         # threading
         self.thread_Leg = threading.Thread(target=self.leg_detector.scan_procedure, args=(False, True))
@@ -100,6 +62,11 @@ class MainProgramme_chongyu(object):
         self.mainEvent = threading.Event()
         self.mainRestartEvent = threading.Event()
         self.is_SSL_pass = False
+        
+        # Process  event control and shared variables
+        self.SSL_Event = multiprocessing.Event()
+        self.VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)
+        self.Voice = Voice_Process(VoiceMenu_Command_Queue=self.VoiceMenu_Command_Queue, SSL_Event=self.SSL_Event, )
     
     def start_sensor(self):
         self.thread_CD.start()
@@ -110,7 +77,7 @@ class MainProgramme_chongyu(object):
     def start_manual_mode(self):
         self.driver.stopMotor()
         self.FFL.FFLevent.clear()
-        self.SSL.SSLEvent.clear()
+        self.SSL_Event.clear()
         self.mainEvent.clear()
         self.mainRestartEvent.set()
         self.is_SSL_pass = True
@@ -123,18 +90,18 @@ class MainProgramme_chongyu(object):
         # set all the thread event as False
         self.mainEvent.clear()
         self.FFL.FFLevent.clear()
-        self.SSL.SSLEvent.clear()
+        self.SSL_Event.clear()
     
     def restart(self, is_SSL_bypass: bool = False):
         self.mainRestartEvent.set()
         if is_SSL_bypass:
             self.is_SSL_pass = False
-            self.SSL.SSLEvent.set()
+            self.SSL_Event.set()
         else:
             self.is_SSL_pass = True
-            self.SSL.SSLEvent.clear()
+            self.SSL_Event.clear()
         self.mainEvent.set()
-        self.SSL.SSLEvent.clear()
+        self.SSL_Event.clear()
         self.is_SSL_pass = True
     
     def main_procedure(self):
@@ -145,19 +112,19 @@ class MainProgramme_chongyu(object):
         self.FFL.FFLevent.clear()
         self.FFL.start_FFL()
         # start the SSL but with event clear
-        self.SSL.SSLEvent.clear()
-        self.SSL.startSSL()
+        self.SSL_Event.clear()  # TODO: clear all the buffers
+        self.Voice.start()
         # start the manual mode
         while True:
             self.mainEvent.wait()
             try:
                 if not self.is_SSL_pass:
                     # start the SSL first
-                    self.SSL.SSLEvent.set()
+                    self.SSL_Event.set()
                     # if some one press the softskin stop the SSL
                     while True:
                         if self.Softskin.max_pressure > 30:
-                            self.SSL.SSLEvent.clear()
+                            self.SSL_Event.clear()
                             break
                         time.sleep(0.1)
                 self.Softskin.skin_unlock_event.wait()
@@ -170,6 +137,52 @@ class MainProgramme_chongyu(object):
                 self.mainRestartEvent.clear()
             except:
                 pass
+    
+    def state_manager(self, ):
+        '''
+        manage the walker state based on the command sent by Voice_Process (VoiceMenu)
+        '''
+        self.command_ls = ['voice menu', 'redraw map', 'charge', 'start',
+                           'sleep', 'voice menu off', 'hand operation', 'help', ]
+        while True:
+            if self.VoiceMenu_Command_Queue.empty():
+                time.sleep(0.1)
+                continue
+            else:
+                cmd = self.VoiceMenu_Command_Queue.get(block=True, timeout=1)
+            
+            if cmd == 'voice menu':
+                pass
+            elif cmd == 'voice menu off':
+                pass
+            elif cmd == 'redraw map':
+                pass
+            elif cmd == 'charge':
+                pass
+            elif cmd == 'start':
+                pass
+            elif cmd == 'sleep':
+                pass
+            elif cmd == 'voice menu':
+                pass
+            elif cmd == 'hand operation':
+                pass
+            elif cmd == 'help':
+                pass
+            else:
+                raise ValueError(
+                    'Unknown command is sent to MainProgramme (state_manager) by Voice_Process (VoiceMenu)')
+    
+    def run(self, ):
+        '''
+        run state_manager and main_procedure in parallel.
+        main_procedure tries to run the whole normal process ( SSL -> FFL (Softskin) )
+        '''
+        p1 = Thread(target=self.state_manager, args=())
+        p2 = Thread(target=self.main_procedure, args=())
+        p1.start()
+        p2.start()
+        p1.join()
 
 
 if __name__ == '__main__':
@@ -180,10 +193,25 @@ if __name__ == '__main__':
     isDebug = True
     useCD = False
     left_right = 0
-    
-    vp = Voice_Process(MappingMicro=MappingMicro, isDebug=isDebug, useCD=useCD, left_right=left_right, )
-    p1 = Process(target=vp.run, args=())
+    SSL_Event = multiprocessing.Event()
+    VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)
+    vp = Voice_Process(VoiceMenu_Command_Queue=VoiceMenu_Command_Queue, SSL_Event=SSL_Event, MappingMicro=MappingMicro,
+                       isDebug=isDebug, useCD=useCD, left_right=left_right, )
+    p1 = Process(target=vp.start, args=())
     p1.start()
+    
+    while True:
+        if VoiceMenu_Command_Queue.empty():
+            time.sleep(0.1)
+            continue
+        else:
+            cmd = VoiceMenu_Command_Queue.get(block=True, timeout=1)
+        print('Received command:', cmd)
+        if cmd == 'start':
+            SSL_Event.set()
+        elif cmd == 'sleep':
+            SSL_Event.clear()
+    
     p1.join()
     
     print('-' * 20, 'Brand-new World!', '-' * 20)
