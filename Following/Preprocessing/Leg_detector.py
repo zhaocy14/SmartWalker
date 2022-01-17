@@ -27,8 +27,8 @@ class Leg_detector(object):
 
         self.scan_raw_data = np.zeros((1, 1))
         self.kmeans = KMeans(n_clusters=2)
-        self.left_leg = np.zeros((1, 2))
-        self.right_leg = np.zeros((1, 2))
+        self.left_leg = np.zeros((2))
+        self.right_leg = np.zeros((2))
         self.scope = 2
 
         # unit cm
@@ -263,5 +263,5 @@ class Leg_detector(object):
 
 if __name__ == "__main__":
     LD = Leg_detector(is_zmq=True)
-    LD.zmq_scan(show=True)
+    LD.zmq_scan(show=False)
     # LD.scan_procedure(show=True, is_record=False)

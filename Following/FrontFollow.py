@@ -213,7 +213,7 @@ class FFL(object):
         # # first make sure the CD is stopped
         # self.updateDriver(Speed=0,Omega=0,Radius=0)
         while True:
-            try:
+            # try:
                 self.FFLevent.wait()
                 self.Camera.get_irdata_once()
                 if self.Softskin.max_pressure > 120:
@@ -229,6 +229,7 @@ class FFL(object):
                     # normalize data
                     self.ir_data = np.array(self.Camera.temperature).reshape((self.ir_data_width, 1))
                     self.ir_data = (self.ir_data - self.min_ir) / (self.max_ir - self.min_ir)
+                    print(self.LD.left_leg,np.shape(self.LD.left_leg))
                     self.leg_data = np.array(self.LD.left_leg[0], self.LD.left_leg[1], self.LD.right_leg[0], self.LD.right_leg[1]).reshape((4, 1))
                     self.leg_data = self.leg_data / self.leg_threshold + self.leg_bias
                     # update the network input buffer
@@ -273,9 +274,9 @@ class FFL(object):
                         else:
                             self.go_forward(show=show)
 
-            except Exception as error:
-                print("Error:", error)
-                pass
+            # except Exception as error:
+            #     print("Error:", error)
+            #     pass
 
     def start_sensor(self):
         # self.thread_CD.start()
