@@ -30,6 +30,7 @@ from SoundSourceLocalization.SSL_Settings import *
 
 class WalkerServer(CommunicationPeer):
     def __init__(self, ):
+        print('-' * 20, 'init a WalkerServer class', '-' * 20, )
         context = zmq.Context()
         
         self.send_port = 8008

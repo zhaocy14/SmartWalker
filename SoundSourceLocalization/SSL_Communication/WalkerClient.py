@@ -55,8 +55,6 @@ class WalkerClient(CommunicationPeer):
             SSL_COMMUNICATION_TOPIC             : None,
         }
     
-        print('-' * 20, 'Finish initializing a WalkerClient class', '-' * 20, )
-    
     def recv(self, subtopic='', ):
         '''
         overload the corresponding function of its parent.

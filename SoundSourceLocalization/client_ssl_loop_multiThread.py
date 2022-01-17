@@ -32,6 +32,29 @@ from SoundSourceLocalization.SSL.code.client_ssl_Thread import SSL_Thread
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
+    
+    # class TunnelBuilder(object):
+    #     def __init__(self, ):
+    #         super(TunnelBuilder, self).__init__()
+    #
+    #     def build_tunnel(self, command):
+    #         os.system(command)
+    #
+    #     def run(self, ):
+    #         import os
+    #         from multiprocessing import Process
+    #
+    #         p1 = Process(target=self.build_tunnel,
+    #                      args=('sshpass -p ZpBrwNaX ssh -tt -L 6015:net-g14:8008 swang@gatekeeper.cs.hku.hk',))
+    #         p1.start()
+    #         p2 = Process(target=self.build_tunnel,
+    #                      args=('sshpass -p ZpBrwNaX ssh -tt -L 6016:net-g14:8080 swang@gatekeeper.cs.hku.hk',))
+    #         p2.start()
+    #         print('-' * 20, 'Tunnelings have been built.', '-' * 20, )
+    #
+    #
+    # TunnelBuilder().run()
+    
     MappingMicro = False
     isDebug = True
     useCD = False
