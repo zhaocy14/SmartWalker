@@ -72,6 +72,14 @@ async def start():
     advert = Advertisement("NUC", ["180D"], 0x0340, 60)
     await advert.register(bus, adapter)
     
+    while True:
+        # Update the heart rate.
+        # service.update_heart_rate(120)
+        # Handle dbus requests.
+        await asyncio.sleep(5)
+
+    await bus.wait_for_disconnect()
+    
 
 if __name__ == "__main__":
     asyncio.run(start())
