@@ -98,7 +98,7 @@ class FFL(object):
         self.thread_CD = threading.Thread(target=self.CD.control_part, args=())
         self.thread_Infrared = threading.Thread(target=self.Infrared.read_data, args=())
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
-        self.thread_main = threading.Thread(target=self.main_FFL, args=(True,))
+        self.thread_main = threading.Thread(target=self.main_FFL, args=(False,False))
 
         # thread event
         self.FFLevent = threading.Event()
@@ -141,7 +141,7 @@ class FFL(object):
 
     def go_forward(self, show: bool = False):
         if self.LD.obstacle_array[0, 1] > 1 or self.Infrared.distance_data[1:4].min() < 25:
-            self.stop()
+            self.stop(show=show)
             if show:
                 print("forward but obstacle")
         else:
@@ -154,7 +154,7 @@ class FFL(object):
             # if there is an obstacle
             if self.LD.obstacle_array[0, 0] > 1 or self.LD.obstacle_array[0, 3] > 1 or self.Infrared.distance_data[
                 0] < 25:
-                self.stop()
+                self.stop(show=show)
                 if show:
                     print("left in space but obstacle")
             else:
@@ -165,7 +165,7 @@ class FFL(object):
             # if there is an obstacle
             if self.LD.obstacle_array[0, 0] > 1 or self.LD.obstacle_array[0, 3] > 1 or self.Infrared.distance_data[
                 0] < 25:
-                self.stop()
+                self.stop(show=show)
                 if show:
                     print("left but obstacle")
             else:
@@ -181,7 +181,7 @@ class FFL(object):
             if self.LD.obstacle_array[0, 2] > 1 or self.LD.obstacle_array[0, 4] > 1 or self.Infrared.distance_data[
                 4] < 25:
                 # if there is an obstacle
-                self.stop()
+                self.stop(show=show)
                 if show:
                     print("right in place but obstacle")
             else:
@@ -192,7 +192,7 @@ class FFL(object):
             if self.LD.obstacle_array[0, 2] > 1 or self.LD.obstacle_array[0, 4] > 1 or self.Infrared.distance_data[
                 4] < 25:
                 # if there is an obstacle
-                self.stop()
+                self.stop(show=show)
                 if show:
                     print("right but obstacle")
             else:
@@ -210,13 +210,13 @@ class FFL(object):
 
 
 
-    def main_FFL(self, show: bool = False, demo:bool = False):
+    def main_FFL(self, show: bool = False, demo:bool = True):
         # # first make sure the CD is stopped
         # self.updateDriver(Speed=0,Omega=0,Radius=0)
         while True:
             # try:
                 self.FFLevent.wait()
-                self.Camera.get_irdata_once()
+                self.Camera.get_irdata_once(demo=demo)
                 if self.Softskin.max_pressure > 120:
                     # Abnormal pressure detected
                     # run the unlock pattern
@@ -244,7 +244,7 @@ class FFL(object):
                     if -40 < current_position[4] < self.backward_boundary:
                         self.go_backward(show=show)
                     # then detect going forward/ turn left/right
-                    elif max_possibility >= 0.8:
+                    elif max_possibility >= 0.3:
                         if action_label == 0:
                             self.stop(show=show)
                         elif action_label == 1:
@@ -273,7 +273,6 @@ class FFL(object):
                             self.turn_right(right_foot_position=current_position[3], is_in_place=True, show=show)
                         else:
                             self.go_forward(show=show)
-
             # except Exception as error:
             #     print("Error:", error)
             #     pass

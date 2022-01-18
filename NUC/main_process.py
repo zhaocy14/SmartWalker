@@ -83,7 +83,7 @@ class MainProgramme(object):
         self.is_SSL_pass = False
 
     def start_sensor(self):
-        self.thread_CD.start()
+        # self.thread_CD.start()
         self.thread_Infrared.start()
         self.thread_Softskin.start()
         self.thread_Leg.start()

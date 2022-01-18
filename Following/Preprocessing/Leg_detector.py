@@ -263,5 +263,5 @@ class Leg_detector(object):
 
 if __name__ == "__main__":
     LD = Leg_detector(is_zmq=True)
-    LD.zmq_scan(show=False)
+    LD.zmq_scan(show=True)
     # LD.scan_procedure(show=True, is_record=False)
