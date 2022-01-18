@@ -19,7 +19,7 @@ from Driver import ControlOdometryDriver
 class network_data(object):
     def __init__(self, buffer_len: int = 10, ir_data_width: int = 768, leg_data_width: int = 4):
         super().__init__()
-        self.buffer = np.zeros((buffer_len * (ir_data_width + leg_data_width), 1))
+        self.buffer = np.zeros((1, buffer_len * (ir_data_width + leg_data_width), 1))
         self.buffer_len = buffer_len
         self.ir_data_width = ir_data_width
         self.leg_data_width = leg_data_width
@@ -29,13 +29,14 @@ class network_data(object):
 
     def update(self, ir_data: np.ndarray, leg_data: np.ndarray):
         # add the new frame to the rear part, the data are queue
-        self.buffer[0:(self.buffer_len - 1) * self.ir_data_width, 0] = self.buffer[
+        self.buffer[0,0:(self.buffer_len - 1) * self.ir_data_width, 0] = self.buffer[0,
                                                                        self.ir_data_width:self.buffer_len * self.ir_data_width,
                                                                        0]
-        self.buffer[(self.buffer_len - 1) * self.ir_data_width:self.buffer_len * self.ir_data_width] = ir_data
-        self.buffer[self.leg_start_index:self.leg_start_index + (self.buffer_len - 1) * self.leg_data_width,
-        0] = self.buffer[self.leg_start_index + self.leg_data_width:self.total_length, 0]
-        self.buffer[self.leg_start_index + (self.buffer_len - 1) * self.leg_data_width: self.total_length, 0] = leg_data
+        self.buffer[0, (self.buffer_len - 1) * self.ir_data_width:self.buffer_len * self.ir_data_width] = ir_data
+        self.buffer[0, self.leg_start_index:self.leg_start_index + (self.buffer_len - 1) * self.leg_data_width,
+        0] = self.buffer[0, self.leg_start_index + self.leg_data_width:self.total_length, 0]
+        self.buffer[0, self.leg_start_index + (self.buffer_len - 1) * self.leg_data_width: self.total_length, 0] = leg_data
+
 
 
 class FFL(object):
@@ -67,7 +68,7 @@ class FFL(object):
 
         # this is the buffer for storing the leg positional information
         self.position_buffer_length = 3
-        self.position_buffer = np.array((6, self.position_buffer_length))
+        self.position_buffer = np.zeros((6, self.position_buffer_length))
 
         # threshold settings
         self.max_ir = 40
@@ -111,7 +112,7 @@ class FFL(object):
 
     def update_position_buffer(self, is_average: bool = True):
         """just use a average buffer"""
-        human_position = (self.leg_data[0:2, 0] + self.leg_data[2:4, 0]) / 2
+        human_position = (self.leg_data[0:2] + self.leg_data[2:4]) / 2
         self.position_buffer[:, 0:-1] = self.position_buffer[:, 1:self.position_buffer_length]
         self.position_buffer[0:4, -1] = self.leg_data
         self.position_buffer[4:6, -1] = human_position
@@ -209,7 +210,7 @@ class FFL(object):
 
 
 
-    def main_FFL(self, show: bool = False):
+    def main_FFL(self, show: bool = False, demo:bool = False):
         # # first make sure the CD is stopped
         # self.updateDriver(Speed=0,Omega=0,Radius=0)
         while True:
@@ -229,8 +230,7 @@ class FFL(object):
                     # normalize data
                     self.ir_data = np.array(self.Camera.temperature).reshape((self.ir_data_width, 1))
                     self.ir_data = (self.ir_data - self.min_ir) / (self.max_ir - self.min_ir)
-                    print(self.LD.left_leg,np.shape(self.LD.left_leg))
-                    self.leg_data = np.array(self.LD.left_leg[0], self.LD.left_leg[1], self.LD.right_leg[0], self.LD.right_leg[1]).reshape((4, 1))
+                    self.leg_data = np.array([self.LD.left_leg[0], self.LD.left_leg[1], self.LD.right_leg[0], self.LD.right_leg[1]]).reshape((4))
                     self.leg_data = self.leg_data / self.leg_threshold + self.leg_bias
                     # update the network input buffer
                     self.data_buffer.update(self.ir_data, self.leg_data)
