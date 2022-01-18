@@ -58,15 +58,16 @@ class MainProgramme(object):
         self.camera = IRCamera.IRCamera()
         self.Softskin = softskin.SoftSkin()
         self.infrared_sensor = Infrared_Sensor.Infrared_Sensor()
+        # self.IMU = IMU.IMU()
+        # self.GPS = GPS_Module.GPS()
+        # self.HeartRate = heartrate()
         self.leg_detector = Leg_detector.Leg_detector(is_zmq=True)
         self.driver = cd.ControlDriver()
         self.FFL = FrontFollow.FFL(self.camera,self.leg_detector,self.driver,self.infrared_sensor,self.Softskin)
         self.SSL = SSL()
 
         self.health_state = True
-        # self.IMU = IMU.IMU()
-        # self.GPS = GPS_Module.GPS()
-        # self.HeartRate = heartrate()
+
 
         self.VoiceMenu = VoiceMenu()
         self.VoiceMenuEvent = threading.Event()
@@ -81,6 +82,9 @@ class MainProgramme(object):
         self.mainEvent = threading.Event()
         self.mainRestartEvent = threading.Event()
         self.is_SSL_pass = False
+
+        # state information
+
 
     def start_sensor(self):
         # self.thread_CD.start()
@@ -154,3 +158,6 @@ class MainProgramme(object):
 
 
 
+if __name__ == "__main__":
+    mp = MainProgramme()
+    mp.main_procedure()
