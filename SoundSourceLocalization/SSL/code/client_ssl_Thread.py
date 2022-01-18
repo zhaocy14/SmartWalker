@@ -44,17 +44,27 @@ import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
         super(SSL, self).__init__()
         self.seg_len = seg_len
-        self.useDenoise = useDenoise
+        self.doDenoise = doDenoise
         self.useCD = useCD
         self.isDebug = isDebug
     
-    def run(self, walker_client, control_driver):
+    def run(self, walker_client, control_driver, SHARED_SSL_EVENT):
+        Server_SSL_Wait = True
         while True:
             time.sleep(0.1)
-            direction = walker_client.recv(subtopic=SSL_COMMUNICATION_TOPIC)
+            if (not SHARED_SSL_EVENT.is_set()) and (not Server_SSL_Wait):  # need to wait, but server doesn't
+                walker_client.send(data=True, subtopic=SSL_WAIT_COMMUNICATION_TOPIC)
+                Server_SSL_Wait = True
+            elif SHARED_SSL_EVENT.is_set() and Server_SSL_Wait:  # doesn't need to wait, but server is waiting
+                walker_client.send(data=False, subtopic=SSL_WAIT_COMMUNICATION_TOPIC)
+                Server_SSL_Wait = False
+            else:
+                pass
+            
+            direction = walker_client.recv(subtopic=SSL_DOA_COMMUNICATION_TOPIC)
             if direction is None:
                 continue
             print(f'Direction ({direction}) is received')
@@ -73,18 +83,18 @@ class SSL(object):
 
 
 class SSL_Thread(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False, left_right=0, ):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False, left_right=0, ):
         super(SSL_Thread, self).__init__()
         self.seg_len = seg_len
-        self.useDenoise = useDenoise
+        self.doDenoise = doDenoise
         self.useCD = useCD
         self.isDebug = isDebug
         self.left_right = left_right
     
-    def run(self, walker_client, ):
+    def run(self, walker_client, SHARED_SSL_EVENT):
         cd = CD.ControlDriver(left_right=self.left_right) if self.useCD else ''
         if self.useCD:
             cd_thread = threading.Thread(target=cd.control_part, args=())
             cd_thread.start()
-        ssl = SSL(seg_len=self.seg_len, useDenoise=self.useDenoise, useCD=self.useCD, isDebug=self.isDebug, )
-        ssl.run(walker_client=walker_client, control_driver=cd, )
+        ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, useCD=self.useCD, isDebug=self.isDebug, )
+        ssl.run(walker_client=walker_client, control_driver=cd, SHARED_SSL_EVENT=SHARED_SSL_EVENT)

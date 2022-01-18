@@ -44,11 +44,11 @@ import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
         print('-' * 20 + 'init SSL class' + '-' * 20)
         self.isDebug = isDebug
         self.doDrop = False
-        self.useDenoise = useDenoise  # useless
+        self.doDenoise = doDenoise  # useless
         self.useCD = useCD
         self.frames = []
         segment_para_set = {
@@ -411,10 +411,10 @@ class SSL(object):
 
 
 class SSL_Process(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
         super(SSL_Process, self).__init__()
         self.seg_len = seg_len
-        self.useDenoise = useDenoise
+        self.doDenoise = doDenoise
         self.useCD = useCD
         self.isDebug = isDebug
     
@@ -423,5 +423,5 @@ class SSL_Process(object):
         if self.useCD:
             cd_thread = threading.Thread(target=cd.control_part, args=())
             cd_thread.start()
-        ssl = SSL(seg_len=self.seg_len, useDenoise=self.useDenoise, useCD=self.useCD, isDebug=self.isDebug, )
+        ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, useCD=self.useCD, isDebug=self.isDebug, )
         ssl.run(RECV_PIPE, cd, )

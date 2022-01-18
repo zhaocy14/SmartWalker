@@ -44,11 +44,11 @@ import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
         print('-' * 20 + 'init SSL class' + '-' * 20)
         self.isDebug = isDebug
         self.doDrop = False
-        self.useDenoise = useDenoise  # useless
+        self.doDenoise = doDenoise  # useless
         self.useCD = useCD
         self.frames = []
         segment_para_set = {

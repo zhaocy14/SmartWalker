@@ -30,6 +30,7 @@ from SoundSourceLocalization.SSL_Settings import *
 
 class WalkerServer(CommunicationPeer):
     def __init__(self, ):
+        print('-' * 20, 'init a WalkerServer class', '-' * 20, )
         context = zmq.Context()
         
         self.send_port = 8008
@@ -48,7 +49,8 @@ class WalkerServer(CommunicationPeer):
                                            recv_port=self.recv_port, recv_topic=self.recv_topic,
                                            recv_socket=self.recv_socket)
         self.subtopic_buffer_dict = {
-            AUDIO_COMMUNICATION_TOPIC: None,
+            AUDIO_COMMUNICATION_TOPIC   : None,
+            SSL_WAIT_COMMUNICATION_TOPIC: None,
             # KWS_COMMUNICATION_TOPIC             : None,
             # WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC: False,
         }
@@ -59,6 +61,8 @@ class WalkerServer(CommunicationPeer):
         take different recv actions based on the subtopics.
         AUDIO_COMMUNICATION_TOPIC: only audio_receiver will block until an audio frame is received and all the other messages will be stored in the class.
         KWS_COMMUNICATION_TOPIC: only check this class's buffer for messages
+        
+        Warning: will rewrite the data in {self.subtopic_buffer_dict} even if the last data is not used.
         Args:
             subtopic:
                 '': self.recv_topic will be used as the default topic
@@ -82,6 +86,10 @@ class WalkerServer(CommunicationPeer):
                         continue
                 if subtopic_key == AUDIO_COMMUNICATION_TOPIC:
                     return self.subtopic_buffer_dict[subtopic_key]
+        elif subtopic == SSL_WAIT_COMMUNICATION_TOPIC:
+            data = self.subtopic_buffer_dict[SSL_WAIT_COMMUNICATION_TOPIC]
+            self.subtopic_buffer_dict[SSL_WAIT_COMMUNICATION_TOPIC] = None
+            return data
         
         # elif subtopic == WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC:
         #     data = self.subtopic_buffer_dict[WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC]

@@ -43,8 +43,8 @@ if __name__ == '__main__':
     walker_server = manager.WalkerServer()
     mv = MonitorVoice_Process(MappingMicro=False, )
     kws = KeyWordSpotting_Process(use_stream=False, )
-    ssl = SSL_Process(seg_len='256ms', useDenoise=True, isDebug=isDebug)
-    # ssl = SSL_test(seg_len='256ms', useDenoise=True, isDebug=isDebug)
+    ssl = SSL_Process(seg_len='256ms', doDenoise=True, isDebug=isDebug)
+    # ssl = SSL_test(seg_len='256ms', doDenoise=True, isDebug=isDebug)
     
     p1 = Process(target=mv.run, args=(walker_server, SHARED_AUDIO_QUEUE, SHARED_AUDIO_QUEUE_CLEAR,))
     p2 = Process(target=kws.run,

@@ -22,7 +22,8 @@ RECORD_SECONDS = 1.1  # 1
 
 # SSL
 KWS_TIMEOUT_SECONDS = 0.5
-SSL_COMMUNICATION_TOPIC = 'DoA'
+SSL_DOA_COMMUNICATION_TOPIC = 'DOA'
+SSL_WAIT_COMMUNICATION_TOPIC = 'WAIT'
 # 在SSL模块接收KWS识别的关键词时，由于会在一个（可能）连续的时间内，传来多段语音。此参数集用来表征用户说一次关键词，SSL收集持续多长时间内的关键词语音
 
 # Reinforcement Learning

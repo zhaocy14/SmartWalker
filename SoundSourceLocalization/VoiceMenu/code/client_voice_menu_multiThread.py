@@ -43,13 +43,15 @@ audio_speed_test_start_time = None
 
 
 class VoiceMenu(object):
-    def __init__(self):
+    def __init__(self, SHARED_COMMAND_QUEUE=None):
         print('-' * 20, 'init VoiceMenu class', '-' * 20)
         super(VoiceMenu, self).__init__()
+        self.SHARED_COMMAND_QUEUE = SHARED_COMMAND_QUEUE  # send out recognized commands
         self.keyword_ls = ['walker', 'voice', 'menu', 'redraw', 'the', 'map', 'charge', 'start', 'sleep',
                            'off', 'hand', 'operation', 'yes', 'no', 'help', ]
         self.walker_name = 'walker'
         self.menu_name = 'voice menu'
+        self.menu_off = 'voice menu off'
         self.command_ls = ['voice menu', 'redraw map', 'charge', 'start',
                            'sleep', 'voice menu off', 'hand operation', 'yes', 'no', 'help', ]
         self.affirm_ls = ['yes', 'no']
@@ -165,11 +167,14 @@ class VoiceMenu(object):
                     2: Will ... automatically in half a minute. Say "No" or press the emergency button to cancel;
                     3: Complete ...
         '''
+        
         if command == None:
+            self.SHARED_COMMAND_QUEUE.put(self.menu_off, block=True, timeout=1)  # send out command
             print('Broadcast: Time out. And exit the voice menu automatically.')
         # elif command == self.walker_name:
         #     print(f'Broadcast: walker_name (\'{self.walker_name}\') is detected.')
         elif command == self.menu_name:
+            self.SHARED_COMMAND_QUEUE.put(command, block=True, timeout=1)  # send out command
             print('Broadcast: Voice menu started.')
         elif command in self.wait_action_ls:
             if level == 1:
@@ -178,6 +183,7 @@ class VoiceMenu(object):
                 print(
                     f'Broadcast: Will {command} automatically in half a minute. \n\t\t\tSay "No" or press the emergency button to cancel?')
             elif level == 3:
+                self.SHARED_COMMAND_QUEUE.put(command, block=True, timeout=1)  # send out command
                 print(f'Broadcast: {command} was completed')
             else:
                 print(f'Warning: Level ({level}) is illegal!')
@@ -185,6 +191,7 @@ class VoiceMenu(object):
             if level == 1:
                 print(f'Broadcast: Sure to {command} ?')
             elif level == 2:
+                self.SHARED_COMMAND_QUEUE.put(command, block=True, timeout=1)  # send out command
                 print(f'Broadcast: {command} was completed')
             else:
                 print(f'Warning: Level ({level}) is illegal!')
@@ -423,6 +430,28 @@ class SSL_test(object):
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    
+    # class TunnelBuilder(object):
+    #     def __init__(self, ):
+    #         super(TunnelBuilder, self).__init__()
+    #
+    #     def build_tunnel(self, command):
+    #         os.system(command)
+    #
+    #     def run(self, ):
+    #         import os
+    #         from multiprocessing import Process
+    #
+    #         p1 = Process(target=self.build_tunnel,
+    #                      args=('sshpass -p ZpBrwNaX ssh -tt -L 6015:net-g14:8008 swang@gatekeeper.cs.hku.hk',))
+    #         p1.start()
+    #         p2 = Process(target=self.build_tunnel,
+    #                      args=('sshpass -p ZpBrwNaX ssh -tt -L 6016:net-g14:8080 swang@gatekeeper.cs.hku.hk',))
+    #         p2.start()
+    #         print('-' * 20, 'Tunnelings have been built.', '-' * 20, )
+    #
+    #
+    # TunnelBuilder().run()
     
     walker_client = WalkerClient()
     mv = MonitorVoice(MappingMicro=False)

@@ -41,7 +41,7 @@ if __name__ == '__main__':
     
     mv_vm = MonitorVoice_VoiceMenu_Process(MappingMicro=MappingMicro)
     kws = KeyWordSpotting_Process(use_stream=False)
-    ssl = SSL_Process(seg_len='256ms', useDenoise=True, useCD=useCD, isDebug=isDebug)
+    ssl = SSL_Process(seg_len='256ms', doDenoise=True, useCD=useCD, isDebug=isDebug)
     
     p1 = Process(target=mv_vm.run_forever, args=(GLOBAL_AUDIO_QUEUE, GLOBAL_AUDIO_QUEUE_CLEAR,
                                                  GLOBAL_WORD_QUEUE, GLOBAL_WORD_QUEUE_UPDATA, GLOBAL_WORD_QUEUE_CLEAR,))

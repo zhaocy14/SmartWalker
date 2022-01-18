@@ -275,7 +275,7 @@ class SSL_test(object):
             (audio, y, prob, time) = msg
             print('SSL: walker data is received~', )
             direction = 0
-            walker_server.send(data=direction, subtopic=SSL_COMMUNICATION_TOPIC)
+            walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
             print(f'SSL: Direction ({direction}) is received')
 
 
