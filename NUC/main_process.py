@@ -163,6 +163,7 @@ class MainProgramme(object):
 
 if __name__ == "__main__":
     mp = MainProgramme()
-    mp.main_procedure()
+    thread_main = threading.Thread(target=mp.main_procedure, args=())
+    thread_main.start()
     time.sleep(1)
     mp.mainEvent.set()
