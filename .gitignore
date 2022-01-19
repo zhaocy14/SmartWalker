@@ -143,5 +143,5 @@ virtualenv/
 
 .vscode/sftp.json*
 .DS_Store
-.vscode/sftp.json*!/SoundSourceLocalization/lib/
+!/SoundSourceLocalization/lib/
 !/SoundSourceLocalization/mylib/
