@@ -228,8 +228,8 @@ class IRCamera(object):
                     # time_previous = time_new
                     if demo:
                         self.demonstrate_data()
-        if write:
-            file_ir.close()
+                    if write:
+                        file_ir.close()
 
     def demonstrate_data(self, scope=10):
         temperature = []
@@ -271,7 +271,11 @@ class IRCamera(object):
 if __name__ == '__main__':
     ir_data = IRCamera()
     while True:
+<<<<<<< HEAD
         ir_data.get_irdata_once()
+=======
+        ir_data.get_irdata_once(demo=True)
+>>>>>>> 5a8e3b8d50c5b615b4d84112895316d83ae19c14
     # # portname, baudrate = ir_data.get_portname_baudrate()
     # # print(portname, baudrate)
     # for i in range(100):

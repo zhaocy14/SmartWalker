@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import threading
 import time
 #
@@ -25,8 +26,14 @@ import time
 # time.sleep(5)
 # a.threading_flag = True
 # print("thread_flag is set to False")
+=======
+import numpy as np
+>>>>>>> 5a8e3b8d50c5b615b4d84112895316d83ae19c14
 
+a = np.zeros((1,2))
+b = np.zeros((2))
 
+<<<<<<< HEAD
 e1 = threading.Event()
 e2 = threading.Event()
 
@@ -54,3 +61,7 @@ e2.set()
 time.sleep(2)
 e2.clear()
 print(e1.is_set(),e2.is_set())
+=======
+print(a.shape)
+print(b.shape)
+>>>>>>> 5a8e3b8d50c5b615b4d84112895316d83ae19c14

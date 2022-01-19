@@ -44,11 +44,11 @@ import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
         print('-' * 20 + 'init SSL class' + '-' * 20)
         self.isDebug = isDebug
         self.doDrop = False
-        self.useDenoise = useDenoise  # useless
+        self.doDenoise = doDenoise  # useless
         self.useCD = useCD
         self.frames = []
         segment_para_set = {
@@ -90,7 +90,7 @@ class SSL(object):
             },
         }
         self.seg_para = segment_para_set[seg_len]
-        ref_audio, _ = audioread('../resource/wav/reference_wav.wav')
+        ref_audio, _ = audioread(os.path.abspath('./reference_wav.wav'))
         self.ref_audio = normalize_single_channel_audio(ref_audio)
         self.ref_audio_threshold = (self.ref_audio ** 2).sum() / len(self.ref_audio) / 500
         del ref_audio, self.ref_audio,
@@ -289,12 +289,14 @@ class SSL(object):
             
             # calculate features
             gcc_feature_batch = doa.extract_gcc_phat_4_batch(audio_segments)
-            # gcc_feature = np.mean(gcc_feature_batch, axis=0)
+            gcc_feature_batch = np.mean(gcc_feature_batch, axis=0)[np.newaxis, :]
             _, direction = doa.predict(gcc_feature_batch)
             print("Producing action ...\n", 'Direction', direction)
             
             ### 接入Owen的模块，传入aim_loca
             if self.useCD:
+                direction = direction[0] * 45
+                
                 SSLturning(control, direction)
                 control.speed = STEP_SIZE / FORWARD_SECONDS
                 control.radius = 0
@@ -409,17 +411,17 @@ class SSL(object):
 
 
 class SSL_Process(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
         super(SSL_Process, self).__init__()
         self.seg_len = seg_len
-        self.useDenoise = useDenoise
+        self.doDenoise = doDenoise
         self.useCD = useCD
         self.isDebug = isDebug
     
-    def run(self, RECV_PIPE, ):
-        cd = CD.ControlDriver(left_right=0) if self.useCD else ''
+    def run(self, RECV_PIPE, left_right):
+        cd = CD.ControlDriver(left_right=left_right) if self.useCD else ''
         if self.useCD:
             cd_thread = threading.Thread(target=cd.control_part, args=())
             cd_thread.start()
-        ssl = SSL(seg_len=self.seg_len, useDenoise=self.useDenoise, useCD=self.useCD, isDebug=self.isDebug, )
+        ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, useCD=self.useCD, isDebug=self.isDebug, )
         ssl.run(RECV_PIPE, cd, )

@@ -33,7 +33,7 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 import Driver.ControlOdometryDriver as CD
-from Communication.Soundlocalization_socket import CLIENT
+from Communication_220114.Soundlocalization_socket import CLIENT
 
 
 # from Communication.Soundlocalization_socket_local import server_receive, server_transmit

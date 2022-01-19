@@ -48,11 +48,11 @@ import SoundSourceLocalization.VoiceMenu.code.voice_menu as VoiceMenu
 
 
 class SSL(object):
-    def __init__(self, useDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
+    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False):
         print('-' * 20 + 'init SSL class' + '-' * 20)
         self.isDebug = isDebug
         self.doDrop = False
-        self.useDenoise = useDenoise  # useless
+        self.doDenoise = doDenoise  # useless
         self.useCD = useCD
         self.frames = []
         segment_para_set = {
@@ -412,7 +412,7 @@ if __name__ == '__main__':
     kws = VoiceMenu.KeyWordSpotting(use_stream=False)
     vm = VoiceMenu.VoiceMenu()
     cd = CD.ControlDriver(left_right=0) if useCD else ''
-    ssl = SSL(seg_len='256ms', useDenoise=True, useCD=useCD, isDebug=isDebug)
+    ssl = SSL(seg_len='256ms', doDenoise=True, useCD=useCD, isDebug=isDebug)
     
     p1 = threading.Thread(target=mv.run, args=())
     p1.start()
