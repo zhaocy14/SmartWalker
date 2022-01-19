@@ -152,6 +152,7 @@ class MainProgramme_ws(object):
                 cmd = self.VoiceMenu_Command_Queue.get(block=True, timeout=1)
             
             if cmd == 'voice menu':
+
                 pass
             elif cmd == 'voice menu off':
                 pass

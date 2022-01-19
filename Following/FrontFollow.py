@@ -210,7 +210,7 @@ class FFL(object):
 
 
 
-    def main_FFL(self, show: bool = False, demo:bool = True):
+    def main_FFL(self, show: bool = True, demo:bool = False):
         # # first make sure the CD is stopped
         # self.updateDriver(Speed=0,Omega=0,Radius=0)
         while True:

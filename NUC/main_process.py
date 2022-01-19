@@ -45,7 +45,7 @@ class SSL(object):
         while True:
             self.SSLEvent.wait()
             time.sleep(5)
-            # break
+            break
 
     def startSSL(self):
         self.SSLthread.start()
@@ -53,7 +53,7 @@ class SSL(object):
 
 class MainProgramme(object):
     def __init__(self):
-        super.__init__()
+        super().__init__()
 
         self.camera = IRCamera.IRCamera()
         self.Softskin = softskin.SoftSkin()
@@ -73,7 +73,7 @@ class MainProgramme(object):
         self.VoiceMenuEvent = threading.Event()
 
         # threading
-        self.thread_Leg = threading.Thread(target=self.leg_detector.scan_procedure, args=(False, True))
+        self.thread_Leg = threading.Thread(target=self.leg_detector.zmq_scan, args=(False, True))
         self.thread_CD = threading.Thread(target=self.driver.control_part, args=())
         self.thread_Infrared = threading.Thread(target=self.infrared_sensor.read_data, args=())
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
@@ -134,9 +134,12 @@ class MainProgramme(object):
         self.SSL.startSSL()
         # start the manual mode
         while True:
+            print("0")
             self.mainEvent.wait()
+            print("1")
             try:
                 if not self.is_SSL_pass:
+                    print("2")
                     # start the SSL first
                     self.SSL.SSLEvent.set()
                     # if some one press the softskin stop the SSL
@@ -161,3 +164,5 @@ class MainProgramme(object):
 if __name__ == "__main__":
     mp = MainProgramme()
     mp.main_procedure()
+    time.sleep(1)
+    mp.mainEvent.set()
