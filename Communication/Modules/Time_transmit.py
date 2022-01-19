@@ -41,5 +41,5 @@ class TimeTransmit(object):
 
 if __name__ == "__main__":
     # ir_sock = InfraredTransmit(topic=driver_topic)
-    ir_sock = TimeTransmit(ir_topic)
-    ir_sock.start()
+    time_sock = TimeTransmit("Time")
+    time_sock.start()
