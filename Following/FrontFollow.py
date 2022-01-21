@@ -98,7 +98,7 @@ class FFL(object):
         self.thread_CD = threading.Thread(target=self.CD.control_part, args=())
         self.thread_Infrared = threading.Thread(target=self.Infrared.read_data, args=())
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
-        self.thread_main = threading.Thread(target=self.main_FFL, args=(False,False))
+        self.thread_main = threading.Thread(target=self.main_FFL, args=(True,False))
 
         # thread event
         self.FFLevent = threading.Event()

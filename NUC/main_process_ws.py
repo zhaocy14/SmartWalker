@@ -53,7 +53,7 @@ class MainProgramme_ws(object):
         # self.HeartRate = heartrate()
         
         # threading
-        self.thread_Leg = threading.Thread(target=self.leg_detector.scan_procedure, args=(False, True))
+        self.thread_Leg = threading.Thread(target=self.leg_detector.zmq_scan, args=(False, True))
         self.thread_CD = threading.Thread(target=self.driver.control_part, args=())
         self.thread_Infrared = threading.Thread(target=self.infrared_sensor.read_data, args=())
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
@@ -69,7 +69,7 @@ class MainProgramme_ws(object):
         self.Voice = Voice_Process(VoiceMenu_Command_Queue=self.VoiceMenu_Command_Queue, SSL_Event=self.SSL_Event, )
     
     def start_sensor(self):
-        self.thread_CD.start()
+        # self.thread_CD.start()
         self.thread_Infrared.start()
         self.thread_Softskin.start()
         self.thread_Leg.start()
@@ -102,7 +102,7 @@ class MainProgramme_ws(object):
             self.SSL_Event.clear()
         self.mainEvent.set()
         self.SSL_Event.clear()
-        self.is_SSL_pass = True
+        # self.is_SSL_pass = True
     
     def main_procedure(self):
         """this is the main procedure of different threads"""
@@ -116,18 +116,21 @@ class MainProgramme_ws(object):
         self.Voice.start()
         # start the manual mode
         while True:
+            print("0")
             self.mainEvent.wait()
             try:
                 if not self.is_SSL_pass:
                     # start the SSL first
                     self.SSL_Event.set()
+                    print("1")
                     # if some one press the softskin stop the SSL
                     while True:
                         if self.Softskin.max_pressure > 30:
                             self.SSL_Event.clear()
                             break
                         time.sleep(0.1)
-                self.Softskin.skin_unlock_event.wait()
+                    print("2")
+                # self.Softskin.skin_unlock_event.wait()
                 # start the FFL
                 self.FFL.TurnOnDriver()
                 self.FFL.FFLevent.set()
@@ -152,17 +155,20 @@ class MainProgramme_ws(object):
                 cmd = self.VoiceMenu_Command_Queue.get(block=True, timeout=1)
             
             if cmd == 'voice menu':
-
+                self.stop_main_procedure()
                 pass
             elif cmd == 'voice menu off':
+                self.restart()
                 pass
             elif cmd == 'redraw map':
                 pass
             elif cmd == 'charge':
                 pass
             elif cmd == 'start':
+                self.restart()
                 pass
             elif cmd == 'sleep':
+                self.stop_main_procedure()
                 pass
             elif cmd == 'voice menu':
                 pass
@@ -187,32 +193,36 @@ class MainProgramme_ws(object):
 
 
 if __name__ == '__main__':
-    print('-' * 20, 'Hello World!', '-' * 20)
-    os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
-    
-    MappingMicro = False
-    isDebug = True
-    useCD = False
-    left_right = 0
-    SSL_Event = multiprocessing.Event()
-    VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)
-    vp = Voice_Process(VoiceMenu_Command_Queue=VoiceMenu_Command_Queue, SSL_Event=SSL_Event, MappingMicro=MappingMicro,
-                       isDebug=isDebug, useCD=useCD, left_right=left_right, )
-    p1 = Process(target=vp.start, args=())
-    p1.start()
-    
-    while True:
-        if VoiceMenu_Command_Queue.empty():
-            time.sleep(0.1)
-            continue
-        else:
-            cmd = VoiceMenu_Command_Queue.get(block=True, timeout=1)
-        print('Received command:', cmd)
-        if cmd == 'start':
-            SSL_Event.set()
-        elif cmd == 'sleep':
-            SSL_Event.clear()
-    
-    p1.join()
-    
-    print('-' * 20, 'Brand-new World!', '-' * 20)
+    mp = MainProgramme_ws()
+    mp.run()
+    # print('-' * 20, 'Hello World!', '-' * 20)
+    # os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
+    #
+    # MappingMicro = False
+    # isDebug = True
+    # useCD = False
+    # left_right = 0
+    # SSL_Event = multiprocessing.Event()
+    # VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)
+    # vp = Voice_Process(VoiceMenu_Command_Queue=VoiceMenu_Command_Queue, SSL_Event=SSL_Event, MappingMicro=MappingMicro,
+    #                    isDebug=isDebug, useCD=useCD, left_right=left_right, )
+    # p1 = Process(target=vp.start, args=())
+    # p1.start()
+    #
+    #
+    #
+    # while True:
+    #     if VoiceMenu_Command_Queue.empty():
+    #         time.sleep(0.1)
+    #         continue
+    #     else:
+    #         cmd = VoiceMenu_Command_Queue.get(block=True, timeout=1)
+    #     print('Received command:', cmd)
+    #     if cmd == 'start':
+    #         SSL_Event.set()
+    #     elif cmd == 'sleep':
+    #         SSL_Event.clear()
+    #
+    # p1.join()
+    #
+    # print('-' * 20, 'Brand-new World!', '-' * 20)
