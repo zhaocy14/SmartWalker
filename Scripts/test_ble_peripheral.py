@@ -78,8 +78,7 @@ def main(adapter_address):
     logger = logging.getLogger('localGATT')
     logger.setLevel(logging.DEBUG)
     # Example of the output from read_value
-    print('CPU temperature is {}\u00B0C'.format(
-        int.from_bytes(read_value(), byteorder='little', signed=True)/100))
+    print('Advertising SmartWalker BLE')
     # Create peripheral
     wifi_configurator = peripheral.Peripheral(adapter_address,
                                         local_name='SmartWalker WiFi Configurator',
