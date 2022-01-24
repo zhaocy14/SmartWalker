@@ -4,6 +4,10 @@
 # Author: Owen Yip
 # Mail: me@owenyip.com
 #
+import os,sys
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
 
 from bluez_peripheral.gatt.service import Service
 from bluez_peripheral.gatt.characteristic import characteristic, CharacteristicFlags as CharFlags
@@ -12,7 +16,11 @@ from bluez_peripheral.gatt.service import ServiceCollection
 from bluez_peripheral.util import *
 from bluez_peripheral.advert import Advertisement
 from bluez_peripheral.agent import NoIoAgent
+from bluez_peripheral.uuid import BTUUID
 import asyncio
+
+SmartWalkerUUID = "4df03521-6912-431d-89c7-5b3b63a648be"
+SetWifiControlPoint = "b7e9e754-1e59-42d4-810f-16ed47244b50"
 
 # Define a service like so.
 class MyService(Service):
@@ -38,7 +46,7 @@ class MyService(Service):
    # In Python 3.9+:
    # @characteristic("BEF1", CharFlags.WRITE).setter
    # Define a characteristic writing function like so.
-   @my_readonly_characteristic.setter
+   @my_writeonly_characteristic.setter
    def my_writeonly_characteristic(self, value, options):
       # Your characteristics will need to handle bytes.
       self._some_value = value

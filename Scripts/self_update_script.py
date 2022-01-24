@@ -1,8 +1,17 @@
+#
+# Created on Tue Jan 25 2022
+# Author: Owen Yip
+# Mail: me@owenyip.com
+#
+
+import os,sys
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
+
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import re
-import os
-import sys
 import requests
 from requests.exceptions import HTTPError
 import time
