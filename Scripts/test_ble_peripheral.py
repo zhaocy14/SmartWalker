@@ -6,9 +6,15 @@
 # Standard modules
 
 """Installation
-1. Install pyenv
-2. pip3 install PyGObject
-3. Install dbus-python
+1. sudo apt-get install libffi-dev
+2. sudo apt-get install bluez-tools
+3. sudo apt install build-essential libdbus-glib-1-dev libgirepository1.0-dev
+4. sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
+5. Insall pyenv
+6. pip3 install pycairo
+7. pip3 install PyGObject
+8. pip3 install dbus-python
+9. pip3 install bluezero
 
 """
 
