@@ -8,7 +8,7 @@ import logging
 import random
 
 # Bluezero modules
-from bluezero import async_tools
+# from bluezero import async_tools
 from bluezero import adapter
 from bluezero import peripheral
 
@@ -61,16 +61,16 @@ def write_value(value, options):
     return True
 
 
-def notify_callback(notifying, characteristic):
-    """
-    Noitificaton callback example. In this case used to start a timer event
-    which calls the update callback ever 2 seconds
+# def notify_callback(notifying, characteristic):
+#     """
+#     Noitificaton callback example. In this case used to start a timer event
+#     which calls the update callback ever 2 seconds
 
-    :param notifying: boolean for start or stop of notifications
-    :param characteristic: The python object for this characteristic
-    """
-    if notifying:
-        async_tools.add_timer_seconds(2, update_value, characteristic)
+#     :param notifying: boolean for start or stop of notifications
+#     :param characteristic: The python object for this characteristic
+#     """
+#     if notifying:
+#         async_tools.add_timer_seconds(2, update_value, characteristic)
 
 
 def main(adapter_address):
@@ -103,10 +103,10 @@ def main(adapter_address):
                                    notify_callback=None
                                    )
     # Add descriptor
-    wifi_configurator.add_descriptor(srv_id=1, chr_id=1, dsc_id=1, uuid=WIFI_FMT_DSCP,
-                               value=[0x0E, 0xFE, 0x2F, 0x27, 0x01, 0x00,
-                                      0x00],
-                               flags=['read'])
+    # wifi_configurator.add_descriptor(srv_id=1, chr_id=1, dsc_id=1, uuid=WIFI_FMT_DSCP,
+    #                            value=[0x0E, 0xFE, 0x2F, 0x27, 0x01, 0x00,
+    #                                   0x00],
+    #                            flags=['read'])
     # Publish peripheral and start event loop
     wifi_configurator.publish()
 
