@@ -4,6 +4,14 @@
 # Mail: me@owenyip.com
 #
 # Standard modules
+
+"""Installation
+1. Install pyenv
+2. pip3 install PyGObject
+3. Install dbus-python
+
+"""
+
 import logging
 import random
 
