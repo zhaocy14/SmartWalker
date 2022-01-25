@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from PIL import Image
-import cv2
 
 
 def next_greater_power_of_2(x):
@@ -16,6 +15,13 @@ def next_lower_power_of_2(x):
 
 
 def add_prefix_and_suffix_4_basename(path, prefix=None, suffix=None):
+    '''
+    add prefix and/or suffix string(s) to a path's basename
+    :param path:
+    :param prefix:
+    :param suffix:
+    :return:
+    '''
     dir_path, basename = os.path.split(path)
     filename, ext = os.path.splitext(basename)
     filename = str(prefix if prefix is not None else '') + filename + str(suffix if suffix is not None else '') + ext
@@ -32,9 +38,6 @@ def wise_standard_normalizaion(data, normalization=None):
     if normalization is None:
         return data
     assert normalization in ['sample-wise', 'channel-wise', 'samplepoint-wise']
-    data_ndim = data.ndim
-    if data_ndim == 2:
-        data = data[np.newaxis,]
     for i in range(len(data)):
         if normalization == 'sample-wise':
             data[i, :, :] = standard_normalizaion(data[i, :, :])
@@ -44,9 +47,7 @@ def wise_standard_normalizaion(data, normalization=None):
             data[i, :, :] = np.array([standard_normalizaion(data[i, :, j]) for j in range(data.shape[-1])]).T
         else:
             print('-' * 20, 'normalization is incorrectly assigned', '-' * 20)
-            exit(1)
-    if data_ndim == 2:
-        return np.array(data)[0]
+    
     return np.array(data)
 
 
@@ -244,7 +245,7 @@ def extract_nb_from_str(str):
     return list(map(int, res))
 
 
-def get_files_by_suffix(root, suffix):
+def get_files_by_suffix(root, suffix=''):
     if isinstance(suffix, str):
         suffix = (suffix,)
     else:
@@ -259,7 +260,7 @@ def get_files_by_suffix(root, suffix):
     return file_list
 
 
-def get_files_by_prefix(root, prefix):
+def get_files_by_prefix(root, prefix=''):
     if isinstance(prefix, str):
         prefix = (prefix,)
     else:
@@ -274,7 +275,7 @@ def get_files_by_prefix(root, prefix):
     return file_list
 
 
-def get_dirs_by_suffix(root, suffix):
+def get_dirs_by_suffix(root, suffix=''):
     if isinstance(suffix, str):
         suffix = (suffix,)
     else:
@@ -289,7 +290,7 @@ def get_dirs_by_suffix(root, suffix):
     return dir_list
 
 
-def get_dirs_by_prefix(root, prefix):
+def get_dirs_by_prefix(root, prefix=''):
     if isinstance(prefix, str):
         prefix = (prefix,)
     else:
@@ -301,6 +302,67 @@ def get_dirs_by_prefix(root, prefix):
             if d.startswith(prefix):
                 path = os.path.normpath(os.path.join(parent, d))
                 dir_list.append(path)
+    return dir_list
+
+
+def get_subfiles_by_suffix(root, suffix=''):
+    if isinstance(suffix, str):
+        suffix = (suffix,)
+    else:
+        suffix = tuple(suffix)
+    
+    file_list = []
+    for file_basename in os.listdir(root):
+        fpath = os.path.join(root, file_basename)
+        if os.path.isfile(fpath) and file_basename.endswith(suffix):
+            # img: (('.jpg', '.bmp', '.dib', '.png', '.jpg', '.jpeg', '.pbm', '.pgm', '.ppm', '.tif', '.tiff')):
+            path = os.path.normpath(fpath)
+            file_list.append(path)
+    return file_list
+
+
+def get_subfiles_by_prefix(root, prefix=''):
+    if isinstance(prefix, str):
+        prefix = (prefix,)
+    else:
+        prefix = tuple(prefix)
+    
+    file_list = []
+    for file_basename in os.listdir(root):
+        fpath = os.path.join(root, file_basename)
+        if os.path.isfile(fpath) and file_basename.startswith(prefix):
+            path = os.path.normpath(fpath)
+            file_list.append(path)
+    return file_list
+
+
+def get_subdirs_by_suffix(root, suffix=''):
+    if isinstance(suffix, str):
+        suffix = (suffix,)
+    else:
+        suffix = tuple(suffix)
+    
+    dir_list = []
+    for dir_basename in os.listdir(root):
+        dpath = os.path.join(root, dir_basename)
+        if os.path.isdir(dpath) and dir_basename.endswith(suffix):
+            path = os.path.normpath(dpath)
+            dir_list.append(path)
+    return dir_list
+
+
+def get_subdirs_by_prefix(root, prefix=''):
+    if isinstance(prefix, str):
+        prefix = (prefix,)
+    else:
+        prefix = tuple(prefix)
+    
+    dir_list = []
+    for dir_basename in os.listdir(root):
+        dpath = os.path.join(root, dir_basename)
+        if os.path.isdir(dpath) and dir_basename.startswith(prefix):
+            path = os.path.normpath(dpath)
+            dir_list.append(path)
     return dir_list
 
 
@@ -324,14 +386,12 @@ def plot_curve(data, title=None, img_path=None, show=True, y_lim=None, linestyle
     plt.title(title)
     plt.legend()
     if img_path is not None:
-        if not os.path.exists(os.path.dirname(img_path)):
-            os.mkdir(os.path.dirname(img_path))
+        os.makedirs(os.path.dirname(img_path), exist_ok=True)
         plt.savefig(img_path)
     if show:
         plt.show()
     else:
         plt.close()
-
 
 
 def plot_hist(data, title=None, img_path=None, bins=100, show=True):
@@ -381,6 +441,7 @@ def img_splice(img_paths, save_path, sgl_img_size):
 
 
 def otsu_threshold(data):
+    import cv2
     data = np.array([data], dtype=np.uint8)
     threshold, res_data, = cv2.threshold(data, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return res_data[0], threshold

@@ -9,37 +9,21 @@
 
 import os, sys
 
-code_dir = os.path.dirname(os.path.abspath(__file__))
-module_dir = os.path.dirname(code_dir)
-project_dir = os.path.dirname(module_dir)
-sys.path.extend([module_dir, project_dir])
-# print('project_dir:', project_dir)
+CRT_DIR = os.path.dirname(os.path.abspath(__file__))
+F_PATH = os.path.dirname(CRT_DIR)
+FF_PATH = os.path.dirname(F_PATH)
+sys.path.extend([CRT_DIR, F_PATH, FF_PATH, ])
+# print('sys.path:', sys.path)
 
 import time
 import json
 import numpy as np
 from scipy import stats
 import threading
-from multiprocessing import Process, Value, Pipe, Queue
-
-# general lib
-from SoundSourceLocalization.mylib import utils
-from SoundSourceLocalization.mylib.utils import standard_normalizaion
-from SoundSourceLocalization.mylib.audiolib import normalize_single_channel_audio, audio_segmenter_4_numpy, \
-    audio_energy_ratio_over_threshold, audio_energy_over_threshold, audioread, audiowrite
 
 # independent systems
 from SoundSourceLocalization.SSL_Settings import *
-import SoundSourceLocalization.SpeechEnhancement.code.ns_enhance_onnx as ns_enhance_onnx
-from SoundSourceLocalization.SSL.code.ssl_audio_processor import *
-from SoundSourceLocalization.SSL.code.ssl_feature_extractor import FeatureExtractor
-from SoundSourceLocalization.SSL.code.ssl_DOA_model import DOA
 from SoundSourceLocalization.SSL.code.ssl_turning import SSLturning
-from SoundSourceLocalization.ReinforcementLearning.code.ssl_agent import Agent
-from SoundSourceLocalization.ReinforcementLearning.code.ssl_env import MAP_ENV, ONLINE_MAP_ENV
-# from SoundSourceLocalization.ReinforcementLearning.code.ssl_actor_critic import Actor, Critic
-# # from Communication.Soundlocalization_socket_local import server_receive, server_transmit
-# from Communication.Soundlocalization_socket import CLIENT
 import Driver.ControlOdometryDriver as CD
 
 

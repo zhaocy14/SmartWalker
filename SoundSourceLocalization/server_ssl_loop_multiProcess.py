@@ -9,10 +9,11 @@
 
 import os, sys
 
-module_dir = os.path.dirname(os.path.abspath(__file__))
-project_dir = os.path.dirname(module_dir)
-sys.path.extend([module_dir, project_dir])
+CRT_DIR = os.path.dirname(os.path.abspath(__file__))
+F_PATH = os.path.dirname(CRT_DIR)
+sys.path.extend([CRT_DIR, F_PATH, ])
 # print('sys.path:', sys.path)
+
 
 import time
 import numpy as np
@@ -43,7 +44,7 @@ if __name__ == '__main__':
     walker_server = manager.WalkerServer()
     mv = MonitorVoice_Process(MappingMicro=False, )
     kws = KeyWordSpotting_Process(use_stream=False, )
-    ssl = SSL_Process(seg_len='256ms', doDenoise=True, isDebug=isDebug)
+    ssl = SSL_Process(seg_len='1s', doDenoise=True, isDebug=isDebug)
     # ssl = SSL_test(seg_len='256ms', doDenoise=True, isDebug=isDebug)
     
     p1 = Process(target=mv.run, args=(walker_server, SHARED_AUDIO_QUEUE, SHARED_AUDIO_QUEUE_CLEAR,))

@@ -71,7 +71,7 @@ class KeyWordSpotting(object):
         
         print('-' * 20, 'Loading KWS non_stream_model...', '-' * 20, )
         self.non_stream_model = self.__load_non_stream_model__(weights_name='last_weights')
-        if self.use_stream:  # TODO 保存流式模型，直接加载？而非每次都要转换，还挺耗时的
+        if self.use_stream:  # 保存流式模型，直接加载，而非每次都要转换，还挺耗时的
             self.stream_model = self.__convert_2_stream_model__()
         self.labels = np.array(['silence', 'unknown', ] + self.flags.wanted_words.split(','))
         self.walker_name = self.labels[2]
@@ -101,6 +101,7 @@ class KeyWordSpotting(object):
         config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
         tf.keras.backend.set_session(sess)
+        # tf.compat.v1.keras.backend.set_session(sess)
         # self.audio_processor = input_data.AudioProcessor(self.flags)
         tf.keras.backend.set_learning_phase(0)
         # tf.disable_eager_execution()
@@ -137,13 +138,14 @@ class KeyWordSpotting(object):
         
         return stream_model
     
-    def clear_SSL_AUDIO_QUEUE(self, QUEUE, ):
-        while not QUEUE.empty():
+    def clear_Queue(self, Queue, description=None):
+        while not Queue.empty():
             try:
-                QUEUE.get_nowait()
+                Queue.get_nowait()
             except:
                 pass
-        print('-' * 20, 'SSL_AUDIO_QUEUE is cleared as it is full.', '-' * 20)
+        if description is not None:
+            print('-' * 20, str(description), '-' * 20)
     
     def predict(self, x, use_stream=None, ):
         use_stream = self.use_stream if (use_stream is None) else use_stream
@@ -186,36 +188,36 @@ class KeyWordSpotting(object):
                 # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
                 #     # print('y & prob:', y, round(prob, 3), end='\t')
                 #     print(y, round(prob, 3), end='\t')
-                if y == self.walker_name:  # TODO 监听到 walker_name，使用 Pipe 将音频传给声源定位模块 Pipe blocks! Must place a consumer first!
+                if y == self.walker_name:
                     if SSL_AUDIO_QUEUE.full():
-                        self.clear_SSL_AUDIO_QUEUE(SSL_AUDIO_QUEUE, )
+                        self.clear_Queue(SSL_AUDIO_QUEUE, description='SSL_AUDIO_QUEUE is cleared as it is full.')
                     SSL_AUDIO_QUEUE.put((audio, y, prob, time.time()), block=True, timeout=1)
                     # print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
                     # SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
                     # SSL_AUDIO_UPDATE = True
         else:
             assert False, 'Streaming model has not been tested'
-            local_audio_frames = deque(maxlen=self.window_stride_ms)
-            while True:
-                for i in range(self.window_stride_ms):
-                    local_audio_frames.append(AUDIO_QUEUE.get(block=True, timeout=None))
-                if len(local_audio_frames) != self.clip_duration_ms:
-                    continue
-                ################################ predict ########################################
-                audio = np.concatenate(local_audio_frames, axis=1)
-                # audio = normalize_single_channel_to_target_level(audio, )
-                x = np.array(audio[0], dtype=np.float64)[np.newaxis, :]
-                y, prob = self.predict(x, use_stream=self.use_stream)
-                y, prob = self.labels[y[0]], prob[0]
-                # WORD_QUEUE.put((y, prob))
-                # WORD_QUEUE_UPDATA = True
-                # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
-                #     # print('y & prob:', y, round(prob, 3), end='\t')
-                #     print(y, round(prob, 3), end='\t')
-                if y == self.walker_name:  # TODO 监听到 walker_name，使用 Pipe 将音频传给声源定位模块
-                    print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
-                    # SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
-                    # SSL_AUDIO_QUEUE_UPDATE = True
+            # local_audio_frames = deque(maxlen=self.window_stride_ms)
+            # while True:
+            #     for i in range(self.window_stride_ms):
+            #         local_audio_frames.append(AUDIO_QUEUE.get(block=True, timeout=None))
+            #     if len(local_audio_frames) != self.clip_duration_ms:
+            #         continue
+            #     ################################ predict ########################################
+            #     audio = np.concatenate(local_audio_frames, axis=1)
+            #     # audio = normalize_single_channel_to_target_level(audio, )
+            #     x = np.array(audio[0], dtype=np.float64)[np.newaxis, :]
+            #     y, prob = self.predict(x, use_stream=self.use_stream)
+            #     y, prob = self.labels[y[0]], prob[0]
+            #     # WORD_QUEUE.put((y, prob))
+            #     # WORD_QUEUE_UPDATA = True
+            #     # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
+            #     #     # print('y & prob:', y, round(prob, 3), end='\t')
+            #     #     print(y, round(prob, 3), end='\t')
+            #     if y == self.walker_name:
+            #         print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
+            #         # SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
+            #         # SSL_AUDIO_QUEUE_UPDATE = True
 
 
 class MonitorVoice(object):
@@ -223,13 +225,14 @@ class MonitorVoice(object):
         print('-' * 20, 'init MonitorVoice class', '-' * 20)
         super(MonitorVoice, self).__init__()
     
-    def clear_AUDIO_QUEUE(self, AUDIO_QUEUE, ):
-        while not AUDIO_QUEUE.empty():
+    def clear_Queue(self, Queue, description=None):
+        while not Queue.empty():
             try:
-                AUDIO_QUEUE.get_nowait()
+                Queue.get_nowait()
             except:
                 pass
-        print('-' * 20, 'AUDIO_QUEUE is cleared as it is full.', '-' * 20)
+        if description is not None:
+            print('-' * 20, str(description), '-' * 20)
     
     def run(self, walker_server, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, ):
         while True:
@@ -239,7 +242,7 @@ class MonitorVoice(object):
             # audio = np.random.random((4, 16))
             # print('An audio frame is received')
             if AUDIO_QUEUE.full():
-                self.clear_AUDIO_QUEUE(AUDIO_QUEUE, )
+                self.clear_Queue(AUDIO_QUEUE, description='AUDIO_QUEUE is cleared as it is full.', )
                 AUDIO_QUEUE_CLEAR.value = True
             AUDIO_QUEUE.put(audio, block=True, timeout=1)
 
