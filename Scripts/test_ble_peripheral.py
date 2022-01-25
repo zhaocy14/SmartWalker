@@ -71,7 +71,7 @@ def update_value(characteristic):
 
 
 def write_value(value, options):
-    print("Received: ", value)
+    print("Received: ", bytes(value).decode('utf-8'))
     return True
 
 
@@ -95,8 +95,7 @@ def main(adapter_address):
     print('Advertising SmartWalker BLE')
     # Create peripheral
     wifi_configurator = peripheral.Peripheral(adapter_address,
-                                        local_name='SmartWalker WiFi Configurator',
-                                        appearance=1344)
+                                        local_name='SmartWalker WiFi Configurator')
     # Add service
     wifi_configurator.add_service(srv_id=1, uuid=SmartWalkerUUID, primary=True)
     # Add characteristic
@@ -126,4 +125,5 @@ def main(adapter_address):
 
 if __name__ == '__main__':
     # Get the default adapter address and pass it to main
+    # print(list(adapter.Adapter.available())[0].address)
     main(list(adapter.Adapter.available())[0].address)
