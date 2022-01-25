@@ -35,9 +35,9 @@ def detect_serials(location="1-1.1:1.0", vid=0x10c4, pid=0xea60):
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print_serial(port)
-
         if port.location.__contains__(location):
             port_path = port.device
+            # print_serial(port)
             return port_path
         else:
             print("Cannot find the target device: %s" % location)
@@ -47,16 +47,21 @@ def detect_serials(location="1-1.1:1.0", vid=0x10c4, pid=0xea60):
 class SoftSkin(object):
 
     def __init__(self, is_STM32: bool = True):
-
-        port_name = detect_serials("1-1.3:1.0")  # Arduino Mega 2560 ttyACM0
+        port_name = detect_serials("3-3.1")  # Arduino Mega 2560 ttyACM0
         baud_rate = 115200
         print(port_name, baud_rate)
+
+        # serial
         self.serial = serial.Serial(port_name, baud_rate, timeout=None)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
         self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-        self.serial = serial.Serial(port_name, baud_rate, timeout=None)
 
+        # sensor number
         self.sensor_num = 7
+
+        # data list
+        self.data_list = []
+        self.pressure_data = np.zeros((self.sensor_num))
 
         # average filter
         self.average_length = 10
@@ -79,21 +84,9 @@ class SoftSkin(object):
 
     def read_data(self, is_shown=1):
         try:
-            one_line_data = self.serial.readline().decode("utf-8")
-            print(one_line_data)
-            # print(one_line_data)
-            # one_line_data = one_line_data.strip('SS')
-            # one_line_data = one_line_data.strip('\n')
-            # one_line_data = one_line_data.strip('\r')
-            # one_line_data = one_line_data.split('|')
-            # # print(one_line_data)
-            # if is_shown == 1:
-            #     print(one_line_data)
-            # if len(one_line_data) == self.port_num:
-            #     one_line_data = list(map(float, one_line_data))
-            #     one_line_data = list(map(int, one_line_data))
-            #     self.raw_data = one_line_data
-            #     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
+            while True:
+                data = self.serial.read(20)
+
         except BaseException as be:
             print("Data Error:", be)
 
@@ -144,10 +137,4 @@ class SoftSkin(object):
 if __name__ == '__main__':
     skin = SoftSkin()
     # skin.build_base_line_data()
-    thread_reading = threading.Thread(target=skin.read_and_record, args=())
-
-    time.sleep(1)
-    thread_reading.start()
-
-    skin.unlock()
-
+    skin.read_data()
