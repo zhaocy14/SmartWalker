@@ -51,12 +51,17 @@ class SoftSkin(object):
         baud_rate = 115200
         print(port_name, baud_rate)
 
+        # serial
         self.serial = serial.Serial(port_name, baud_rate, timeout=None)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
         self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-        self.serial = serial.Serial(port_name, baud_rate, timeout=None)
 
+        # sensor number
         self.sensor_num = 7
+
+        # data list
+        self.data_list = []
+        self.pressure_data = np.zeros((self.sensor_num))
 
         # average filter
         self.average_length = 10
@@ -80,27 +85,8 @@ class SoftSkin(object):
     def read_data(self, is_shown=1):
         try:
             while True:
-                # data = self.serial.read(20).hex()
                 data = self.serial.read(20)
-                for i in data:
-                    print(i)
-                    print(type(i))
-                # one_line_data = self.serial.readline().decode("utf-8")
-                print(data)
-                print(type(data))
-            # print(one_line_data)
-            # one_line_data = one_line_data.strip('SS')
-            # one_line_data = one_line_data.strip('\n')
-            # one_line_data = one_line_data.strip('\r')
-            # one_line_data = one_line_data.split('|')
-            # # print(one_line_data)
-            # if is_shown == 1:
-            #     print(one_line_data)
-            # if len(one_line_data) == self.port_num:
-            #     one_line_data = list(map(float, one_line_data))
-            #     one_line_data = list(map(int, one_line_data))
-            #     self.raw_data = one_line_data
-            #     # print(self.raw_data, type(self.raw_data), type(self.raw_data[0]))
+
         except BaseException as be:
             print("Data Error:", be)
 
