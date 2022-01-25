@@ -28,7 +28,7 @@ from scipy.special import softmax as scipy_softmax
 from pyaudio import PyAudio
 
 from SoundSourceLocalization.SSL_Settings import *
-from SoundSourceLocalization.mylib.utils import standard_normalizaion
+from SoundSourceLocalization.mylib import utils, audiolib
 from SoundSourceLocalization.SSL_Communication.WalkerServer import WalkerServer
 
 # KWS
@@ -158,6 +158,23 @@ class KeyWordSpotting(object):
         
         return label, y_pred[:, label].squeeze(axis=0)
     
+    def save_audio(self, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, ):
+        audio_frames = deque()
+        while True:
+            if AUDIO_QUEUE_CLEAR.value:
+                AUDIO_QUEUE_CLEAR.value = False
+                audio_frames.clear()
+            try:
+                audio_frames.append(AUDIO_QUEUE.get(block=True, timeout=1))
+            except Exception as e:
+                # print('Error when KWS get frames from AUDIO_QUEUE:', e)
+                pass
+            if len(audio_frames) >= 10000:
+                audio = np.concatenate(audio_frames, axis=1)
+                audio_frames.clear()
+                save_dir = os.path.join('./', str(time.strftime("%Y%m%d-%H%M%S")))
+                audiolib.save_multi_channel_audio(audio=audio, fs=16000, des_dir=save_dir, norm=False, )
+    
     def run(self, walker_server, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, SSL_AUDIO_QUEUE, ):
         print('-' * 20, 'KWS is running', '-' * 20)
         if not self.use_stream:
@@ -185,9 +202,9 @@ class KeyWordSpotting(object):
                 walker_server.send(data=(y, prob), subtopic=KWS_COMMUNICATION_TOPIC)
                 # print('y, prob:', y, prob)
                 
-                if (y not in ['silence', 'unknown', ]) and prob > 0.50:
-                    # print('y & prob:', y, round(prob, 3), end='\t')
-                    print(y, round(prob, 3), end='\t')
+                # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
+                #     print('y & prob:', y, round(prob, 3), end='\t')
+                # print(y, round(prob, 3), end='\t')  # TODO: for debugging
                 if y == self.walker_name:
                     if SSL_AUDIO_QUEUE.full():
                         self.clear_Queue(SSL_AUDIO_QUEUE, description='SSL_AUDIO_QUEUE is cleared as it is full.')
