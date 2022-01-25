@@ -35,9 +35,9 @@ def detect_serials(location="1-1.1:1.0", vid=0x10c4, pid=0xea60):
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print_serial(port)
-
         if port.location.__contains__(location):
             port_path = port.device
+            # print_serial(port)
             return port_path
         else:
             print("Cannot find the target device: %s" % location)
@@ -47,10 +47,10 @@ def detect_serials(location="1-1.1:1.0", vid=0x10c4, pid=0xea60):
 class SoftSkin(object):
 
     def __init__(self, is_STM32: bool = True):
-
-        port_name = detect_serials("1-1.3:1.0")  # Arduino Mega 2560 ttyACM0
+        port_name = detect_serials("3-3.1")  # Arduino Mega 2560 ttyACM0
         baud_rate = 115200
         print(port_name, baud_rate)
+
         self.serial = serial.Serial(port_name, baud_rate, timeout=None)
         self.pwd = os.path.abspath(os.path.abspath(__file__))
         self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
@@ -79,8 +79,15 @@ class SoftSkin(object):
 
     def read_data(self, is_shown=1):
         try:
-            one_line_data = self.serial.readline().decode("utf-8")
-            print(one_line_data)
+            while True:
+                # data = self.serial.read(20).hex()
+                data = self.serial.read(20)
+                for i in data:
+                    print(i)
+                    print(type(i))
+                # one_line_data = self.serial.readline().decode("utf-8")
+                print(data)
+                print(type(data))
             # print(one_line_data)
             # one_line_data = one_line_data.strip('SS')
             # one_line_data = one_line_data.strip('\n')
@@ -144,10 +151,4 @@ class SoftSkin(object):
 if __name__ == '__main__':
     skin = SoftSkin()
     # skin.build_base_line_data()
-    thread_reading = threading.Thread(target=skin.read_and_record, args=())
-
-    time.sleep(1)
-    thread_reading.start()
-
-    skin.unlock()
-
+    skin.read_data()
