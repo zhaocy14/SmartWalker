@@ -28,15 +28,13 @@ import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
-    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False, ):
+    def __init__(self, useCD=True, isDebug=False, ):
         super(SSL, self).__init__()
-        self.seg_len = seg_len
-        self.doDenoise = doDenoise
         self.useCD = useCD
         self.isDebug = isDebug
     
     def run(self, walker_client, control_driver, SHARED_SSL_EVENT):
-        Server_SSL_Wait = True
+        Server_SSL_Wait = False  # TODO: for debugging
         while True:
             time.sleep(0.1)
             if (not SHARED_SSL_EVENT.is_set()) and (not Server_SSL_Wait):  # need to wait, but server doesn't
@@ -52,6 +50,7 @@ class SSL(object):
             if direction is None:
                 continue
             print(f'Direction ({direction}) is received')
+            
             ### 接入Owen的模块，传入aim_loca
             if self.useCD:
                 direction = direction[0] * 45
@@ -67,10 +66,8 @@ class SSL(object):
 
 
 class SSL_Thread(object):
-    def __init__(self, doDenoise=True, useCD=True, seg_len='256ms', isDebug=False, left_right=0, ):
+    def __init__(self, useCD=True, isDebug=False, left_right=0, ):
         super(SSL_Thread, self).__init__()
-        self.seg_len = seg_len
-        self.doDenoise = doDenoise
         self.useCD = useCD
         self.isDebug = isDebug
         self.left_right = left_right
@@ -80,5 +77,5 @@ class SSL_Thread(object):
         if self.useCD:
             cd_thread = threading.Thread(target=cd.control_part, args=())
             cd_thread.start()
-        ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, useCD=self.useCD, isDebug=self.isDebug, )
+        ssl = SSL(useCD=self.useCD, isDebug=self.isDebug, )
         ssl.run(walker_client=walker_client, control_driver=cd, SHARED_SSL_EVENT=SHARED_SSL_EVENT)

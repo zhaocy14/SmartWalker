@@ -68,8 +68,7 @@ class Voice_Process(object):
         mv = MonitorVoice(MappingMicro=False)
         kws = KeyWordSpotting()
         vm = VoiceMenu(SHARED_COMMAND_QUEUE=self.SHARED_COMMAND_QUEUE)
-        ssl = SSL_Thread(seg_len='256ms', doDenoise=True, useCD=self.useCD, isDebug=self.isDebug,
-                         left_right=self.left_right, )
+        ssl = SSL_Thread(useCD=self.useCD, isDebug=self.isDebug, left_right=self.left_right, )
         
         p1 = Thread(target=mv.run, args=(walker_client,))
         p2 = Thread(target=kws.run, args=(walker_client,))

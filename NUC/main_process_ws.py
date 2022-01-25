@@ -194,7 +194,7 @@ if __name__ == '__main__':
     useCD = True
     left_right = 0
     SSL_Event = multiprocessing.Event()
-    SSL_Event.set()
+    SSL_Event.set()  # TODO: for debugging
     VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)
     vp = Voice_Process(VoiceMenu_Command_Queue=VoiceMenu_Command_Queue, SSL_Event=SSL_Event, MappingMicro=MappingMicro,
                        isDebug=isDebug, useCD=useCD, left_right=left_right, )
