@@ -1,10 +1,14 @@
 import os, sys
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+# pwd = os.path.abspath(os.path.abspath(__file__))
+# father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+# sys.path.append(father_path)
+# data_path = os.path.abspath(
+#     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
+#     os.path.sep + "data")
+pwd = os.path.dirname(os.path.abspath(__file__))
+father_path = os.path.dirname(pwd)
 sys.path.append(father_path)
-data_path = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
-    os.path.sep + "data")
+data_path = os.path.join(father_path, 'data')
 import time
 import threading
 import numpy as np
@@ -16,6 +20,11 @@ from Following import FrontFollow
 from Driver import ControlOdometryDriver as cd
 from Communication.Cpp_command import CppCommand
 
+import multiprocessing  # Event
+from multiprocessing import Process, Value, Pipe, Queue, Event
+from Communication.Cpp_command import CppCommand
+from SoundSourceLocalization.SSL_Settings import *
+from SoundSourceLocalization.client_ssl_loop_multiThread import Voice_Process
 
 class VoiceMenu(object):
     def __init__(self):
@@ -120,7 +129,7 @@ class MainProgramme(object):
             self.SSL.SSLEvent.clear()
         self.mainEvent.set()
         self.SSL.SSLEvent.clear()
-        self.is_SSL_pass = True
+        # self.is_SSL_pass = True
 
     def main_procedure(self):
         """this is the main procedure of different threads"""
@@ -148,10 +157,12 @@ class MainProgramme(object):
                             self.SSL.SSLEvent.clear()
                             break
                         time.sleep(0.1)
-                self.Softskin.skin_unlock_event.wait()
+                    print("3")
+                # self.Softskin.skin_unlock_event.wait()
                 # start the FFL
                 self.FFL.TurnOnDriver()
                 self.FFL.FFLevent.set()
+                print("4")
                 # restart the main procedure
                 self.mainRestartEvent.wait()
                 self.FFL.TurnOffDriver()
@@ -167,3 +178,10 @@ if __name__ == "__main__":
     thread_main.start()
     time.sleep(1)
     mp.mainEvent.set()
+    time.sleep(10)
+    print("stop everything!")
+    mp.stop_main_procedure()
+    print("finished!")
+    time.sleep(3)
+    print("restart!")
+    mp.restart(True)
