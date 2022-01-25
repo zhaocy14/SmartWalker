@@ -185,9 +185,9 @@ class KeyWordSpotting(object):
                 walker_server.send(data=(y, prob), subtopic=KWS_COMMUNICATION_TOPIC)
                 # print('y, prob:', y, prob)
                 
-                # if (y not in ['silence', 'unknown', ]) and prob > 0.70:
-                #     # print('y & prob:', y, round(prob, 3), end='\t')
-                #     print(y, round(prob, 3), end='\t')
+                if (y not in ['silence', 'unknown', ]) and prob > 0.50:
+                    # print('y & prob:', y, round(prob, 3), end='\t')
+                    print(y, round(prob, 3), end='\t')
                 if y == self.walker_name:
                     if SSL_AUDIO_QUEUE.full():
                         self.clear_Queue(SSL_AUDIO_QUEUE, description='SSL_AUDIO_QUEUE is cleared as it is full.')

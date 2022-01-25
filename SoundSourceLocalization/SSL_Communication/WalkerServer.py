@@ -86,7 +86,6 @@ class WalkerServer(CommunicationPeer):
                         continue
                 if subtopic_key == AUDIO_COMMUNICATION_TOPIC:
                     # print("audio frame is receiced~")
-                    
                     return self.subtopic_buffer_dict[subtopic_key]
         elif subtopic == SSL_WAIT_COMMUNICATION_TOPIC:
             data = self.subtopic_buffer_dict[SSL_WAIT_COMMUNICATION_TOPIC]

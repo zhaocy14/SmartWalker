@@ -28,10 +28,9 @@ import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
-    def __init__(self, useCD=True, isDebug=False, ):
+    def __init__(self, useCD=True, ):
         super(SSL, self).__init__()
         self.useCD = useCD
-        self.isDebug = isDebug
     
     def run(self, walker_client, control_driver, SHARED_SSL_EVENT):
         Server_SSL_Wait = False  # TODO: for debugging
@@ -66,10 +65,9 @@ class SSL(object):
 
 
 class SSL_Thread(object):
-    def __init__(self, useCD=True, isDebug=False, left_right=0, ):
+    def __init__(self, useCD=True, left_right=0, ):
         super(SSL_Thread, self).__init__()
         self.useCD = useCD
-        self.isDebug = isDebug
         self.left_right = left_right
     
     def run(self, walker_client, SHARED_SSL_EVENT):
@@ -77,5 +75,5 @@ class SSL_Thread(object):
         if self.useCD:
             cd_thread = threading.Thread(target=cd.control_part, args=())
             cd_thread.start()
-        ssl = SSL(useCD=self.useCD, isDebug=self.isDebug, )
+        ssl = SSL(useCD=self.useCD, )
         ssl.run(walker_client=walker_client, control_driver=cd, SHARED_SSL_EVENT=SHARED_SSL_EVENT)
