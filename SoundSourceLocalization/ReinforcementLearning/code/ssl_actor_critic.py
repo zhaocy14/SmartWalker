@@ -24,7 +24,7 @@ if (sysstr == "Windows"):
     print(gpus)
     tf.config.experimental.set_visible_devices(gpus[0], 'GPU')
     tf.config.experimental.set_memory_growth(gpus[0], True)
-    K.set_image_data_format('channels_first')
+    # K.set_image_data_format('channels_first')
 elif (sysstr == "Linux"):
     pass
 else:

@@ -27,7 +27,7 @@ def print_serial(port):
     print()
 
 
-def detect_serials(location="1-3.2:1.0", vid=0x10c4, pid=0xea60):
+def detect_serials(location="1-4.2:1.0", vid=0x10c4, pid=0xea60):
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print_serial(port)
@@ -138,7 +138,7 @@ class Infrared_Sensor(object):
                         file.write(str(write_data)+"\n")
                         file.flush()
             except BaseException as be:
-                print("Data Error:", be)
+                print("Infrared Error:", be)
 
     def update_from_STM32(self, STM32_data:np.ndarray, is_average:bool = True):
         try:

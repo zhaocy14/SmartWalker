@@ -67,6 +67,7 @@ class MainProgramme_ws(object):
         self.SSL_Event = multiprocessing.Event()
         self.VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)
         self.Voice = Voice_Process(VoiceMenu_Command_Queue=self.VoiceMenu_Command_Queue, SSL_Event=self.SSL_Event, )
+        self.VoicePrpcess = Process(target=self.Voice.start, args=())
     
     def start_sensor(self):
         # self.thread_CD.start()
@@ -103,7 +104,7 @@ class MainProgramme_ws(object):
         self.mainEvent.set()
         self.SSL_Event.clear()
         # self.is_SSL_pass = True
-    
+
     def main_procedure(self):
         """this is the main procedure of different threads"""
         # start the threads
@@ -113,25 +114,26 @@ class MainProgramme_ws(object):
         self.FFL.start_FFL()
         # start the SSL but with event clear
         self.SSL_Event.clear()  # TODO: clear all the buffers
-        self.Voice.start()
+        self.VoicePrpcess.start()
         # start the manual mode
         while True:
-            print("0")
+            print("I am here")
             self.mainEvent.wait()
             try:
                 if not self.is_SSL_pass:
                     # start the SSL first
                     self.SSL_Event.set()
-                    print("1")
+                    print("SSL is set!")
                     # if some one press the softskin stop the SSL
                     while True:
                         if self.Softskin.max_pressure > 30:
                             self.SSL_Event.clear()
+                            print("SSL is break")
                             break
                         time.sleep(0.1)
-                    print("2")
                 # self.Softskin.skin_unlock_event.wait()
                 # start the FFL
+                print("FFL start!")
                 self.FFL.TurnOnDriver()
                 self.FFL.FFLevent.set()
                 # restart the main procedure
@@ -155,6 +157,7 @@ class MainProgramme_ws(object):
                 cmd = self.VoiceMenu_Command_Queue.get(block=True, timeout=1)
             
             if cmd == 'voice menu':
+                print("voice menu detect!")
                 self.stop_main_procedure()
                 pass
             elif cmd == 'voice menu off':
@@ -189,7 +192,8 @@ class MainProgramme_ws(object):
         p2 = Thread(target=self.main_procedure, args=())
         p1.start()
         p2.start()
-        p1.join()
+        # p1.join()
+        self.mainEvent.set()
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ from tensorflow.keras.constraints import max_norm
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras import backend as K
 import tensorflow.keras.backend as K
-K.set_image_data_format('channels_first')
+# K.set_image_data_format('channels_first')
 
 
 # from .utils_tf import BaseClassicalModel
