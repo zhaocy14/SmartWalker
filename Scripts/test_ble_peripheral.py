@@ -20,6 +20,7 @@
 
 import logging
 import random
+import dbus
 
 # Bluezero modules
 # from bluezero import async_tools
@@ -72,7 +73,8 @@ def update_value(characteristic):
 
 def write_value(value, options):
     print("Received: ", bytes(value).decode('utf-8'))
-    return True
+    
+    return dbus.ByteArray(True)
 
 
 # def notify_callback(notifying, characteristic):
