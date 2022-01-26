@@ -3,6 +3,11 @@
 # Author: Owen Yip
 # Mail: me@owenyip.com
 #
+
+"""Command to build the binary
+pyinstaller --additional-hooks-dir PyInstallerHook xxxx.py
+"""
+
 import os,sys
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")

@@ -72,7 +72,7 @@ def update_value(characteristic):
 
 def write_value(value, options):
     print("Received: ", bytes(value).decode('utf-8'))
-    return True
+    return value
 
 
 # def notify_callback(notifying, characteristic):
