@@ -72,7 +72,7 @@ def update_value(characteristic):
 
 def write_value(value, options):
     print("Received: ", bytes(value).decode('utf-8'))
-    return True
+    # return True
 
 
 # def notify_callback(notifying, characteristic):
@@ -109,7 +109,7 @@ def main(adapter_address):
     
     wifi_configurator.add_characteristic(srv_id=1, chr_id=1, uuid=SetWifiControlPoint,
                                    value=[], notifying=False,
-                                   flags=['write'],
+                                   flags=['write-without-response'],
                                    read_callback=None,
                                    write_callback=write_value,
                                    notify_callback=None
