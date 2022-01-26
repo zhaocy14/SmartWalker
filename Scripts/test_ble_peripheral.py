@@ -20,7 +20,6 @@
 
 import logging
 import random
-import dbus
 
 # Bluezero modules
 # from bluezero import async_tools
