@@ -37,8 +37,7 @@ if __name__ == '__main__':
     MappingMicro = False
     isDebug = True
     
-    manager = BaseManager()
-    # 一定要在start前注册，不然就注册无效
+    manager = BaseManager()  # 一定要在start前注册，不然就注册无效
     manager.register('WalkerServer', WalkerServer)  # 第一个参数为类型id，通常和第二个参数传入的类的类名相同，直观并且便于阅读
     manager.start()
     walker_server = manager.WalkerServer()

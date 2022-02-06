@@ -63,7 +63,7 @@ class Voice_Process(object):
         # TunnelBuilder().run()
         
         walker_client = WalkerClient()
-        mv = MonitorVoice(MappingMicro=False)
+        mv = MonitorVoice(MappingMicro=self.MappingMicro)
         kws = KeyWordSpotting()
         vm = VoiceMenu(SHARED_COMMAND_QUEUE=self.SHARED_COMMAND_QUEUE)
         ssl = SSL_Thread(useCD=self.useCD, left_right=self.left_right, )

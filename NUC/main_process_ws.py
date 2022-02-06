@@ -189,7 +189,7 @@ if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
     
-    MappingMicro = False
+    MappingMicro = True
     useCD = False
     left_right = 0
     SSL_Event = multiprocessing.Event()

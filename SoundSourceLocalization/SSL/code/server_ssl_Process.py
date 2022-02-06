@@ -367,7 +367,7 @@ class SSL(object):
             # ini_signals = self.get_audio_from_pipe(RECV_PIPE)
             (ini_signals, y, prob, send_time) = SSL_AUDIO_QUEUE.get(block=True, timeout=None)
             if prob <= 0.6:
-                print('walker will be dropped due to low confidence.')
+                # print(f'walker will be dropped due to low confidence ({round(prob, 3)}).')
                 continue
             if time.time() - send_time >= 1:
                 print('walker will be dropped due to high latency.')

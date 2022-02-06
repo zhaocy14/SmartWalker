@@ -39,7 +39,7 @@ class WalkerClient(CommunicationPeer):
         # self.send_socket.connect("tcp://127.0.0.1:%d" % self.send_port)
         self.send_socket.connect("tcp://smartwalker.cs.hku.hk:%d" % self.send_port)
         
-        self.recv_port = 8008
+        self.recv_port = 8009
         # self.recv_port = 6015
         self.recv_topic = 'WalkerServer Sends...'
         self.recv_socket = context.socket(zmq.SUB)
@@ -83,11 +83,12 @@ class WalkerClient(CommunicationPeer):
                         data = msgpack.loads(by_message, object_hook=msgnp.decode, use_list=False, raw=True)
                         self.subtopic_buffer_dict[subtopic_key] = \
                             data  # will rewrite the data even if the last data is not used.
+                        print('Receive message:', str(by_message))  # TODO: for debugging
                         break
                     else:
                         continue
                 if subtopic_key == KWS_COMMUNICATION_TOPIC:
-                    return self.subtopic_buffer_dict[subtopic_key]
+                    return self.subtopic_buffer_dict[KWS_COMMUNICATION_TOPIC]
         
         elif subtopic == WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC:
             data = self.subtopic_buffer_dict[WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC]
