@@ -23,8 +23,8 @@ from Communication.Cpp_command import CppCommand
 import multiprocessing  # Event
 from multiprocessing import Process, Value, Pipe, Queue, Event
 from Communication.Cpp_command import CppCommand
-from SoundSourceLocalization.SSL_Settings import *
-from SoundSourceLocalization.client_ssl_loop_multiThread import Voice_Process
+# from SoundSourceLocalization.SSL_Settings import *
+# from SoundSourceLocalization.client_ssl_loop_multiThread import Voice_Process
 
 class VoiceMenu(object):
     def __init__(self):

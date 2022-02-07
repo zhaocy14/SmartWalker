@@ -98,7 +98,7 @@ class FFL(object):
         self.thread_CD = threading.Thread(target=self.CD.control_part, args=())
         self.thread_Infrared = threading.Thread(target=self.Infrared.read_data, args=())
         self.thread_Softskin = threading.Thread(target=self.Softskin.read_and_record, args=())
-        self.thread_main = threading.Thread(target=self.main_FFL, args=(True,False))
+        self.thread_main = threading.Thread(target=self.main_FFL, args=(False,False))
 
         # thread event
         self.FFLevent = threading.Event()
@@ -210,7 +210,7 @@ class FFL(object):
 
 
 
-    def main_FFL(self, show: bool = True, demo:bool = False):
+    def main_FFL(self, show: bool = False, demo:bool = False):
         # # first make sure the CD is stopped
         # self.updateDriver(Speed=0,Omega=0,Radius=0)
         while True:
