@@ -52,27 +52,27 @@ class lidar(object):
         super().__init__()
         self.port_name = detect_serials(description="CP2102 USB")
         if not is_zmq:
-            self.rplidar = rplidar.RPLidar(self.port_name)
+            self.lidar_0 = rplidar.RPLidar(self.port_name)
         else:
-            self.rplidar = []
+            self.lidar_0 = []
         self.scan_data_list = []
 
     def rplidar_scan_procedure(self,is_show:bool=False):
         # present_time = time.time()
         while True:
-            try:
-                info = self.rplidar.get_info()
-                health = self.rplidar.get_health()
+            # try:
+                info = self.lidar_0.get_info()
+                health = self.lidar_0.get_health()
                 print(info)
                 print(health)
-                for i, scan in enumerate(self.iter_scans(max_buf_meas=5000)):
+                for i, scan in enumerate(self.lidar_0.iter_scans(max_buf_meas=5000)):
                     self.scan_data_list = scan
                     if is_show:
                         print(self.scan_data_list)
-            except BaseException as be:
-                self.clean_input()
-                # self.stop()
-                # self.stop_motor()
+            # except BaseException as be:
+            #     self.lidar_0.clean_input()
+                # self.lidar_0.stop()
+                # self.lidar_0.stop_motor()
 
     def zmq_scan(self,is_show:bool=False):
         while True:
@@ -83,5 +83,5 @@ class lidar(object):
 
 if __name__ == "__main__":
     lidar_instance = lidar()
-    thread_lidar_scan = threading.Thread(target=lidar_instance.scan_procedure,args=())
-    thread_lidar_scan.start()
+    lidar_instance.rplidar_scan_procedure(True)
+
