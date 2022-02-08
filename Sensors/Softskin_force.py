@@ -85,7 +85,9 @@ class SoftSkin(object):
     def read_data(self, is_shown=1):
         try:
             while True:
-                data = self.serial.read(20)
+                data = self.serial.read(20).hex()
+                data = data.encode("utf-8")
+                print(data)
 
         except BaseException as be:
             print("Data Error:", be)
