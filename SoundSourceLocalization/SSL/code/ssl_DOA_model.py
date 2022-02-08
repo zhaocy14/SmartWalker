@@ -32,6 +32,8 @@ class DOA(object):
         cls_dir = os.path.join(md_dir, 'classifier', 'ckpt')
         feature_extractor = tf.keras.models.load_model(fe_dir)
         classifier = tf.keras.models.load_model(cls_dir)
+        feature_extractor.compile()
+        classifier.compile()
         return feature_extractor, classifier
     
     def extract_gcc_phat_4_pair(self, audio_pair):

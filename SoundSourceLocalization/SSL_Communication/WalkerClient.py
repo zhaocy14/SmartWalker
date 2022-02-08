@@ -83,7 +83,7 @@ class WalkerClient(CommunicationPeer):
                         data = msgpack.loads(by_message, object_hook=msgnp.decode, use_list=False, raw=True)
                         self.subtopic_buffer_dict[subtopic_key] = \
                             data  # will rewrite the data even if the last data is not used.
-                        print('Receive message:', str(by_message))  # TODO: for debugging
+                        # print('Receive message:', str(by_message))  # TODO: for debugging
                         break
                     else:
                         continue
