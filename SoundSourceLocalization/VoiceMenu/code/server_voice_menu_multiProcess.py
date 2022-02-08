@@ -17,6 +17,7 @@ sys.path.extend([CRT_DIR, F_PATH, FF_PATH, FFF_PATH, ])
 
 import time
 import json
+import requests
 import numpy as np
 import threading
 import ctypes
@@ -175,6 +176,15 @@ class KeyWordSpotting(object):
                 save_dir = os.path.join('./', str(time.strftime("%Y%m%d-%H%M%S")))
                 audiolib.save_multi_channel_audio(audio=audio, fs=16000, des_dir=save_dir, norm=False, )
     
+    def send_help_request(self, prob):
+        url = 'http://smartwalker.cs.hku.hk/smartwalker-backend/api/v1/notification/help'
+        s = json.dumps({
+            'from'       : 'SW000001',
+            'to'         : 'smartwalker-demo-user',
+            'probability': prob,
+        })
+        requests.post(url, data=s)
+    
     def run(self, walker_server, AUDIO_QUEUE, AUDIO_QUEUE_CLEAR, SSL_AUDIO_QUEUE, ):
         print('-' * 20, 'KWS is running', '-' * 20)
         if not self.use_stream:
@@ -212,6 +222,9 @@ class KeyWordSpotting(object):
                     # print(f'KWS: walker_name (\'{self.walker_name}\') is detected.')
                     # SSL_AUDIO = (audio, y, prob)  # （音频，文本，概率）
                     # SSL_AUDIO_UPDATE = True
+                elif y == 'help':  # send help request
+                    self.send_help_request(prob=prob)
+        
         else:
             assert False, 'Streaming model has not been tested'
             # local_audio_frames = deque(maxlen=self.window_stride_ms)

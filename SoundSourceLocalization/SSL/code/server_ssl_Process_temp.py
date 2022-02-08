@@ -348,23 +348,6 @@ class SSL(object):
         if description is not None:
             print('-' * 20, str(description), '-' * 20)
     
-    def receive_preprocess_audio(self, SSL_AUDIO_QUEUE, last_ssl_time):
-        # ini_signals = self.get_audio_from_pipe(RECV_PIPE)
-        (ini_signals, y, prob, send_time) = SSL_AUDIO_QUEUE.get(block=True, timeout=None)
-        if prob <= 0.6:
-            # print(f'walker will be dropped due to low confidence ({round(prob, 3)}).')
-            return None, send_time
-        if time.time() - send_time >= 1.:
-            print('walker will be dropped due to high latency.')
-            return None, send_time
-        if (last_ssl_time is not None) and abs(send_time - last_ssl_time) < 2:
-            print('walker will be dropped due to other adjacent walkers.')
-            return None, send_time
-        
-        # preprocess initial audios (may be dropped)
-        audio = self.preprocess_ini_signal(ini_signals)  # window
-        return audio, send_time
-    
     def run(self, walker_server, SSL_AUDIO_QUEUE, ):
         # initialize models
         num_step = 0
@@ -381,16 +364,29 @@ class SSL(object):
                 time.sleep(0.1)
                 continue
             
-            # receive and preprocess initial audios (may be dropped)
-            audio, send_time = self.receive_preprocess_audio(SSL_AUDIO_QUEUE, last_ssl_time)
+            # Detecting for walker_name
+            # ini_signals = self.get_audio_from_pipe(RECV_PIPE)
+            (ini_signals, y, prob, send_time) = SSL_AUDIO_QUEUE.get(block=True, timeout=None)
+            if prob <= 0.6:
+                # print(f'walker will be dropped due to low confidence ({round(prob, 3)}).')
+                continue
+            if time.time() - send_time >= 1.:
+                print('walker will be dropped due to high latency.')
+                continue
+            if (last_ssl_time is not None) and abs(send_time - last_ssl_time) < 2:
+                print('walker will be dropped due to other adjacent walkers.')
+                continue
+            last_ssl_time = send_time
+            
+            # preprocess initial audios (may be dropped)
+            audio = self.preprocess_ini_signal(ini_signals)  # window
             if audio is None:
                 continue
-            else:
-                last_ssl_time = send_time
             
-            # localize the source
+            # not drop and will localize the source
             num_step += 1
             print('-' * 20, 'SSL step:', num_step, '-' * 20)
+            # SSL predict
             direction, _ = self.doa.predict_sample(audio=audio, invalid_classes=None)
             print("Producing action ...\n", 'Direction', direction)
             walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
@@ -398,7 +394,6 @@ class SSL(object):
     def run_D3QN(self, walker_server, SSL_AUDIO_QUEUE, ):
         from SoundSourceLocalization.SSL.code.SSL_RL.agent_d3qn import DQNAgent
         
-        # initialize an agent
         D3QN_config = {
             'AGENT_CLASS'         : 'D3QN',
             'agent_learn'         : True,
@@ -431,80 +426,55 @@ class SSL(object):
             'based_on_base_model' : True,
             'd3qn_model_name'     : 'ResCNN',
         }
-        agent = DQNAgent(num_action=self.num_action, **D3QN_config)
+        self.agent = DQNAgent(num_action=self.num_action, **D3QN_config)
         
-        # ----------------------------------- running RL ----------------------------------------- #
-        # initialize parameters
-        Event_Wait = False  # control the running state of SSL # TODO: for debugging
         total_step = 0
-        episode_idx = 0
-        last_ssl_time = None  # be used for dropping expired walker audio
+        episode_reward = []
         while True:
             # start an episode
-            temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
-            if temp_wait is not None:
-                Event_Wait = temp_wait
-                self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
-                                 description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
-            if Event_Wait:
-                time.sleep(0.1)
-                continue
             
             # run an episode
+            
+            # end an episode
+            
+            e_reward = []
+            experience_ls = []
+            state, done = self.env.reset()
             num_step = 0
-            # state, action, reward, state_, done = None, None, None, None, None
-            states, actions, rewards, states_, dones = [], [], [], [], []
-            while True:
-                # determine if this episode ends
-                temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
-                if temp_wait is not None:
-                    Event_Wait = temp_wait
-                    self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
-                                     description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
-                if Event_Wait:
-                    break
-                
-                # receive state
-                audio, send_time = self.receive_preprocess_audio(SSL_AUDIO_QUEUE, last_ssl_time)
-                if audio is None:
-                    continue
-                else:
-                    last_ssl_time = send_time
-                
-                # act
+            exp_pro = None
+            while not done:
                 num_step += 1
                 total_step += 1
-                print('-' * 20, 'SSL step(episode/total):', num_step, '/', total_step, '-' * 20)
-                direction, _ = agent.act(audio, decay_step=total_step)
-                print("Producing action ...\n", 'Direction', direction)
-                walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+                action, exp_pro = self.agent.act(state, decay_step=total_step)
+                state_, reward, done, info = self.env.step(action)
+                experience_ls.append([state, action, reward, state_, done])
+                state = state_
+                e_reward.append(reward)
                 
-                # process last step's experience
-                if len(states) == 0:
-                    states.append(audio)
-                else:
-                    states_.append(states[-1])
-                    states.append(audio)
-                actions.append(direction)
-                dones.append(False)
-                rewards.append(-0.05)
+                # if done:
+                #     print('Done! Saving model...')
+                #     self.agent.save_model()
+                
+                if num_step >= self.max_episode_steps:
+                    break
+            episode_reward.append(np.sum(e_reward))
+            if self.agent_learn:
+                self.agent.remember_batch(batch_experience=experience_ls, useDiscount=True)
+                self.agent.learn()
             
-            # end an episode # if end, improve based on the rules
-            if len(states) > 0:
-                states_.append(None)
-                dones[-1] = True
-                rewards[-1] = 1.
-                experience_ls = list(zip([states, actions, rewards, states_, dones]))
-                agent.remember_batch(batch_experience=experience_ls, useDiscount=True)
-                episode_idx += 1
-                print('episode_idx:', episode_idx, '\t', 'steps:', num_step, '\t', 'done:', dones[-1], '\t', )
-            
-            if D3QN_config['agent_learn']:
-                agent.learn()
-            if episode_idx % D3QN_config['num_update_episode'] == 0:
-                agent.update_target_model()
-                # self.plot_and_save_rewards(episode_rewards)
-            # agent.save()
+            print('episode:', episode_idx, '\t',
+                  'done:', done, '\t',
+                  'steps:', num_step, '\t',
+                  'crt_reward:', np.around(episode_reward[-1], 3), '\t',
+                  f'avg_reward_{self.num_smooth_reward}:',
+                  np.around(
+                      np.mean(episode_reward[-self.num_smooth_reward if episode_idx >= self.num_smooth_reward else 0:]),
+                      2), '\t',
+                  'exp_pro:', exp_pro)
+            if (episode_idx + 1) % self.num_update_episode == 0:
+                self.agent.update_target_model()
+                self.plot_and_save_rewards(episode_reward)
+        self.plot_and_save_rewards(episode_reward)
 
 
 class SSL_Process(object):
@@ -516,8 +486,8 @@ class SSL_Process(object):
     
     def run(self, walker_server, SSL_AUDIO_QUEUE, ):
         ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, isDebug=self.isDebug, )
-        ssl.run(walker_server, SSL_AUDIO_QUEUE, )
-        # ssl.run_D3QN(walker_server, SSL_AUDIO_QUEUE, )
+        # ssl.run(walker_server, SSL_AUDIO_QUEUE, )
+        ssl.run_D3QN(walker_server, SSL_AUDIO_QUEUE, )
 
 
 if __name__ == '__main__':
