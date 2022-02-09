@@ -10,7 +10,7 @@ print(sys.path)
 """PORT Location or description"""
 CAMERA_LOCATION = "3.2-1"
 IMU_LOCATION = "3.2-1"
-STM32_LOCATION = "3.2.3"
+STM32_SERIAL_NUM = "0669"
 LIDAR_DISCRIPTION = "CP2102 USB"
 
 #   Speaker USB port

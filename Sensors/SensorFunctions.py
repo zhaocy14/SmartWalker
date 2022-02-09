@@ -1,6 +1,7 @@
 import serial
 import serial.tools.list_ports
 
+
 # for checksum in sensor information transmission
 def char_checksum(data, byteorder='little'):
     '''
@@ -25,6 +26,7 @@ def char_checksum(data, byteorder='little'):
         # print(checksum)
 
     return checksum
+
 
 def uchar_checksum(data, byteorder='little'):
     '''
@@ -55,8 +57,7 @@ def print_serial(port):
     print()
 
 
-
-def detect_serials(port_key:str, sensor_name:str):
+def detect_serials(port_key: str, sensor_name: str):
     """
     detect and find the port
     return the port to open it
@@ -73,7 +74,11 @@ def detect_serials(port_key:str, sensor_name:str):
             port_path = port.device
             print_serial(port)
             return port_path, port_list
+        elif port.serial_number.__contains__(port_key):
+            port_list = port.description
+            port_path = port.device
+            print_serial(port)
+            return port_path, port_list
         else:
-            print("Cannot find the device: %s"%sensor_name)
+            print("Cannot find the device: %s" % sensor_name)
     return None, None
-
