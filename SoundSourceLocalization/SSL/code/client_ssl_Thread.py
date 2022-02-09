@@ -52,7 +52,7 @@ class SSL(object):
             
             ### 接入Owen的模块，传入aim_loca
             if self.useCD:
-                direction = direction[0] * 45
+                direction = direction * 45
                 SSLturning(control_driver, direction)
                 control_driver.speed = STEP_SIZE / FORWARD_SECONDS
                 control_driver.radius = 0

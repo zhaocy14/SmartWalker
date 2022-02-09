@@ -189,9 +189,9 @@ if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
     
-    MappingMicro = True
-    useCD = False
-    left_right = 0
+    MappingMicro = False
+    useCD = True
+    left_right = 1
     SSL_Event = multiprocessing.Event()
     SSL_Event.set()  # TODO: for debugging
     VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)
