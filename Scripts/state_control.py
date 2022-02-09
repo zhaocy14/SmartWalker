@@ -83,28 +83,14 @@ class StateControl():
                         self.set_charging(util.strtobool(args[1]))
                         msg = 'success'
                 self.socket.send_string(msg)
-        # poller = zmq.Poller()
-        # # Create socket to receive command
-        # state_req = self.context.socket(zmq.REQ)
-
-        # poller.register(state_req, zmq.POLLIN)
-        # while True:
-        #     socks = dict(poller.poll())
-        #     if state_req in socks and socks[state_req] == zmq.POLLIN:
-        #         recv_msg = state_req.recv_string()
-        #         print('receive', recv_msg)
-        #         if 'state_control.get_walker_state' in recv_msg:
-        #             msg = self.current_state().value
-        #             self.socket.send_string(msg)
-
-        #         elif 'state_control.set_walker_state' in recv_msg:
-        #             args = recv_msg.split("::")
-        #             msg = 'fail'
-        #             if len(args) > 1:
-        #                 if WalkerState.getByValue(args[1]):
-        #                     self.set_walker_state(WalkerState.getByValue(args[1]))
-        #                     msg = 'success'
-        #             self.socket.send_string(msg)
+            elif 'state_control.can_i_run' in recv_msg:
+                args = recv_msg.split("::")
+                msg = 'fail'
+                if len(args) > 1:
+                    if WalkerState.getByValue(args[1]) and self.can_i_run(args[1]):
+                        self.set_walker_state(WalkerState.getByValue(args[1]))
+                        msg = 'success'
+                self.socket.send_string(msg)
 
     def get_walker_state(self):
         """Speical handling for IDLE state: check charging status"""
@@ -158,11 +144,15 @@ class StateControl():
         return True
 
     # Todo (Owen): Start the walker program
-    def start_walker_program():
+    def start_walker_program(self):
         return True
 
     # Todo (Owen): Check walker in power station
-    def stop_walker_program():
+    def stop_walker_program(self):
+        return True
+    
+    # Todo (Owen): Determine whether the process can run
+    def can_i_run(self, state):
         return True
 
 
