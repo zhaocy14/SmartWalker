@@ -7,72 +7,37 @@ import sys
 import time
 import matplotlib.pyplot as plt
 import rplidar
-
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-sys.path.append(father_path)
-data_path = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".." +
-    os.path.sep + "data")
-
-
-def print_serial(port):
-    print("---------------[ %s ]---------------" % port.name)
-    print("Path: %s" % port.device)
-    print("Descript: %s" % port.description)
-    print("HWID: %s" % port.hwid)
-    if not None == port.manufacturer:
-        print("Manufacture: %s" % port.manufacturer)
-    if not None == port.product:
-        print("Product: %s" % port.product)
-    if not None == port.interface:
-        print("Interface: %s" % port.interface)
-    if not None == port.vid:
-        print("Vid:",port.vid)
-    if not None == port.pid:
-        print("Pid:",port.pid)
-    print()
-
-
-def detect_serials(description="target device", vid=0x10c4, pid=0xea60):
-    ports = serial.tools.list_ports.comports()
-    for port in ports:
-        print_serial(port)
-        if port.description.__contains__(description):
-            port_path = port.device
-            return port_path
-        else:
-            print("Cannot find the target device: %s" % description)
-    return None
+from Sensors.SensorConfig import *
+from Sensors.SensorFunctions import *
 
 
 class lidar(object):
 
     def __init__(self,is_zmq:bool=False):
         super().__init__()
-        self.port_name = detect_serials(description="CP2102 USB")
+        self.port_name = detect_serials(port_key=LIDAR_DISCRIPTION, sensor_name="LiDAR")
         if not is_zmq:
-            self.rplidar = rplidar.RPLidar(self.port_name)
+            self.python_lidar = rplidar.RPLidar(self.port_name)
         else:
-            self.rplidar = []
+            self.python_lidar = []
         self.scan_data_list = []
 
     def rplidar_scan_procedure(self,is_show:bool=False):
         # present_time = time.time()
         while True:
-            try:
-                info = self.rplidar.get_info()
-                health = self.rplidar.get_health()
+            # try:
+                info = self.python_lidar.get_info()
+                health = self.python_lidar.get_health()
                 print(info)
                 print(health)
-                for i, scan in enumerate(self.iter_scans(max_buf_meas=5000)):
+                for i, scan in enumerate(self.python_lidar.iter_scans(max_buf_meas=5000)):
                     self.scan_data_list = scan
                     if is_show:
                         print(self.scan_data_list)
-            except BaseException as be:
-                self.clean_input()
-                # self.stop()
-                # self.stop_motor()
+            # except BaseException as be:
+            #     self.lidar_0.clean_input()
+                # self.lidar_0.stop()
+                # self.lidar_0.stop_motor()
 
     def zmq_scan(self,is_show:bool=False):
         while True:
@@ -83,5 +48,5 @@ class lidar(object):
 
 if __name__ == "__main__":
     lidar_instance = lidar()
-    thread_lidar_scan = threading.Thread(target=lidar_instance.scan_procedure,args=())
-    thread_lidar_scan.start()
+    lidar_instance.rplidar_scan_procedure(True)
+

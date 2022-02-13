@@ -57,7 +57,7 @@ class SoftSkin(object):
         self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 
         # sensor number
-        self.sensor_num = 7
+        self.sensor_num = 8
 
         # data list
         self.data_list = []
@@ -76,19 +76,49 @@ class SoftSkin(object):
         self.detect_length = 10
         self.detect_buffer = np.zeros((self.detect_length, self.sensor_num))
 
-
         self.skin_unlock_event = threading.Event()
         self.skin_unlock_event.clear()
 
+        self.convert_table = np.zeros((2, 14))
+        self.initialize_table()
+
         # self.build_base_line_data()
+
+    def initialize_table(self):
+        pressure = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        AD = [51, 1912, 2724, 3011, 3163, 3340, 3455, 3522, 3572, 3608, 3633, 3656, 3680, 3697]
+        self.convert_table[0,:] = np.array(AD)
+        self.convert_table[1,:] = np.array(pressure)
+
+    def convert_to_force(self):
+        for i in range(self.sensor_num):
+            for j in range(self.convert_table.shape[1]):
+                if self.pressure_data[i] >= self.convert_table[0, j]:
+                    if j < self.convert_table.shape[1]-1:
+                        ratio = (self.convert_table[1, j+1] - self.convert_table[1, j]) /\
+                                (self.convert_table[0, j+1] - self.convert_table[0, j])
+                    else:
+                        ratio = (self.convert_table[1, j] - self.convert_table[1, j - 1]) / \
+                                (self.convert_table[0, j] - self.convert_table[0, j - 1])
+                    self.pressure_data[i] = ratio*(self.pressure_data[i] - self.convert_table[0, j]) + self.convert_table[1, j]
+                    break
 
     def read_data(self, is_shown=1):
         try:
             while True:
-                data = self.serial.read(20)
-
+                data = self.serial.read(20).hex()
+                data = data.encode("utf-8")
+                print(data)
+                print(data.hex())
+                for i in range(3, self.sensor_num*2 + 3, 2):
+                    self.data_list.append(int.from_bytes(data[i:i + 2], byteorder='big', signed=False))
+                self.pressure_data = np.array(self.data_list)
+                self.data_list = []
+                print(self.pressure_data)
         except BaseException as be:
             print("Data Error:", be)
+
+
 
     def read_and_record(self, record=False, show=False, plot=False, plot_num=30):
         file_path = data_path + os.path.sep + "Softskin.txt"
@@ -117,12 +147,6 @@ class SoftSkin(object):
 
             except BaseException as be:
                 print("Data Error:", be)
-
-    def update_from_STM32(self, STM32_data: np.ndarray):
-        try:
-            self.raw_data = STM32_data
-        except:
-            pass
 
     def unlock(self):
         while True:

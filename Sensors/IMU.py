@@ -16,7 +16,7 @@ class IMU(object):
     def __init__(self, baud_rate=115200,name:str=""):
         """serial information"""
         self.baud_rate = baud_rate
-        self.port_name, self.port_list = self.detect_serials("USB-SERIAL CH340") #USB-SERIAL CH340   1-3.3
+        self.port_name, self.port_list = self.detect_serials("3-2.2.2") #USB-SERIAL CH340   1-3.3
         print(self.port_name)
         self.serial = serial.Serial(self.port_name, self.baud_rate, timeout=None)
 
@@ -60,7 +60,7 @@ class IMU(object):
         port_list = []
         for port in ports:
             self.print_serial(port)
-            if port.description.__contains__(description):
+            if port.location.__contains__(description):
                 port_list = port.description
                 port_path = port.device
                 self.print_serial(port)

@@ -1,28 +1,31 @@
 import serial
-import serial.tools.list_ports
-import os,sys
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-sys.path.append(father_path)
-data_path = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
-    os.path.sep + "data")
-
-from Sensors import softskin, Infrared_Sensor
-from Driver import ControlOdometryDriver
+# from Sensors import softskin, Infrared_Sensor
+# from Driver import ControlOdometryDriver
+from Sensors.SensorFunctions import *
+from Sensors.SensorConfig import *
 import Communication.State_client as csc
 from global_variables import WalkerState
 
-class STM32_communication(object):
+def singleton(cls, *args, **kw):
+    instances = {}
 
-    def __init__(self, skin:softskin.SoftSkin, Infrared:Infrared_Sensor.Infrared_Sensor,
-                 Driver:ControlOdometryDriver.ControlDriver,serial_number:str='0669', baudrate:int=115200):
+    def _singleton():
+        if cls not in instances:
+            instances[cls] = cls(*args, **kw)
+        return instances[cls]
 
-        self.port_name,self.port_list = self.detect_serials(number=serial_number)
-        self.serial = serial.Serial(port=self.port_name,baudrate=baudrate)
+    return _singleton
+
+
+@singleton
+class STM32Sensors():
+    def __init__(self,serial_number: str = STM32_SERIAL_NUM, baudrate: int = 115200):
+        self.port_name, self.port_list = detect_serials(port_key=serial_number, sensor_name="STM32")
+        self.serial = serial.Serial(port=self.port_name, baudrate=baudrate)
         # sensor
-        self.skin = skin
-        self.Infrared = Infrared
+        # TODO: how to update data for these sensors
+        # self.skin = skin
+        # self.Infrared = Infrared
         # data
         self.softskin_data = []
         self.infrared_sensor_data = []
@@ -34,51 +37,6 @@ class STM32_communication(object):
         # camera no use
         self.camera_data = []
         self.state_client = csc.StateClient.get_instance()
-
-    """Print the port information"""
-    def print_serial(self, port):
-        print("---------------[ %s ]---------------" % port.name)
-        print("Path: %s" % port.device)
-        print("Descript: %s" % port.description)
-        print("HWID: %s" % port.hwid)
-        if not None == port.manufacturer:
-            print("Manufacture: %s" % port.manufacturer)
-        if not None == port.product:
-            print("Product: %s" % port.product)
-        if not None == port.interface:
-            print("Interface: %s" % port.interface)
-        print()
-
-    """list all the port"""
-    def detect_serials(self, number, vid=0x10c4, pid=0xea60):
-        ports = serial.tools.list_ports.comports()
-        port_cnt = 0
-        port_list = []
-        for port in ports:
-            self.print_serial(port)
-            if port.serial_number.__contains__(number):
-                port_list = port.description
-                port_path = port.device
-                return port_path, port_list
-            else:
-                print("Cannot find the device: IR Camera")
-
-    def GetCameraData(self):
-        count = 1
-        self.serial.write(b'c')
-        buf = self.serial.read(1)
-        for count in range(1, 100):
-            if buf == b'c':
-                break
-            else:
-                count = count + 1
-                buf = self.serial.read(1)
-        if count >= 100:
-            print("Communication timeout, please retry")
-        else:
-            data = self.serial.read(3072)
-            self.camera_data = data.hex()
-            return data
 
     def GetSoftskinData(self):
         count = 1
@@ -114,12 +72,12 @@ class STM32_communication(object):
             self.infrared_sensor_data = data.hex()
             return data
 
-    def UpdateVehicleSpeed(self, linearVelocity:float, angulrVelocity:float, distanceToCenter:int):
+    def UpdateDriver(self, linearVelocity: float, angularVelocity: float, distanceToCenter: int):
         self.vehicle_linear_velocity = linearVelocity
-        self.vehicle_angular_velocity = angulrVelocity
+        self.vehicle_angular_velocity = angularVelocity
         self.vehicle_angular_distance = distanceToCenter
 
-    def SetVehicleSpeed(self,linearVelocity:float, angulrVelocity:float, distanceToCenter:int):
+    def SetVehicleSpeed(self):
         self.serial.write(b's')
         buf = self.serial.read(1)
         count = 1
@@ -129,9 +87,9 @@ class STM32_communication(object):
             else:
                 count = count + 1
                 buf = self.serial.read(1)
-        para1 = str(linearVelocity)
-        para2 = str(angulrVelocity)
-        para3 = str(distanceToCenter)
+        para1 = str(self.vehicle_linear_velocity)
+        para2 = str(self.vehicle_angular_velocity)
+        para3 = str(self.vehicle_angular_distance)
         dataToSend = para1 + ' ' + para2 + ' ' + para3 + '\n'
         if count >= 100:
             print("Coummunication timeout, please retry")
@@ -156,28 +114,48 @@ class STM32_communication(object):
             data = self.serial.read(32)
             self.infrared_sensor_data = data.hex()
             return data
-        
+
     def GetChargingState(self):
         # Todo: Get the charging state
         is_charging = False
         self.state_client.set_charging(is_charging)
-        
+
     def GetPowerLevel(self):
         # Todo: Get the power level
         power_level = 75
         self.state_client.set_power_level(power_level)
 
-    def main_communicate(self,):
+    def STM_loop(self):
         try:
             while True:
-                self.GetSoftskinData()
-                self.skin.update_from_STM32(self.softskin_data)
-                self.GetInfraredData()
-                self.Infrared.update_from_STM32(self.infrared_sensor_data)
+                # TODO: change every data update
+                # self.GetSoftskinData()
+                # self.skin.update_from_STM32(self.softskin_data)
+                # self.GetInfraredData()
+                # self.Infrared.update_from_STM32(self.infrared_sensor_data)
                 self.SetVehicleSpeed()
         except:
             print("STM32 Communication Error!")
             pass
 
-if __name__ == "__main":
-    STM32 = STM32_communication()
+
+if __name__ == "__main__":
+    import threading
+    import time
+    STM32_instance = STM32Sensors()
+    STM32_thread = threading.Thread(target=STM32_instance.STM_loop, args=())
+    STM32_thread.start()
+    for i in range(2):
+        # linearVelocity: cm/s
+        # angularVelocity: rad/s
+        # distanceToCenter: cm      +:left -:right
+        STM32_instance.UpdateDriver(linearVelocity=10,angularVelocity=0,distanceToCenter=0)
+        time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=-10,angularVelocity=0,distanceToCenter=0)
+        time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0.5,distanceToCenter=50)
+        time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0.5,distanceToCenter=-50)
+        time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0,distanceToCenter=0)
+

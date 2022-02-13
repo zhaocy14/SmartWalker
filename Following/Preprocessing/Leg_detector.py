@@ -13,6 +13,7 @@ import cv2
 import threading
 from PIL import Image
 from Sensors import LiDAR
+# import rplidar
 import time
 from sklearn.cluster import KMeans
 from Communication.Modules.Receive import ReceiveZMQ
@@ -262,6 +263,7 @@ class Leg_detector(object):
 
 
 if __name__ == "__main__":
-    LD = Leg_detector(is_zmq=True)
-    LD.zmq_scan(show=True)
-    # LD.scan_procedure(show=True, is_record=False)
+    # LD = Leg_detector(is_zmq=True)
+    # LD.zmq_scan(show=True)
+    LD = Leg_detector(is_zmq=False)
+    LD.scan_procedure(show=True, is_record=False)
