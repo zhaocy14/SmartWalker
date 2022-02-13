@@ -1,14 +1,24 @@
 import serial
-from Sensors import softskin, Infrared_Sensor
+# from Sensors import softskin, Infrared_Sensor
+# from Driver import ControlOdometryDriver
 from Sensors.SensorFunctions import *
 from Sensors.SensorConfig import *
-from Driver import ControlOdometryDriver
 import Communication.State_client as csc
 from global_variables import WalkerState
 
+def singleton(cls, *args, **kw):
+    instances = {}
 
-class STM32_communication(object):
+    def _singleton():
+        if cls not in instances:
+            instances[cls] = cls(*args, **kw)
+        return instances[cls]
 
+    return _singleton
+
+
+@singleton
+class STM32Sensors():
     def __init__(self,serial_number: str = STM32_SERIAL_NUM, baudrate: int = 115200):
         self.port_name, self.port_list = detect_serials(port_key=serial_number, sensor_name="STM32")
         self.serial = serial.Serial(port=self.port_name, baudrate=baudrate)
@@ -27,24 +37,6 @@ class STM32_communication(object):
         # camera no use
         self.camera_data = []
         self.state_client = csc.StateClient.get_instance()
-
-    # def GetCameraData(self):
-    #     # will not use anymore
-    #     count = 1
-    #     self.serial.write(b'c')
-    #     buf = self.serial.read(1)
-    #     for count in range(1, 100):
-    #         if buf == b'c':
-    #             break
-    #         else:
-    #             count = count + 1
-    #             buf = self.serial.read(1)
-    #     if count >= 100:
-    #         print("Communication timeout, please retry")
-    #     else:
-    #         data = self.serial.read(3072)
-    #         self.camera_data = data.hex()
-    #         return data
 
     def GetSoftskinData(self):
         count = 1
@@ -80,12 +72,12 @@ class STM32_communication(object):
             self.infrared_sensor_data = data.hex()
             return data
 
-    def UpdateVehicleSpeed(self, linearVelocity: float, angulrVelocity: float, distanceToCenter: int):
+    def UpdateDriver(self, linearVelocity: float, angularVelocity: float, distanceToCenter: int):
         self.vehicle_linear_velocity = linearVelocity
-        self.vehicle_angular_velocity = angulrVelocity
+        self.vehicle_angular_velocity = angularVelocity
         self.vehicle_angular_distance = distanceToCenter
 
-    def SetVehicleSpeed(self, linearVelocity: float, angulrVelocity: float, distanceToCenter: float):
+    def SetVehicleSpeed(self):
         self.serial.write(b's')
         buf = self.serial.read(1)
         count = 1
@@ -95,9 +87,9 @@ class STM32_communication(object):
             else:
                 count = count + 1
                 buf = self.serial.read(1)
-        para1 = str(linearVelocity)
-        para2 = str(angulrVelocity)
-        para3 = str(distanceToCenter)
+        para1 = str(self.vehicle_linear_velocity)
+        para2 = str(self.vehicle_angular_velocity)
+        para3 = str(self.vehicle_angular_distance)
         dataToSend = para1 + ' ' + para2 + ' ' + para3 + '\n'
         if count >= 100:
             print("Coummunication timeout, please retry")
@@ -133,7 +125,7 @@ class STM32_communication(object):
         power_level = 75
         self.state_client.set_power_level(power_level)
 
-    def main_communicate(self):
+    def STM_loop(self):
         try:
             while True:
                 # TODO: change every data update
@@ -148,28 +140,22 @@ class STM32_communication(object):
 
 
 if __name__ == "__main__":
-
     import threading
     import time
+    STM32_instance = STM32Sensors()
+    STM32_thread = threading.Thread(target=STM32_instance.STM_loop, args=())
+    STM32_thread.start()
+    for i in range(2):
+        # linearVelocity: cm/s
+        # angularVelocity: rad/s
+        # distanceToCenter: cm      +:left -:right
+        STM32_instance.UpdateDriver(linearVelocity=10,angularVelocity=0,distanceToCenter=0)
+        time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=-10,angularVelocity=0,distanceToCenter=0)
+        time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0.5,distanceToCenter=50)
+        time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0.5,distanceToCenter=-50)
+        time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0,distanceToCenter=0)
 
-    STM32_instance = STM32_communication()
-    thread_STM = threading.Thread(target=STM32_instance.main_communicate, args=())
-    thread_STM.start()
-
-    STM32_instance.SetVehicleSpeed(linearVelocity=0.1,angulrVelocity=0,distanceToCenter=0)
-    time.sleep(3)
-    STM32_instance.SetVehicleSpeed(linearVelocity=0,angulrVelocity=0,distanceToCenter=0)
-    time.sleep(1)
-    STM32_instance.SetVehicleSpeed(linearVelocity=0,angulrVelocity=0.3,distanceToCenter=0)
-    time.sleep(3)
-    STM32_instance.SetVehicleSpeed(linearVelocity=0,angulrVelocity=0,distanceToCenter=0)
-    time.sleep(1)
-    STM32_instance.SetVehicleSpeed(linearVelocity=0,angulrVelocity=-0.3,distanceToCenter=0)
-    time.sleep(3)
-    STM32_instance.SetVehicleSpeed(linearVelocity=0,angulrVelocity=0,distanceToCenter=0)
-    time.sleep(1)
-    STM32_instance.SetVehicleSpeed(linearVelocity=0,angulrVelocity=0.2,distanceToCenter=50)
-    time.sleep(3)
-    STM32_instance.SetVehicleSpeed(linearVelocity=-0.4,angulrVelocity=0,distanceToCenter=0)
-    time.sleep(2)
-    STM32_instance.SetVehicleSpeed(linearVelocity=0, angulrVelocity=0, distanceToCenter=0)

@@ -1,46 +1,27 @@
-import numpy as np
+import serial
+from Sensors.SensorFunctions import *
 
-a = b'\x02\x0F'
-b = b'\x02\x01'
-c = b'\x00'
+def singleton(cls, *args, **kw):
+    instances = {}
 
-def char_checksum(data, byteorder='little'):
-    '''
-    char_checksum 按字节计算校验和。每个字节被翻译为带符号整数
-    @param data: 字节串
-    @param byteorder: 大/小端
-    '''
-    length = len(data)
-    checksum = 0
-    for i in range(0, length):
-        x = int.from_bytes(data[i:i + 1], byteorder, signed=True)
-        if x > 0 and checksum > 0:
-            checksum += x
-            if checksum > 0x7F:  # 上溢出
-                checksum = (checksum & 0x7F) - 0x80  # 取补码就是对应的负数值
-        elif x < 0 and checksum < 0:
-            checksum += x
-            if checksum < -0x80:  # 下溢出
-                checksum &= 0x7F
-        else:
-            checksum += x  # 正负相加，不会溢出
-        # print(checksum)
+    def _singleton():
+        if cls not in instances:
+            instances[cls] = cls(*args, **kw)
+        return instances[cls]
 
-    return checksum
-
-def uchar_checksum(data, byteorder='little'):
-    '''
-    char_checksum 按字节计算校验和。每个字节被翻译为无符号整数
-    @param data: 字节串
-    @param byteorder: 大/小端
-    '''
-    length = len(data)
-    checksum = 0
-    for i in range(0, length):
-        checksum += int.from_bytes(data[i:i + 1], byteorder, signed=False)
-        checksum &= 0xFF  # 强制截断
-    return checksum
-
-print(uchar_checksum(a))
+    return _singleton
 
 
+@singleton
+class serial_test(object):
+
+    def __init__(self):
+        self.a = 1
+        port,_=detect_serials(port_key="USB", sensor_name="22")
+        self.ser = serial.Serial(port=port,baudrate=9600)
+
+
+a = serial_test()
+b = serial_test()
+
+print(id(a),id(b))
