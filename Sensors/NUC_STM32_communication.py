@@ -19,7 +19,7 @@ def singleton(cls, *args, **kw):
 
 @singleton
 class STM32Sensors():
-    def __init__(self,serial_number: str = STM32_SERIAL_NUM, baudrate: int = 115200):
+    def __init__(self,serial_number: str = STM32_SERIAL_NUM, baudrate: int = STM32_BAUDRATE):
         self.port_name, self.port_list = detect_serials(port_key=serial_number, sensor_name="STM32")
         self.serial = serial.Serial(port=self.port_name, baudrate=baudrate)
         # sensor
