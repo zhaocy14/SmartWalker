@@ -34,7 +34,7 @@ ACTION_SPACE = 8
 FORMAT = pyaudio.paInt16
 
 FORWARD_SECONDS = 3
-STEP_SIZE = 1  # 1
+STEP_SIZE = 0.5  # 1
 
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")

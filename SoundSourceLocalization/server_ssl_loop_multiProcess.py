@@ -9,10 +9,11 @@
 
 import os, sys
 
-module_dir = os.path.dirname(os.path.abspath(__file__))
-project_dir = os.path.dirname(module_dir)
-sys.path.extend([module_dir, project_dir])
+CRT_DIR = os.path.dirname(os.path.abspath(__file__))
+F_PATH = os.path.dirname(CRT_DIR)
+sys.path.extend([CRT_DIR, F_PATH, ])
 # print('sys.path:', sys.path)
+
 
 import time
 import numpy as np
@@ -32,18 +33,16 @@ from SoundSourceLocalization.SSL.code.server_ssl_Process import SSL_Process
 
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
-    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-    MappingMicro = False
+    os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
     isDebug = True
     
-    manager = BaseManager()
-    # 一定要在start前注册，不然就注册无效
+    manager = BaseManager()  # 一定要在start前注册，不然就注册无效
     manager.register('WalkerServer', WalkerServer)  # 第一个参数为类型id，通常和第二个参数传入的类的类名相同，直观并且便于阅读
     manager.start()
     walker_server = manager.WalkerServer()
     mv = MonitorVoice_Process(MappingMicro=False, )
     kws = KeyWordSpotting_Process(use_stream=False, )
-    ssl = SSL_Process(seg_len='256ms', doDenoise=True, isDebug=isDebug)
+    ssl = SSL_Process(seg_len='1s', doDenoise=True, isDebug=isDebug)
     # ssl = SSL_test(seg_len='256ms', doDenoise=True, isDebug=isDebug)
     
     p1 = Process(target=mv.run, args=(walker_server, SHARED_AUDIO_QUEUE, SHARED_AUDIO_QUEUE_CLEAR,))
