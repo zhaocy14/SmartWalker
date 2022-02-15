@@ -39,11 +39,12 @@ SetWifiControlPoint = "b7e9e754-1e59-42d4-810f-16ed47244b50"
 WIFI_FMT_DSCP = '2904'
 
 
-class BleManager:
+class BleManager(object):
+    tx_obj = None
+
     def __init__(self, address=None):
-        if address is None:
-            self.adpater_address = list(adapter.Adapter.available())[0].address
-        else:
+        self.adpater_address = list(adapter.Adapter.available())[0].address
+        if address is not None:
             self.adpater_address = address
     
     
@@ -65,32 +66,34 @@ class BleManager:
                                                 byteorder='little', signed=True))
 
 
-    def wificonfig_notify_value(self, characteristic):
-        """
-        Example of callback to send notifications
-
-        :param characteristic:
-        :return: boolean to indicate if timer should continue
-        """
-        # read/calculate new value.
-        new_value = self.read_value()
-        # Causes characteristic to be updated and send notification
-        characteristic.set_value(new_value)
-        # Return True to continue notifying. Return a False will stop notifications
-        # Getting the value from the characteristic of if it is notifying
-        return characteristic.is_notifying
-
-
-    def wificonfig_write_value(self, value, options):
+    def wificonfig_write_callback(self, value, options):
         if value:
             print("Received: ", bytes(value).decode('utf-8'))
-            wifi_connector = WifiConnector()
             wifi_config = json.loads(bytes(value).decode('utf-8'))
-            print("parse: ", wifi_config)
+            print("parse: ", wifi_config["ssid"])
+            wifi_connector = WifiConnector()
             result = wifi_connector.Connect(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"])
             print("connect result: ", result)
+
+            if self.tx_obj:
+                print('replying')
+                if result:
+                    self.tx_obj.set_value(b'success')
+                else:
+                    self.tx_obj.set_value(b'failure')
+                # self.tx_obj.set_value(bool(False).to_bytes(1, byteorder='little', signed=True))
+            else:
+                pass
             
-        return True
+        # return bool(True).to_bytes()
+
+
+    def wificonfig_notify_callback(self, notifying, characteristic):
+        print('notifying', notifying)
+        if notifying:
+            self.tx_obj = characteristic
+        else:
+            self.tx_obj = None
 
 
     # def notify_callback(notifying, characteristic):
@@ -112,7 +115,7 @@ class BleManager:
         # Example of the output from read_value
         print('Advertising SmartWalker BLE')
         # Create peripheral
-        ble_configurator = peripheral.Peripheral(self.adapter_address,
+        ble_configurator = peripheral.Peripheral(self.adpater_address,
                                             local_name='SmartWalker BLE Configurator')
         
         # Add service
@@ -120,10 +123,10 @@ class BleManager:
         # Add characteristic
         ble_configurator.add_characteristic(srv_id=1, chr_id=1, uuid=SetWifiControlPoint,
                                     value=[], notifying=False,
-                                    flags=['write', 'notify'],
+                                    flags=['write', 'write-without-response', 'notify'],
                                     read_callback=None,
-                                    write_callback=self.wificonfig_write_value,
-                                    notify_callback=self.wificonfig_notify_value
+                                    write_callback=self.wificonfig_write_callback,
+                                    notify_callback=self.wificonfig_notify_callback
                                     )
         # Add descriptor
         # ble_configurator.add_descriptor(srv_id=1, chr_id=1, dsc_id=1, uuid=WIFI_FMT_DSCP,
@@ -139,3 +142,4 @@ if __name__ == '__main__':
     # print(list(adapter.Adapter.available())[0].address)
     # main(list(adapter.Adapter.available())[0].address)
     ble_manager = BleManager()
+    ble_manager.start()
