@@ -16,7 +16,6 @@ def singleton(cls, *args, **kw):
 
     return _singleton
 
-
 @singleton
 class STM32Sensors():
     def __init__(self,serial_number: str = STM32_SERIAL_NUM, baudrate: int = 115200):
@@ -76,6 +75,7 @@ class STM32Sensors():
         self.vehicle_linear_velocity = linearVelocity
         self.vehicle_angular_velocity = angularVelocity
         self.vehicle_angular_distance = distanceToCenter
+        self.SetVehicleSpeed()
 
     def SetVehicleSpeed(self):
         self.serial.write(b's')
@@ -143,19 +143,19 @@ if __name__ == "__main__":
     import threading
     import time
     STM32_instance = STM32Sensors()
-    STM32_thread = threading.Thread(target=STM32_instance.STM_loop, args=())
-    STM32_thread.start()
-    for i in range(2):
+    # STM32_thread = threading.Thread(target=STM32_instance.STM_loop, args=())
+    # STM32_thread.start()
+    for i in range(1):
         # linearVelocity: cm/s
         # angularVelocity: rad/s
-        # distanceToCenter: cm      +:left -:right
+        # distanceToCenter: cm      -:left +:right
         STM32_instance.UpdateDriver(linearVelocity=10,angularVelocity=0,distanceToCenter=0)
         time.sleep(2)
-        STM32_instance.UpdateDriver(linearVelocity=-10,angularVelocity=0,distanceToCenter=0)
+        # STM32_instance.UpdateDriver(linearVelocity=-10,angularVelocity=0,distanceToCenter=0)
+        # time.sleep(2)
+        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0.2,distanceToCenter=50)
         time.sleep(2)
-        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0.5,distanceToCenter=50)
-        time.sleep(2)
-        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0.5,distanceToCenter=-50)
+        STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0.2,distanceToCenter=-50)
         time.sleep(2)
         STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0,distanceToCenter=0)
 
