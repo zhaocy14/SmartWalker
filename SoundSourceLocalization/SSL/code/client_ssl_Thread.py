@@ -73,8 +73,8 @@ class SSL_Thread(object):
     def run(self, walker_client, SHARED_SSL_EVENT):
         # cd = CD.ControlDriver(left_right=self.left_right) if self.useCD else ''
         cd = STM32.STM32Sensors() if self.useCD else ''
-        if self.useCD:
-            cd_thread = threading.Thread(target=cd.control_part, args=())
-            cd_thread.start()
+        # if self.useCD:
+        #     cd_thread = threading.Thread(target=cd.control_part, args=())
+        #     cd_thread.start()
         ssl = SSL(useCD=self.useCD, )
         ssl.run(walker_client=walker_client, control_driver=cd, SHARED_SSL_EVENT=SHARED_SSL_EVENT)
