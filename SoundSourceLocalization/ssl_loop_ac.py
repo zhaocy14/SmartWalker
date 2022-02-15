@@ -239,9 +239,6 @@ class SSL:
                     audio_energy_ratio_over_threshold(signal_mean, fs=SAMPLE_RATE,
                                                       threshold=self.seg_para['threshold'], ))
     
-    def save_continuous_True(self, ini_list, num=3):  # todo
-        pass
-    
     def drop_audio_clips(self, signal_segments, ):
         # print('Number of segments before dropping: ', len(signal_segments))
         audio_segments = []

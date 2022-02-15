@@ -31,13 +31,11 @@ from SoundSourceLocalization.SSL.code.client_ssl_Thread import SSL_Thread
 
 
 class Voice_Process(object):
-    def __init__(self, VoiceMenu_Command_Queue, SSL_Event, MappingMicro=False, isDebug=True, useCD=False,
-                 left_right=0, ):
+    def __init__(self, VoiceMenu_Command_Queue, SSL_Event, MappingMicro=False, useCD=False, left_right=0, ):
         super(Voice_Process, self).__init__()
         self.SHARED_COMMAND_QUEUE = VoiceMenu_Command_Queue
         self.SSL_Event = SSL_Event
         self.MappingMicro = MappingMicro
-        self.isDebug = isDebug
         self.useCD = useCD
         self.left_right = left_right
     
@@ -65,11 +63,10 @@ class Voice_Process(object):
         # TunnelBuilder().run()
         
         walker_client = WalkerClient()
-        mv = MonitorVoice(MappingMicro=False)
+        mv = MonitorVoice(MappingMicro=self.MappingMicro)
         kws = KeyWordSpotting()
         vm = VoiceMenu(SHARED_COMMAND_QUEUE=self.SHARED_COMMAND_QUEUE)
-        ssl = SSL_Thread(seg_len='256ms', doDenoise=True, useCD=self.useCD, isDebug=self.isDebug,
-                         left_right=self.left_right, )
+        ssl = SSL_Thread(useCD=self.useCD, left_right=self.left_right, )
         
         p1 = Thread(target=mv.run, args=(walker_client,))
         p2 = Thread(target=kws.run, args=(walker_client,))

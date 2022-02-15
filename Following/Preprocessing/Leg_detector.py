@@ -263,7 +263,7 @@ class Leg_detector(object):
 
 
 if __name__ == "__main__":
-    # LD = Leg_detector(is_zmq=True)
-    # LD.zmq_scan(show=True)
-    LD = Leg_detector(is_zmq=False)
-    LD.scan_procedure(show=True, is_record=False)
+    LD = Leg_detector(is_zmq=True)
+    LD.zmq_scan(show=True)
+    # LD = Leg_detector(is_zmq=False)
+    # LD.scan_procedure(show=True, is_record=False)
