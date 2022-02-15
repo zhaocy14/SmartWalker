@@ -55,11 +55,10 @@ class SSL(object):
             if self.useCD:
                 direction = direction * 45
                 SSLturning(control_driver, direction)
-                control_driver.speed = STEP_SIZE / FORWARD_SECONDS
-                control_driver.radius = 0
-                control_driver.omega = 0
+                speed = STEP_SIZE * 100 / FORWARD_SECONDS
+                control_driver.UpdateDriver(linearVelocity=speed, angularVelocity=0, distanceToCenter=0)
                 time.sleep(FORWARD_SECONDS)
-                control_driver.speed = 0
+                control_driver.UpdateDriver(linearVelocity=0, angularVelocity=0, distanceToCenter=0)
                 print("movement done.")
             else:
                 pass
