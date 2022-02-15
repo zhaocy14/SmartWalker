@@ -64,6 +64,9 @@ def detect_serials(port_key: str, sensor_name: str):
     """
     ports = serial.tools.list_ports.comports()
     for port in ports:
+        # print(port.serial_number)
+        # print(port.location)
+        # print(port.description)
         if port.description.__contains__(port_key):
             port_list = port.description
             port_path = port.device
@@ -74,11 +77,12 @@ def detect_serials(port_key: str, sensor_name: str):
             port_path = port.device
             print_serial(port)
             return port_path, port_list
-        elif port.serial_number.__contains__(port_key):
-            port_list = port.description
-            port_path = port.device
-            print_serial(port)
-            return port_path, port_list
+        elif port.serial_number != None:
+            if port.serial_number.__contains__(port_key):
+                port_list = port.description
+                port_path = port.device
+                print_serial(port)
+                return port_path, port_list
         else:
             print("Cannot find the device: %s" % sensor_name)
     return None, None
