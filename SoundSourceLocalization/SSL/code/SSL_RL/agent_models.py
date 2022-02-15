@@ -30,16 +30,16 @@ def FeatureExtractor(model_dir='../model/base_model/'):
     return fe
 
 
-def D3QN_Classifier(dueling=True, base_model_dir='../model/base_model/',
+def D3QN_Classifier(dueling=True, base_model_dir='../model/base_model/', loadTarget=False,
                     load_d3qn_model=False, d3qn_model_dir='../model/d3qn_model/', based_on_base_model=True):
     def __init_d3qn_model__():
         print('-' * 20, 'Initializing a new D3QN model...', '-' * 20, )
         if based_on_base_model:
             print('-' * 20, 'Based on base_model\'s classifier...', '-' * 20, )
             base_classifier = tf.keras.models.load_model(base_ckpt_dir)
-            conv, bn, reshape = base_classifier.layers
-            input = base_classifier.input
-            base_classifier = Model(inputs=input, outputs=reshape(conv(input)))
+            conv, reshape = base_classifier.layers
+            # input = base_classifier.input
+            # base_classifier = Model(inputs=input, outputs=reshape(conv(input)))
         
         else:
             print('-' * 20, 'Even the classifier is initialized randomly...', '-' * 20, )
@@ -66,8 +66,8 @@ def D3QN_Classifier(dueling=True, base_model_dir='../model/base_model/',
         else:
             output = base_classifier.output
         # outputs = tf.keras.layers.Multiply()([output, [1, 1. / 2460]])
-        outputs = Lambda(lambda x: x / 2460.)(output)
-        return Model(inputs=base_classifier.input, outputs=outputs)
+        output = Lambda(lambda x: x / 2460.)(output)
+        return Model(inputs=base_classifier.input, outputs=output)
     
     def __load_d3qn_model__():
         try:
@@ -81,14 +81,20 @@ def D3QN_Classifier(dueling=True, base_model_dir='../model/base_model/',
     
     # ------------------------------------- main procedure -------------------------------------------------#
     base_ckpt_dir = os.path.join(base_model_dir, 'classifier', 'ckpt')
-    d3qn_ckpt_dir = os.path.join(d3qn_model_dir, 'classifier', 'ckpt')
+    if loadTarget:
+        d3qn_ckpt_dir = os.path.join(d3qn_model_dir, 'classifier', 'target_ckpt')
+    else:
+        d3qn_ckpt_dir = os.path.join(d3qn_model_dir, 'classifier', 'ckpt')
     
     if load_d3qn_model:
         d3qn_model = __load_d3qn_model__()
     else:
         d3qn_model = __init_d3qn_model__()
     
-    print('-' * 20, 'd3qn_classifier', '-' * 20, )
+    if loadTarget:
+        print('-' * 20, 'd3qn_target_classifier', '-' * 20, )
+    else:
+        print('-' * 20, 'd3qn_classifier', '-' * 20, )
     d3qn_model.summary()
     
     return d3qn_model
@@ -138,8 +144,8 @@ def SAC_actor(base_model_dir='../model/base_model/',
     return sac_actor
 
 
-def SAC_critic(base_model_dir='../model/base_model/',
-               load_sac_model=False, sac_model_dir='../model/sac_model/', based_on_base_model=True):
+def SAC_critic(base_model_dir='../model/base_model/', load_sac_model=False, sac_model_dir='../model/sac_model/',
+               based_on_base_model=True, index=None, loadTarget=False):
     def __init_sac_critic__():
         print('-' * 20, 'Initializing a new SAC_critic...', '-' * 20, )
         if based_on_base_model:
@@ -157,7 +163,10 @@ def SAC_critic(base_model_dir='../model/base_model/',
     
     def __load_sac_critic__():
         try:
-            print('-' * 20, 'Loading pre-trained sac_critic...', '-' * 20, )
+            if loadTarget:
+                print('-' * 20, 'Loading pre-trained target sac_critic...', '-' * 20, )
+            else:
+                print('-' * 20, 'Loading pre-trained sac_critic...', '-' * 20, )
             return tf.keras.models.load_model(sac_ckpt_dir)
         except Exception as e:
             print('Warning:', e)
@@ -167,7 +176,16 @@ def SAC_critic(base_model_dir='../model/base_model/',
     
     # ------------------------------------- main procedure -------------------------------------------------#
     base_ckpt_dir = os.path.join(base_model_dir, 'classifier', 'ckpt')
-    sac_ckpt_dir = os.path.join(sac_model_dir, 'critic', 'ckpt')
+    if loadTarget:
+        if index is None:
+            sac_ckpt_dir = os.path.join(sac_model_dir, 'critic', 'target_ckpt')
+        else:
+            sac_ckpt_dir = os.path.join(sac_model_dir, 'critic', 'target_ckpt_' + str(index))
+    else:
+        if index is None:
+            sac_ckpt_dir = os.path.join(sac_model_dir, 'critic', 'ckpt')
+        else:
+            sac_ckpt_dir = os.path.join(sac_model_dir, 'critic', 'ckpt_' + str(index))
     
     if load_sac_model:
         sac_critic = __load_sac_critic__()

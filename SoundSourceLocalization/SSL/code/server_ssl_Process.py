@@ -12,7 +12,8 @@ import os, sys
 CRT_DIR = os.path.dirname(os.path.abspath(__file__))
 F_PATH = os.path.dirname(CRT_DIR)
 FF_PATH = os.path.dirname(F_PATH)
-sys.path.extend([CRT_DIR, F_PATH, FF_PATH, ])
+FFF_PATH = os.path.dirname(FF_PATH)
+sys.path.extend([CRT_DIR, F_PATH, FF_PATH, FFF_PATH, ])
 # print('sys.path:', sys.path)
 
 
@@ -114,12 +115,14 @@ class SSL(object):
         self.denoise_model, _ = ns_enhance_onnx.load_onnx_model()
         
         # DOA
-        print('-' * 20, 'Loading DOA model...', '-' * 20, )
         self.num_action = 8
-        doa_model_path = os.path.abspath(os.path.join(CRT_DIR, '../model/ResCNN/base_model'))
-        self.doa = DOA(model_dir=doa_model_path, num_gcc_bin=self.num_gcc_bin, num_mel_bin=self.num_mel_bin,
-                       fft_len=self.fft_len, fft_seg_len=self.fft_seg_len, fft_stepsize_ratio=self.fft_stepsize_ratio,
-                       fs=SAMPLE_RATE, )
+        
+        # print('-' * 20, 'Loading DOA model...', '-' * 20, )
+        # self.num_action = 8
+        # doa_model_path = os.path.abspath(os.path.join(CRT_DIR, '../model/ResCNN/base_model'))
+        # self.doa = DOA(model_dir=doa_model_path, num_gcc_bin=self.num_gcc_bin, num_mel_bin=self.num_mel_bin,
+        #                fft_len=self.fft_len, fft_seg_len=self.fft_seg_len, fft_stepsize_ratio=self.fft_stepsize_ratio,
+        #                fs=SAMPLE_RATE, loadModel=False)
         
         # RL
         # self.save_model_steps = 3
@@ -366,6 +369,13 @@ class SSL(object):
         return audio, send_time
     
     def run(self, walker_server, SSL_AUDIO_QUEUE, ):
+        # DOA
+        print('-' * 20, 'Loading DOA model...', '-' * 20, )
+        doa_model_path = os.path.abspath(os.path.join(CRT_DIR, '../model/ResCNN/base_model'))
+        self.doa = DOA(model_dir=doa_model_path, num_gcc_bin=self.num_gcc_bin, num_mel_bin=self.num_mel_bin,
+                       fft_len=self.fft_len, fft_seg_len=self.fft_seg_len, fft_stepsize_ratio=self.fft_stepsize_ratio,
+                       fs=SAMPLE_RATE, loadModel=True)
+        
         # initialize models
         num_step = 0
         Event_Wait = False  # control the running state of SSL # TODO: for debugging
@@ -391,21 +401,41 @@ class SSL(object):
             # localize the source
             num_step += 1
             print('-' * 20, 'SSL step:', num_step, '-' * 20)
-            direction, _ = self.doa.predict_sample(audio=audio, invalid_classes=None)
+            direction, probs = self.doa.predict_sample(audio=audio, invalid_classes=None)
             print("Producing action ...\n", 'Direction', direction)
+            print('Probs:', np.around(probs, 3))
             walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
     
     def run_D3QN(self, walker_server, SSL_AUDIO_QUEUE, ):
+        def get_input():
+            while True:
+                with open('/home/swadmin/project/SmartWalker-master/SoundSourceLocalization/temp_input.txt', 'r+') as f:
+                    lines = f.readlines()
+                    if len(lines) > 0:
+                        input_str = lines[0].strip('\n')
+                        print(input_str)
+                        f.truncate(0)
+                        break
+                time.sleep(0.5)
+            return input_str
+        
         from SoundSourceLocalization.SSL.code.SSL_RL.agent_d3qn import DQNAgent
+        # DOA
+        print('-' * 20, 'Loading DOA model...', '-' * 20, )
+        doa = DOA(model_dir=None, num_gcc_bin=self.num_gcc_bin, num_mel_bin=self.num_mel_bin,
+                  fft_len=self.fft_len, fft_seg_len=self.fft_seg_len, fft_stepsize_ratio=self.fft_stepsize_ratio,
+                  fs=SAMPLE_RATE, loadModel=False)
         
         # initialize an agent
         D3QN_config = {
             'AGENT_CLASS'         : 'D3QN',
             'agent_learn'         : True,
-            'print_interval'      : 10,
+            'print_interval'      : 1,
             'max_episode_steps'   : 30,  # 一个episode最多探索多少步，超过则强行终止。
             'num_update_episode'  : 1,  # update target model and reward graph & data
             'num_smooth_reward'   : 20,
+            'num_save_episode'    : 1000,
+            'num_plot_episode'    : 1,
             
             # -------------------------------- D3QN agent parameters ------------------------------------#
             'reward_discount_rate': 0.75,  # [0.8, 0.95]
@@ -421,48 +451,53 @@ class SSL(object):
             # 'episodes'            : 500,
             'eps_decay'           : False,
             'ini_eps'             : 1.0,
-            'min_eps'             : 0.05,
+            'min_eps'             : 0.10,
             'eps_decay_rate'      : 0.999,
             'base_model_dir'      : \
-                os.path.abspath(os.path.join(os.path.dirname(__file__), '../model/ResCNN/base_model')),
+                os.path.abspath(os.path.join(os.path.dirname(__file__), '../model/ResCNN/base_model_fullData_woBN')),
             'd3qn_model_dir'      : \
-                os.path.abspath(os.path.join(os.path.dirname(__file__), '../model/ResCNN/d3qn_model')),
-            'load_d3qn_model'     : False,
+                os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                             '../model/ResCNN/d3qn_model')),
+            'load_d3qn_model'     : True,
             'based_on_base_model' : True,
-            'd3qn_model_name'     : 'ResCNN',
+            'd3qn_model_name'     : 'Dueling_DDQN_softUpdate__lr_0.0001_20220212-235802',
         }
         agent = DQNAgent(num_action=self.num_action, **D3QN_config)
         
         # ----------------------------------- running RL ----------------------------------------- #
         # initialize parameters
-        Event_Wait = False  # control the running state of SSL # TODO: for debugging
+        # Event_Wait = False  # control the running state of SSL # TODO: for debugging
         total_step = 0
         episode_idx = 0
         last_ssl_time = None  # be used for dropping expired walker audio
         while True:
-            # start an episode
-            temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
-            if temp_wait is not None:
-                Event_Wait = temp_wait
-                self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
-                                 description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
-            if Event_Wait:
-                time.sleep(0.1)
-                continue
+            # start an episode  # TODO: for debugging
+            # temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
+            # if temp_wait is not None:
+            #     Event_Wait = temp_wait
+            #     self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
+            #                      description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
+            # if Event_Wait:
+            #     time.sleep(0.1)
+            #     continue
+            print('-' * 20, 'will start a new episode', '-' * 20, )
             
             # run an episode
             num_step = 0
             # state, action, reward, state_, done = None, None, None, None, None
             states, actions, rewards, states_, dones = [], [], [], [], []
+            
+            self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
+                             description='SSL_AUDIO_QUEUE is cleared due to the start of a new episode.')
             while True:
-                # determine if this episode ends
-                temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
-                if temp_wait is not None:
-                    Event_Wait = temp_wait
-                    self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
-                                     description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
-                if Event_Wait:
-                    break
+                # determine if this episode ends # TODO: for debugging
+                # temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
+                # if temp_wait is not None:
+                #     Event_Wait = temp_wait
+                #     self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
+                #                      description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
+                # if Event_Wait:
+                #     break
                 
                 # receive state
                 audio, send_time = self.receive_preprocess_audio(SSL_AUDIO_QUEUE, last_ssl_time)
@@ -475,9 +510,10 @@ class SSL(object):
                 num_step += 1
                 total_step += 1
                 print('-' * 20, 'SSL step(episode/total):', num_step, '/', total_step, '-' * 20)
-                direction, _ = agent.act(audio, decay_step=total_step)
-                print("Producing action ...\n", 'Direction', direction)
-                walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+                stft_feature = doa.get_stft_feature(audio=audio)
+                direction, act_info = agent.act(stft_feature, decay_step=total_step)
+                direction = int(direction)
+                print('Producing action ...\n', 'Direction:', direction, 'act_info:', act_info)
                 
                 # process last step's experience
                 if len(states) == 0:
@@ -488,23 +524,188 @@ class SSL(object):
                 actions.append(direction)
                 dones.append(False)
                 rewards.append(-0.05)
+                
+                print('Send this direction?', end='\t')
+                if get_input() == 'y':  # TODO: for debugging
+                    walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+                print('End this eposoide?', end='\t')
+                if get_input() == 'y':
+                    self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
+                                     description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
+                    break
             
             # end an episode # if end, improve based on the rules
             if len(states) > 0:
                 states_.append(None)
-                dones[-1] = True
-                rewards[-1] = 1.
-                experience_ls = list(zip([states, actions, rewards, states_, dones]))
-                agent.remember_batch(batch_experience=experience_ls, useDiscount=True)
+                print('Done?', end='\t')
+                if get_input() == 'y':  # TODO: for debugging
+                    dones[-1] = True
+                    rewards[-1] = 1.
+                else:
+                    dones[-1] = False
+                    rewards[-1] = -0.05
+                experience_ls = [list(i) for i in zip(states, actions, rewards, states_, dones)]
+                agent.remember_batch(batch_experience=experience_ls, useDiscount=True, feature_extractor=doa)
                 episode_idx += 1
                 print('episode_idx:', episode_idx, '\t', 'steps:', num_step, '\t', 'done:', dones[-1], '\t', )
             
             if D3QN_config['agent_learn']:
                 agent.learn()
-            if episode_idx % D3QN_config['num_update_episode'] == 0:
+            if (episode_idx + 1) % D3QN_config['num_update_episode'] == 0:
                 agent.update_target_model()
                 # self.plot_and_save_rewards(episode_rewards)
-            # agent.save()
+            print('Saving model...')
+            agent.save_model(model_dir='./temp_d3qn')
+    
+    def run_SAC(self, walker_server, SSL_AUDIO_QUEUE, ):
+        def get_input():
+            while True:
+                with open('/home/swadmin/project/SmartWalker-master/SoundSourceLocalization/temp_input.txt', 'r+') as f:
+                    lines = f.readlines()
+                    if len(lines) > 0:
+                        input_str = lines[0].strip('\n')
+                        print(input_str)
+                        f.truncate(0)
+                        break
+                time.sleep(0.5)
+            return input_str
+        
+        from SoundSourceLocalization.SSL.code.SSL_RL.agent_sac import SACAgent
+        # DOA
+        print('-' * 20, 'Loading DOA model...', '-' * 20, )
+        doa = DOA(model_dir=None, num_gcc_bin=self.num_gcc_bin, num_mel_bin=self.num_mel_bin,
+                  fft_len=self.fft_len, fft_seg_len=self.fft_seg_len, fft_stepsize_ratio=self.fft_stepsize_ratio,
+                  fs=SAMPLE_RATE, loadModel=False)
+        
+        # initialize an agent
+        SAC_config = {
+            'AGENT_CLASS'         : 'SAC',
+            'agent_learn'         : True,
+            
+            'print_interval'      : 1,
+            'num_smooth_reward'   : 20,
+            'num_save_episode'    : 1000,
+            'num_plot_episode'    : 1,
+            
+            # -------------------------------- D3QN agent parameters ------------------------------------#
+            'num_Q'               : 2,
+            'reward_scale'        : 1.,
+            'reward_discount_rate': 0.75,
+            
+            'policy_lr'           : 3e-4,
+            'Q_lr'                : 3e-4,
+            'alpha_lr'            : 3e-4,
+            
+            'learnTimes'          : 8,
+            'batch_size'          : 32,
+            'memory_size'         : 1024,
+            
+            'softUpdate'          : True,
+            'num_update_episode'  : 1,
+            'softUpdate_tau'      : 0.01,
+            
+            'load_sac_model'      : True,
+            'based_on_base_model' : True,
+            'base_model_dir'      : \
+                os.path.abspath(os.path.join(os.path.dirname(__file__), '../model/ResCNN/base_model_fullData_woBN')),
+            'sac_model_dir'       : \
+                os.path.abspath(os.path.join(os.path.dirname(__file__), '../model/ResCNN/sac_model')),
+            'sac_model_name'      : '20220214-005038_SAC_lr-p-0.0003-Q-0.0003-a-0.0003_up-1-8-tau-0.01_mom-1024-32_rwd-1.0-0.75',
+        }
+        agent = SACAgent(num_action=self.num_action, **SAC_config)
+        
+        # ----------------------------------- running RL ----------------------------------------- #
+        # initialize parameters
+        # Event_Wait = False  # control the running state of SSL # TODO: for debugging
+        total_step = 0
+        episode_idx = 0
+        last_ssl_time = None  # be used for dropping expired walker audio
+        while True:
+            # start an episode  # TODO: for debugging
+            # temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
+            # if temp_wait is not None:
+            #     Event_Wait = temp_wait
+            #     self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
+            #                      description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
+            # if Event_Wait:
+            #     time.sleep(0.1)
+            #     continue
+            print('-' * 20, 'will start a new episode', '-' * 20, )
+            
+            # run an episode
+            num_step = 0
+            # state, action, reward, state_, done = None, None, None, None, None
+            states, actions, rewards, states_, dones = [], [], [], [], []
+            
+            self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
+                             description='SSL_AUDIO_QUEUE is cleared due to the start of a new episode.')
+            while True:
+                # determine if this episode ends # TODO: for debugging
+                # temp_wait = walker_server.recv(subtopic=SSL_WAIT_COMMUNICATION_TOPIC, )
+                # if temp_wait is not None:
+                #     Event_Wait = temp_wait
+                #     self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
+                #                      description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
+                # if Event_Wait:
+                #     break
+                
+                # receive state
+                audio, send_time = self.receive_preprocess_audio(SSL_AUDIO_QUEUE, last_ssl_time)
+                if audio is None:
+                    continue
+                else:
+                    last_ssl_time = send_time
+                
+                # act
+                num_step += 1
+                total_step += 1
+                print('-' * 20, 'SSL step(episode/total):', num_step, '/', total_step, '-' * 20)
+                stft_feature = doa.get_stft_feature(audio=audio)
+                direction, act_info = agent.act(stft_feature, decay_step=total_step)
+                direction = int(direction)
+                print('Producing action ...\n', 'Direction:', direction, 'act_info:', act_info)
+                
+                # process last step's experience
+                if len(states) == 0:
+                    states.append(audio)
+                else:
+                    states_.append(states[-1])
+                    states.append(audio)
+                actions.append(direction)
+                dones.append(False)
+                rewards.append(-0.05)
+                
+                print('Send this direction?', end='\t')
+                if get_input() == 'y':  # TODO: for debugging
+                    walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+                print('End this eposoide?', end='\t')
+                if get_input() == 'y':
+                    self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
+                                     description='SSL_AUDIO_QUEUE is cleared due to the change of SSL state.')
+                    break
+            
+            # end an episode # if end, improve based on the rules
+            if len(states) > 0:
+                states_.append(None)
+                print('Done?', end='\t')
+                if get_input() == 'y':  # TODO: for debugging
+                    dones[-1] = True
+                    rewards[-1] = 1.
+                else:
+                    dones[-1] = False
+                    rewards[-1] = -0.05
+                experience_ls = [list(i) for i in zip(states, actions, rewards, states_, dones)]
+                agent.remember_batch(batch_experience=experience_ls, useDiscount=True, feature_extractor=doa)
+                episode_idx += 1
+                print('episode_idx:', episode_idx, '\t', 'steps:', num_step, '\t', 'done:', dones[-1], '\t', )
+            
+            if SAC_config['agent_learn']:
+                agent.learn()
+            if (episode_idx + 1) % SAC_config['num_update_episode'] == 0:
+                agent.update_target_model()
+                # self.plot_and_save_rewards(episode_rewards)
+            print('Saving model...')
+            agent.save_model(model_dir='./temp_sac')
 
 
 class SSL_Process(object):
@@ -516,8 +717,9 @@ class SSL_Process(object):
     
     def run(self, walker_server, SSL_AUDIO_QUEUE, ):
         ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, isDebug=self.isDebug, )
-        ssl.run(walker_server, SSL_AUDIO_QUEUE, )
+        # ssl.run(walker_server, SSL_AUDIO_QUEUE, )
         # ssl.run_D3QN(walker_server, SSL_AUDIO_QUEUE, )
+        ssl.run_SAC(walker_server, SSL_AUDIO_QUEUE, )
 
 
 if __name__ == '__main__':

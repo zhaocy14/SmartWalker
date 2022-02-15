@@ -15,7 +15,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 # from model_tf.PER import Memory
-from SoundSourceLocalization.SSL.code.SSL_RL.agent_models import D3QN_Classifier, FeatureExtractor
+from .agent_models import D3QN_Classifier, FeatureExtractor
 from collections import deque
 
 
@@ -26,6 +26,7 @@ class DQNAgent(object):
                  eps_decay=False, ini_eps=1.0, min_eps=0.01, eps_decay_rate=0.999,
                  base_model_dir='../model/base_model', d3qn_model_dir='../model/d3qn_model',
                  load_d3qn_model=True, based_on_base_model=True, d3qn_model_name=None, **kwargs):
+        super(DQNAgent, self).__init__()
         assert usePER == False, 'PER has not been checked'
         if d3qn_model_name is None:
             self.name = self.__class__.__name__
@@ -64,7 +65,7 @@ class DQNAgent(object):
         self.load_d3qn_model = load_d3qn_model
         self.based_on_base_model = based_on_base_model
         self.base_model_dir = base_model_dir
-        self.d3qn_model_dir = os.path.join(d3qn_model_dir, 'classifier', self.name)
+        self.d3qn_model_dir = os.path.join(d3qn_model_dir, self.name, )
         os.makedirs(self.d3qn_model_dir, exist_ok=True)
         
         # create main model and target model
@@ -72,29 +73,32 @@ class DQNAgent(object):
         self.model = D3QN_Classifier(dueling=self.dueling, base_model_dir=self.base_model_dir,
                                      load_d3qn_model=self.load_d3qn_model,
                                      based_on_base_model=self.based_on_base_model,
-                                     d3qn_model_dir=self.d3qn_model_dir, )
+                                     d3qn_model_dir=self.d3qn_model_dir, loadTarget=False)
         if self.ddqn:
             self.target_model = D3QN_Classifier(dueling=self.dueling, base_model_dir=self.base_model_dir,
                                                 load_d3qn_model=self.load_d3qn_model,
                                                 based_on_base_model=self.based_on_base_model,
-                                                d3qn_model_dir=self.d3qn_model_dir, )
-            self.update_target_model(tau=1.0)
+                                                d3qn_model_dir=self.d3qn_model_dir, loadTarget=True)
+            # self.update_target_model(tau=1.0)
         
         self.compile()
     
-    def save_model(self, model_path=None, ):
+    def save_model(self, model_dir=None, ):
         '''
         save the RL model. If ddqn, save target_model, else save model.
-        :param model_path:
+        :param model_dir:
         :return:
         '''
-        assert False, 'Saving model has not been implemented'
         
-        model_path = self.d3qn_model_dir if (model_path is None) else os.path.join(model_path, 'classifier')
+        model_dir = self.d3qn_model_dir if (model_dir is None) else model_dir
+        
+        fe_dir = os.path.join(model_dir, 'feature_extractor', 'ckpt')
+        tf.keras.models.save_model(model=self.feature_extractor, filepath=fe_dir, )
+        c_dir = os.path.join(model_dir, 'classifier', 'ckpt')
+        tf.keras.models.save_model(model=self.model, filepath=c_dir, )
         if self.ddqn:
-            self.target_model.save(model_path)
-        else:
-            self.model.save(model_path)
+            ct_dir = os.path.join(model_dir, 'classifier', 'target_ckpt')
+            tf.keras.models.save_model(model=self.target_model, filepath=ct_dir, )
     
     def compile(self, **kwargs):
         '''
@@ -124,14 +128,18 @@ class DQNAgent(object):
                 target_model_theta[idx] = target_weight
             self.target_model.set_weights(target_model_theta)
     
-    def remember(self, state, action, reward, state_, done, ):
+    def remember(self, state, action, reward, state_, done, feature_extractor=None, **kwargs):
         '''
         save the experience to memory buffer.
         '''
         
         # extract feature to remember
+        if feature_extractor is not None:
+            state = feature_extractor.get_stft_feature(audio=state)
         state = self.feature_extractor.predict(np.array([state]))[0]
         if state_ is not None:
+            if feature_extractor is not None:
+                state_ = feature_extractor.get_stft_feature(audio=state_)
             state_ = self.feature_extractor.predict(np.array([state_]))[0]
         experience = state, action, reward, state_, done
         if self.usePER:
@@ -139,7 +147,7 @@ class DQNAgent(object):
         else:
             self.memory.append(experience)
     
-    def remember_batch(self, batch_experience, useDiscount=True):
+    def remember_batch(self, batch_experience, useDiscount=True, feature_extractor=None, **kwargs):
         '''
         save a batch of experience to memory buffer.
         if discount: apply discount to the reward.
@@ -148,7 +156,7 @@ class DQNAgent(object):
             for i in range(len(batch_experience) - 2, -1, -1):
                 batch_experience[i][2] += self.discount_rate * batch_experience[i + 1][2]
         for experience in batch_experience:
-            self.remember(*experience)
+            self.remember(*experience, feature_extractor=feature_extractor, **kwargs)
     
     def learn_sample(self, state, action, reward, state_, done, ):
         self.learn_per_batch([state], [action], [reward], [state_], [done], )
@@ -187,7 +195,7 @@ class DQNAgent(object):
                 else:  # Standard - DQN ---- DQN chooses the max Q value among next actions
                     target[i][action[i]] = reward[i] + self.discount_rate * (np.amax(target_next[i]))
         
-        self.model.fit(state, target, batch_size=min(len(done), self.batch_size), verbose=2)
+        self.model.fit(state, target, batch_size=min(len(done), self.batch_size), verbose=0)
         
         return target_old, target
     

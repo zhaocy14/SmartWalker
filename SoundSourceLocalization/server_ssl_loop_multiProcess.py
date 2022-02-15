@@ -33,8 +33,7 @@ from SoundSourceLocalization.SSL.code.server_ssl_Process import SSL_Process
 
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
-    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-    MappingMicro = False
+    os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
     isDebug = True
     
     manager = BaseManager()  # 一定要在start前注册，不然就注册无效

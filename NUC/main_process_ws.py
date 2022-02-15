@@ -191,7 +191,7 @@ if __name__ == '__main__':
     
     MappingMicro = False
     useCD = True
-    left_right = 1
+    left_right = 0
     SSL_Event = multiprocessing.Event()
     SSL_Event.set()  # TODO: for debugging
     VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)

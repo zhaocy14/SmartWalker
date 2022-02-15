@@ -14,7 +14,8 @@ from SoundSourceLocalization.mylib.utils import wise_standard_normalizaion
 
 class DOA(object):
     def __init__(self, fft_len, num_gcc_bin=128, num_mel_bin=128, fs=16000, num_channel=4, fft_seg_len=None,
-                 fft_stepsize_ratio=None, gcc_norm=None, model_name='ResCNN', model_dir='./model/ResCNN/base_model', ):
+                 fft_stepsize_ratio=None, gcc_norm=None, model_name='ResCNN', model_dir='./model/ResCNN/base_model',
+                 loadModel=True):
         super(DOA, self).__init__()
         assert model_name == 'ResCNN'
         self.fs = fs
@@ -24,7 +25,8 @@ class DOA(object):
                                                              fft_len=fft_len, fft_seg_len=fft_seg_len,
                                                              fft_stepsize_ratio=fft_stepsize_ratio,
                                                              num_channel=num_channel, datatype='mic', )
-        self.feature_extractor, self.classifier = self.__load_model__(md_dir=self.md_dir)
+        if loadModel:
+            self.feature_extractor, self.classifier = self.__load_model__(md_dir=self.md_dir)
     
     def __load_model__(self, md_dir=None):
         md_dir = self.md_dir if (md_dir is None) else md_dir
@@ -81,9 +83,12 @@ class DOA(object):
         
         return x
     
-    def predict_sample(self, audio, invalid_classes=None):
+    def get_stft_feature(self, audio):
         stft_feature = self.audio_feature_extractor.get_stft(audio)
-        stft_feature = self.preprocess_stft(feature=stft_feature)
+        return self.preprocess_stft(feature=stft_feature)
+    
+    def predict_sample(self, audio, invalid_classes=None):
+        stft_feature = self.get_stft_feature(audio=audio)
         x_batch = np.array([stft_feature])
         
         abstract_feature = self.feature_extractor.predict(x_batch, )
