@@ -50,8 +50,8 @@ class CppCommand(object):
         else:
             self._id = id(self)
             CppCommand._instance = self
-        imuObj = IMU()
-        lidarObj = lidar()
+        # imuObj = IMU()
+        # lidarObj = lidar()
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
         if mode == "online":
@@ -60,7 +60,7 @@ class CppCommand(object):
             self.lidar_port = lidarObj.port_name
             self.imu_port = imuObj.port_name
         # Initialize the driver receiver object
-        self.drvObj = DriverRecv(mode="offline")
+        # self.drvObj = DriverRecv(mode=mode)
         self.program_path = "/app/smartwalker_cartomap/build"
         
         

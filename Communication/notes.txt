@@ -1,0 +1,28 @@
+我忘记有没有编译新小车的参数，麻烦运行以下命令（只需运行一次）：
+docker exec -it SMARTWALKER_CARTO bash -c "cd /app/smartwalker_cartomap/build && make -j4"
+
+
+
+Python Cpp_command 用法，详情参考 (Communication > example.py)
+注意：必须搭配 with CppCommand.get_instance() as cco 来用
+
+功能1. 开始画图
+调用方式：cco.start_drawing(stdout=True)
+备注：
+stdout=True 的时候，可以看到cpp运行的输出，用于debug，但是会 block 掉下面的代码。
+画图完成之后，可以 ctrl+c 强行停止，手动记录 "Saved pbstream: " 后面的文件名字，往后可以重用这个画图文件
+
+功能2. 开始导航
+调用方式：cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")
+备注：
+stdout=True 的时候，可以看到cpp运行的输出，用于debug，但是会 block 掉下面的代码。
+driver_ctrl=True/False，启动或不启动小车driver
+ir_sensor=True/False，启动或不启动小车红外检测
+map_file="latest"/"{file name}"，要小车用最新的地图，或者指定地图
+
+功能3. 强行关闭
+正常情况下，ctrl+c 会关闭对应的 cpp process
+如发现关闭不成功，可以运行以下命令强行关闭：
+cco.stop_navigation(force=True)
+cco.stop_drawing(force=True)
+cco.stop_sensors(force=True)
