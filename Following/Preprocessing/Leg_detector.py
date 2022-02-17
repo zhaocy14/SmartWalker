@@ -1,28 +1,20 @@
-import os, sys
-
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(os.path.dirname(pwd)) + os.path.sep + "..")
-sys.path.append(father_path)
-data_path = os.path.abspath(
-    os.path.dirname(father_path + os.path.sep + ".." +
-                    os.path.sep + "data"))
-
 import numpy as np
 import math
 import cv2
 import threading
 from PIL import Image
 from Sensors import LiDAR
-# import rplidar
 import time
 from sklearn.cluster import KMeans
 from Communication.Modules.Receive import ReceiveZMQ
+from Sensors.SensorConfig import *
+from Sensors.SensorFunctions import *
 
 
 class Leg_detector(object):
     def __init__(self, is_show: bool = False, is_zmq: bool = False):
         if not is_zmq:
-            self.rplidar = LiDAR.lidar()
+            self.rplidar = LiDAR.LiDAR(is_zmq=is_zmq)
         else:
             self.rplidar = []
 
@@ -34,19 +26,19 @@ class Leg_detector(object):
 
         # unit cm
         # for 2D scan images sizes
-        self.size = 300
-        self.half_size = int(self.size / 2)
+        self.size = SCAN_SIZE
+        self.half_size = HALF_SIZE
         # old version of filtering useless data
-        self.column_boundry = self.half_size - 20
-        self.filter_theta = 150
-        self.bottom_boundary = self.half_size - 100
+        self.column_boundry = COLUMN_BOUNDARY
+        self.filter_theta = FILTER_THETA
+        self.bottom_boundary = BOTTOM_BOUNDARY
         # new version of filtering useless data
-        self.walker_top_boundary = 12
-        self.walker_bottom_boundary = 50
-        self.walker_left_boundary = 34
-        self.walker_right_boundary = 38
+        self.walker_top_boundary = WALKER_TOP_BOUNDARY
+        self.walker_bottom_boundary = WALKER_BOTTOM_BOUNDARY
+        self.walker_left_boundary = WALKER_LEFT_BOUNDARY
+        self.walker_right_boundary = WALKER_RIGHT_BOUNDARY
         # cecnter point is the geometry center of the walker
-        self.center_point = np.array([self.half_size + 45, self.half_size])
+        self.center_point = CENTER_POINT
         self.is_show = is_show
         # zmq part
         self.rzo = ReceiveZMQ.get_instance()
@@ -55,7 +47,9 @@ class Leg_detector(object):
         self.theta_flag = 0
         # obstacle part
         self.obstacle_array = np.zeros((1, 5))  # 0 means no obstacle, else means yes
-        self.obstacle_distance = 15  # 15 cm detection
+        self.obstacle_distance = OBSTACLE_DISTANCE  # 15 cm detection
+        self.front_od = FRONT_OBSTACLE_DISTANCE  # front obstacle distance
+        self.side_od = SIDE_OBSTACLE_DISTANCE   # side obstacle distance
 
     def turn_to_img(self, original_list: list, show: bool = False):
         """turn the scan data list into a ndarray"""
@@ -182,8 +176,8 @@ class Leg_detector(object):
             return infinite_far, infinite_far
 
     def detect_obstacle(self, img: np.ndarray):
-        front_od = self.obstacle_distance + 10
-        side_od = self.obstacle_distance - 2
+        front_od = self.front_od
+        side_od = self.side_od
         obstacle_area = img[self.half_size - self.walker_top_boundary - front_od:
                             self.half_size + self.bottom_boundary,
                         self.half_size - self.walker_left_boundary - side_od:
@@ -238,7 +232,7 @@ class Leg_detector(object):
         self.theta_flag = theta
         self.zmq_temp_list.append([quality, theta, dist])
 
-    def zmq_scan(self, show: bool = False, is_record: bool = False, file_path: str = data_path):
+    def zmq_scan(self, show: bool = False, is_record: bool = False, file_path: str = DATA_PATH):
         """main procedure of scanning legs and the environment"""
         if is_record:
             data_path = file_path + os.path.sep + "leg.txt"
@@ -251,6 +245,7 @@ class Leg_detector(object):
                         self.scan_raw_data = np.array(self.zmq_scan_list)
                         img = self.turn_to_img(self.zmq_scan_list)
                         self.detect_leg_boundary_version(self.kmeans, img, show=show)
+                        self.detect_obstacle(img=img)
                         if is_record:
                             time_index = time.time()
                             leg_data = np.r_[self.left_leg, self.right_leg]
