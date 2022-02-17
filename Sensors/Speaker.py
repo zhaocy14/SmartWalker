@@ -38,7 +38,7 @@ class Speaker(object):
         for i in range(1, 5):
             self.set_one_speaker(command, speaker_num=i)
 
-    def play_song(self, command_num: int = 0, is_all:bool=True):
+    def play_song(self, command_num: int = 1, is_all:bool=True, speaker_num:int = 1):
         """play the specific song"""
         song_num = command_num.to_bytes(1, byteorder='little', signed=False)
         command = PLAY_SONG + song_num
@@ -46,17 +46,17 @@ class Speaker(object):
         if is_all:
             self.set_all_speaker(command)
         else:
-            self.set_one_speaker(command, 1)
+            self.set_one_speaker(command, speaker_num)
 
     def initialize_for_microphone(self):
         """sequentially play the speaker """
-        self.speaker_1.write(PLAY)
+        self.play_song(command_num=1,is_all=False,speaker_num=1)
         time.sleep(MIC_INI_TIME_GAP)
-        self.speaker_2.write(PLAY)
+        self.play_song(command_num=2,is_all=False,speaker_num=2)
         time.sleep(MIC_INI_TIME_GAP)
-        self.speaker_3.write(PLAY)
+        self.play_song(command_num=3,is_all=False,speaker_num=3)
         time.sleep(MIC_INI_TIME_GAP)
-        self.speaker_4.write(PLAY)
+        self.play_song(command_num=4,is_all=False,speaker_num=4)
 
     def set_volume(self, volume: int = 20):
         """set volume for every speaker"""
@@ -73,4 +73,9 @@ class Speaker(object):
 
 if __name__ == "__main__":
     speaker_instance = Speaker()
-    speaker_instance.play_clips()
+    speaker_instance.set_volume(30)
+    # speaker_instance.play_song(1)
+    # time.sleep(2)
+    while True:
+        time.sleep(3)
+        speaker_instance.initialize_for_microphone()
