@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # Connect WiFi with password & without password
     # print(wifi_connector.Connect('OpenWiFi'))
-    # print(wifi_connector.Connect('ClosedWiFi', 'password'))
+    print(wifi_connector.Connect('Forence', '12345678'))
 
     # Delete WiFi from auto connect list
     # print(wifi_connector.Delete('DeleteWiFi'))
