@@ -126,7 +126,7 @@ def audioread(path, norm=False, start=0, stop=None, target_level=-25):
     return audio, sample_rate
 
 
-def audiowrite(destpath, audio, sample_rate=16000, norm=False, target_level=-25, clipping_threshold=0.99,
+def audiowrite(destpath, audio, sample_rate=16000, norm=False, target_level=-25, clipping_threshold=None,
                clip_test=False):
     '''Function to write audio'''
     
@@ -136,6 +136,7 @@ def audiowrite(destpath, audio, sample_rate=16000, norm=False, target_level=-25,
     
     if norm:
         audio = normalize_single_channel_audio(audio, target_level=target_level, )
+    if clipping_threshold is not None:
         max_amp = max(abs(audio))
         if max_amp >= clipping_threshold:
             audio = audio / max_amp * (clipping_threshold - EPS)
@@ -145,7 +146,6 @@ def audiowrite(destpath, audio, sample_rate=16000, norm=False, target_level=-25,
     os.makedirs(destdir, exist_ok=True)
     
     sf.write(destpath, audio, sample_rate)
-    return
 
 
 def add_reverb(sasxExe, input_wav, filter_file, output_wav):
@@ -424,14 +424,14 @@ def next_lower_power_of_2(x):
     return 2 ** ((int(x) - 1).bit_length() - 1)
 
 
-def audio_segmenter_4_file(input_path, dest_dir, segment_len=1., stepsize=0.25, fs=None, window='hann', padding=False,
-                           pow_2=True, save2segFolders=False):
+def audio_segmenter_4_file(input_path, dest_dir, segment_len, stepsize, fs=None, window='hann', padding=False,
+                           pow_2=False, save2segFolders=False):
     '''
     Segment single-channel audio into clips, and save them in seg_{i} folder.
     :param input_path: 待clip的声音文件路径
     :param dest_dir: 保存片段的文件夹
-    :param segment_len: 声音片段的长度（单位 s ）
-    :param stepsize: 相邻clip间的步长大小
+    :param segment_len: 声音片段的长度(单位 s)
+    :param stepsize: 相邻clip间的步长大小(单位 s)
     :param fs: 目标采样率，若为None，则不对声音做任何采样处理；若与原声音不同，则对原声音重采样
     :param window: 加窗类型
     :param padding: 当最后一个clip不够长时，是否补足
@@ -446,7 +446,7 @@ def audio_segmenter_4_file(input_path, dest_dir, segment_len=1., stepsize=0.25, 
     else:
         fs = ini_fs
     
-    audio_segments = audio_segmenter_4_numpy(audio, fs=fs, segment_len=segment_len, stepsize=stepsize,
+    audio_segments = audio_segmenter_4_numpy(audio, segment_len=segment_len, stepsize=stepsize, fs=fs,
                                              window=window, padding=padding, pow_2=pow_2)
     file_basename = os.path.basename(input_path)
     basename, ext = os.path.splitext(file_basename)
@@ -462,13 +462,13 @@ def audio_segmenter_4_file(input_path, dest_dir, segment_len=1., stepsize=0.25, 
             audiowrite(save_path, audio_seg, fs, norm=False, )
 
 
-def audio_segmenter_4_numpy(audio, fs=16000, segment_len=1., stepsize=0., window='hann', padding=False, pow_2=True):
+def audio_segmenter_4_numpy(audio, segment_len, stepsize, fs=16000, window='hann', padding=False, pow_2=False):
     '''
     将numpy格式的单通道语音划分为 clips
     :param audio: numpy格式声音
     :param fs: 声音的采样率
-    :param segment_len: 声音片段的长度（单位 s）
-    :param stepsize:
+    :param segment_len: 声音片段的长度(单位 s)
+    :param stepsize: 声音片段每次向前移动的时间长度(单位 s)
     :param window:
     :param padding: 是否补全最后一个声音片段，若为True，则从开头截取一段声音进行补全
     :param pow_2:

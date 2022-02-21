@@ -33,7 +33,7 @@ class WalkerServer(CommunicationPeer):
         print('-' * 20, 'init a WalkerServer class', '-' * 20, )
         context = zmq.Context()
         
-        self.send_port = 8008
+        self.send_port = 8009
         self.send_topic = 'WalkerServer Sends...'
         self.send_socket = context.socket(zmq.PUB)
         self.send_socket.bind('tcp://*:%d' % self.send_port)
@@ -85,6 +85,7 @@ class WalkerServer(CommunicationPeer):
                     else:
                         continue
                 if subtopic_key == AUDIO_COMMUNICATION_TOPIC:
+                    # print("audio frame is receiced~")  # TODO: for debugging
                     return self.subtopic_buffer_dict[subtopic_key]
         elif subtopic == SSL_WAIT_COMMUNICATION_TOPIC:
             data = self.subtopic_buffer_dict[SSL_WAIT_COMMUNICATION_TOPIC]
