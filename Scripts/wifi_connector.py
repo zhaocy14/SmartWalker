@@ -28,7 +28,7 @@ class WifiConnector:
 
 
     def FindFromSavedList(self, ssid):
-        cell = wifi.Scheme.find('wlan0', ssid)
+        cell = wifi.Scheme.find('wlo1', ssid)
 
         if cell:
             return cell
@@ -39,7 +39,7 @@ class WifiConnector:
     def Connect(self, ssid, password=None, hidden=False):
         if not hidden:
             cell = self.FindFromSearchList(ssid)
-
+            
             if cell:
                 savedcell = self.FindFromSavedList(ssid)
 
@@ -87,7 +87,7 @@ class WifiConnector:
         if not cell:
             return False
 
-        scheme = wifi.Scheme.for_cell('wlan0', cell.ssid, cell, password)
+        scheme = wifi.Scheme.for_cell('wlo1', cell.ssid, cell, password)
         scheme.save()
         return scheme
 
@@ -108,7 +108,7 @@ class WifiConnector:
 if __name__ == '__main__':
     wifi_connector = WifiConnector()
     # Search WiFi and return WiFi list
-    print(wifi_connector.Search())
+    # print(wifi_connector.Search())
 
     # Connect WiFi with password & without password
     # print(wifi_connector.Connect('OpenWiFi'))
