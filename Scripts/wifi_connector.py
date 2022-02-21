@@ -9,7 +9,7 @@ import os
 class WifiConnector:
 
     # function to establish a new connection
-    def createNewConnection(name, SSID, password):
+    def createNewConnection(self, name, SSID, password):
         config = """<?xml version=\"1.0\"?>
     <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
         <name>"""+name+"""</name>
@@ -41,13 +41,13 @@ class WifiConnector:
         os.system(command)
 
     # function to connect to a network
-    def connect(name, SSID):
+    def connect(self, name, SSID):
         command = "netsh wlan connect name=\""+name + \
             "\" ssid=\""+SSID+"\" interface=Wi-Fi"
         os.system(command)
 
     # function to display avavilabe Wifi networks
-    def displayAvailableNetworks():
+    def displayAvailableNetworks(self):
         command = "netsh wlan show networks interface=Wi-Fi"
         os.system(command)
 
