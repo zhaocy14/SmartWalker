@@ -9,7 +9,7 @@ class WifiConnector:
     def Search(self):
         wifilist = []
 
-        cells = wifi.Cell.all('wlan0')
+        cells = wifi.Cell.all('wlo1')
 
         for cell in cells:
             wifilist.append(cell)
