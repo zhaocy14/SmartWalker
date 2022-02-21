@@ -3,116 +3,67 @@
 # Author: Owen Yip
 # Mail: me@owenyip.com
 #
-import wifi
+import os
+
 
 class WifiConnector:
-    def Search(self):
-        wifilist = []
 
-        cells = wifi.Cell.all('wlo1')
+    # function to establish a new connection
+    def createNewConnection(name, SSID, password):
+        config = """<?xml version=\"1.0\"?>
+    <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
+        <name>"""+name+"""</name>
+        <SSIDConfig>
+            <SSID>
+                <name>"""+SSID+"""</name>
+            </SSID>
+        </SSIDConfig>
+        <connectionType>ESS</connectionType>
+        <connectionMode>auto</connectionMode>
+        <MSM>
+            <security>
+                <authEncryption>
+                    <authentication>WPA2PSK</authentication>
+                    <encryption>AES</encryption>
+                    <useOneX>false</useOneX>
+                </authEncryption>
+                <sharedKey>
+                    <keyType>passPhrase</keyType>
+                    <protected>false</protected>
+                    <keyMaterial>"""+password+"""</keyMaterial>
+                </sharedKey>
+            </security>
+        </MSM>
+    </WLANProfile>"""
+        command = "netsh wlan add profile filename=\""+name+".xml\""+" interface=Wi-Fi"
+        with open(name+".xml", 'w') as file:
+            file.write(config)
+        os.system(command)
 
-        for cell in cells:
-            wifilist.append(cell)
+    # function to connect to a network
+    def connect(name, SSID):
+        command = "netsh wlan connect name=\""+name + \
+            "\" ssid=\""+SSID+"\" interface=Wi-Fi"
+        os.system(command)
 
-        return wifilist
-
-
-    def FindFromSearchList(self, ssid):
-        wifilist = self.Search()
-
-        for cell in wifilist:
-            if cell.ssid == ssid:
-                return cell
-
-        return False
-
-
-    def FindFromSavedList(self, ssid):
-        cell = wifi.Scheme.find('wlo1', ssid)
-
-        if cell:
-            return cell
-
-        return False
-
-
-    def Connect(self, ssid, password=None, hidden=False):
-        if not hidden:
-            cell = self.FindFromSearchList(ssid)
-            
-            if cell:
-                savedcell = self.FindFromSavedList(ssid)
-
-                # Already Saved from Setting
-                if savedcell:
-                    savedcell.activate()
-                    return cell
-
-                # First time to conenct
-                else:
-                    if cell.encrypted:
-                        if password:
-                            scheme = self.Add(cell, password)
-
-                            try:
-                                scheme.activate()
-
-                            # Wrong Password
-                            except wifi.exceptions.ConnectionError:
-                                self.Delete(ssid)
-                                return False
-
-                            return cell
-                        else:
-                            return False
-                    else:
-                        scheme = self.Add(cell)
-
-                        try:
-                            scheme.activate()
-                        except wifi.exceptions.ConnectionError:
-                            self.Delete(ssid)
-                            return False
-
-                        return cell
-        
-        # Todo: Hidden network handling
-        else:
-            print('This is a hidden network')
-        
-        return False
-
-
-    def Add(self, cell, password=None):
-        if not cell:
-            return False
-
-        scheme = wifi.Scheme.for_cell('wlo1', cell.ssid, cell, password)
-        scheme.save()
-        return scheme
-
-
-    def Delete(self, ssid):
-        if not ssid:
-            return False
-
-        cell = self.FindFromSavedList(ssid)
-
-        if cell:
-            cell.delete()
-            return True
-
-        return False
-
+    # function to display avavilabe Wifi networks
+    def displayAvailableNetworks():
+        command = "netsh wlan show networks interface=Wi-Fi"
+        os.system(command)
 
 if __name__ == '__main__':
     wifi_connector = WifiConnector()
-    # Search WiFi and return WiFi list
-    # print(wifi_connector.Search())
+    # display available netwroks
+    wifi_connector.displayAvailableNetworks()
 
-    # Connect WiFi with password & without password
-    # print(wifi_connector.Connect('OpenWiFi'))
-    print(wifi_connector.Connect('Forence', '12345678'))
+    # input wifi name and password
+    name = input("Name of Wi-Fi: ")
+    password = input("Password: ")
 
-    # Delete WiFi from auto connect list
-    # print(wifi_connector.Delete('DeleteWiFi'))
+    # establish new connection
+    wifi_connector.createNewConnection(name, name, password)
+
+    # connect to the wifi network
+    wifi_connector.connect(name, name)
+    print("If you aren't connected to this network, try connecting with the correct password!")
+
