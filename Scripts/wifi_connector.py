@@ -111,8 +111,8 @@ if __name__ == '__main__':
     print(wifi_connector.Search())
 
     # Connect WiFi with password & without password
-    print(wifi_connector.Connect('OpenWiFi'))
-    print(wifi_connector.Connect('ClosedWiFi', 'password'))
+    # print(wifi_connector.Connect('OpenWiFi'))
+    # print(wifi_connector.Connect('ClosedWiFi', 'password'))
 
     # Delete WiFi from auto connect list
-    print(wifi_connector.Delete('DeleteWiFi'))
+    # print(wifi_connector.Delete('DeleteWiFi'))
