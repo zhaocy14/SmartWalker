@@ -28,6 +28,7 @@ from bluezero import adapter
 from bluezero import peripheral
 
 from wifi_connector import WifiConnector
+import subprocess
 
 # constants
 # Custom service uuid
@@ -70,17 +71,17 @@ class BleManager(object):
         if value:
             print("Received: ", bytes(value).decode('utf-8'))
             wifi_config = json.loads(bytes(value).decode('utf-8'))
-            print("parse: ", wifi_config["ssid"])
-            wifi_connector = WifiConnector()
-            result = wifi_connector.Connect(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"])
+            # wifi_connector = WifiConnector()
+            # result = wifi_connector.Connect(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"])
+            result = subprocess.run(["nmcli", "dev", "wifi", "con", wifi_config["ssid"], "password", wifi_config["password"]["value"]])
             print("connect result: ", result)
 
             if self.tx_obj:
-                print('replying')
-                if result:
-                    self.tx_obj.set_value(b'success')
-                else:
-                    self.tx_obj.set_value(b'failure')
+                self.tx_obj.set_value(b'success')
+                # if result:
+                #     self.tx_obj.set_value(b'success')
+                # else:
+                #     self.tx_obj.set_value(b'failure')
                 # self.tx_obj.set_value(bool(False).to_bytes(1, byteorder='little', signed=True))
             else:
                 pass

@@ -4,7 +4,7 @@
 # Mail: me@owenyip.com
 #
 import os
-
+import subprocess
 
 class WifiConnector:
 
@@ -52,18 +52,20 @@ class WifiConnector:
         os.system(command)
 
 if __name__ == '__main__':
-    wifi_connector = WifiConnector()
-    # display available netwroks
-    wifi_connector.displayAvailableNetworks()
+    # wifi_connector = WifiConnector()
+    # # display available netwroks
+    # wifi_connector.displayAvailableNetworks()
 
-    # input wifi name and password
-    name = input("Name of Wi-Fi: ")
-    password = input("Password: ")
+    # # input wifi name and password
+    # name = input("Name of Wi-Fi: ")
+    # password = input("Password: ")
 
-    # establish new connection
-    wifi_connector.createNewConnection(name, name, password)
+    # # establish new connection
+    # wifi_connector.createNewConnection(name, name, password)
 
-    # connect to the wifi network
-    wifi_connector.connect(name, name)
-    print("If you aren't connected to this network, try connecting with the correct password!")
+    # # connect to the wifi network
+    # wifi_connector.connect(name, name)
+    # print("If you aren't connected to this network, try connecting with the correct password!")
+    
+    result = subprocess.run(["nmcli", "dev", "wifi", "con", "HKU", "password", "test"])
 
