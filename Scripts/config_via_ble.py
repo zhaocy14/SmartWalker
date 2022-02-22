@@ -31,6 +31,7 @@ from bluezero import peripheral
 from wifi_connector import WifiConnector
 import subprocess
 import nmcli
+import time
 
 # constants
 # Custom service uuid
@@ -89,17 +90,27 @@ class BleManager(object):
                 # print(nmcli.device.wifi()) # Get all available wifis
                 # print(nmcli.general()) # Get current wifi connection state General(state=<NetworkManagerState.CONNECTED_GLOBAL: 'connected'>, connectivity=<NetworkConnectivity.FULL: 'full'>, wifi_hw=True, wifi=True, wwan_hw=True, wwan=True)
                 if wifi_config["hidden"]:
-                    nmcli.device.wifi_connect_hidden(wifi_config["ssid"], wifi_config["password"]["value"])
+                    print('This is a hidden network')
+                    nmcli.device.wifi_connect_hidden(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
                 else:
-                    nmcli.device.wifi_rescan()
-                    nmcli.device.wifi_connect(wifi_config["ssid"], wifi_config["password"]["value"])
+                    print('This is a open network')
+                    nmcli.device.wifi()
+                    nmcli.device.wifi_connect(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
                     
-                connection_status = nmcli.general().to_json()
                 if self.tx_obj:
-                    if connection_status['state'] == 'connected':
-                        self.tx_obj.set_value(b'success')
-                    else:
+                    retry = 10
+                    connected = False
+                    while retry > 0:
+                        connection_status = nmcli.general().to_json()
+                        if connection_status['state'] == 'connected':
+                            connected = True
+                            self.tx_obj.set_value(b'success')
+                            break
+                        retry = retry - 1
+                        time.sleep(1)
+                    if not connected:
                         self.tx_obj.set_value(b'failure')
+                        
                 else:
                     pass
                 
@@ -114,7 +125,7 @@ class BleManager(object):
 
 
     def wificonfig_notify_callback(self, notifying, characteristic):
-        print('notifying', notifying)
+        # print('notifying', notifying)
         if notifying:
             self.tx_obj = characteristic
         else:
