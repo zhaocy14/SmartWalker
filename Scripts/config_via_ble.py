@@ -88,8 +88,12 @@ class BleManager(object):
                 # print(nmcli.device()) # Get all network devices
                 # print(nmcli.device.wifi()) # Get all available wifis
                 # print(nmcli.general()) # Get current wifi connection state General(state=<NetworkManagerState.CONNECTED_GLOBAL: 'connected'>, connectivity=<NetworkConnectivity.FULL: 'full'>, wifi_hw=True, wifi=True, wwan_hw=True, wwan=True)
-                nmcli.device.wifi_rescan()
-                nmcli.device.wifi_connect(wifi_config["ssid"], wifi_config["password"]["value"])
+                if wifi_config["hidden"]:
+                    nmcli.device.wifi_connect_hidden(wifi_config["ssid"], wifi_config["password"]["value"])
+                else:
+                    nmcli.device.wifi_rescan()
+                    nmcli.device.wifi_connect(wifi_config["ssid"], wifi_config["password"]["value"])
+                    
                 connection_status = nmcli.general().to_json()
                 if self.tx_obj:
                     if connection_status['state'] == 'connected':
