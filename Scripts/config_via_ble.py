@@ -15,6 +15,7 @@
 7. pip3 install PyGObject
 8. pip3 install dbus-python
 9. pip3 install bluezero
+10. need to config the user execute sudo without password
 
 """
 
