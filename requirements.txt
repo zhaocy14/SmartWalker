@@ -36,3 +36,4 @@ PyGObject==3.42.0
 dbus-python==1.2.18
 bluezero==0.6.0
 wifi==0.3.8
+nmcli==1.0.0
