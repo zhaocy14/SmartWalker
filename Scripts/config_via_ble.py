@@ -30,6 +30,7 @@ from bluezero import peripheral
 
 from wifi_connector import WifiConnector
 import subprocess
+import nmcli
 
 # constants
 # Custom service uuid
@@ -74,18 +75,35 @@ class BleManager(object):
             wifi_config = json.loads(bytes(value).decode('utf-8'))
             # wifi_connector = WifiConnector()
             # result = wifi_connector.Connect(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"])
-            result = subprocess.run(["nmcli", "dev", "wifi", "con", wifi_config["ssid"], "password", wifi_config["password"]["value"]])
-            print("connect result: ", result)
+            # result = subprocess.run(["nmcli", "dev", "wifi", "con", wifi_config["ssid"], "password", wifi_config["password"]["value"]])
+            # print("connect result: ", result)
 
-            if self.tx_obj:
-                self.tx_obj.set_value(b'success')
-                # if result:
-                #     self.tx_obj.set_value(b'success')
-                # else:
-                #     self.tx_obj.set_value(b'failure')
-                # self.tx_obj.set_value(bool(False).to_bytes(1, byteorder='little', signed=True))
-            else:
-                pass
+            # if self.tx_obj:
+            #     self.tx_obj.set_value(b'success')
+            # else:
+            #     pass
+            
+            try:
+                # print(nmcli.connection()) # Saved connections
+                # print(nmcli.device()) # Get all network devices
+                # print(nmcli.device.wifi()) # Get all available wifis
+                # print(nmcli.general()) # Get current wifi connection state General(state=<NetworkManagerState.CONNECTED_GLOBAL: 'connected'>, connectivity=<NetworkConnectivity.FULL: 'full'>, wifi_hw=True, wifi=True, wwan_hw=True, wwan=True)
+                nmcli.device.wifi_connect(wifi_config["ssid"], wifi_config["password"]["value"])
+                connection_status = nmcli.general().to_json()
+                if self.tx_obj:
+                    if connection_status['state'] == 'connected':
+                        self.tx_obj.set_value(b'success')
+                    else:
+                        self.tx_obj.set_value(b'failure')
+                else:
+                    pass
+                
+            except Exception as e:
+                print('catch:', e)
+                if self.tx_obj:
+                    self.tx_obj.set_value(b'failure')
+                else:
+                    pass
             
         # return bool(True).to_bytes()
 

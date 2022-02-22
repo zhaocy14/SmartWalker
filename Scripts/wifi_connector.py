@@ -54,12 +54,14 @@ class WifiConnector:
 
 if __name__ == '__main__':
     try:
-        print(nmcli.connection())
-        print(nmcli.device())
-        print(nmcli.device.wifi())
-        print(nmcli.general())
+        # print(nmcli.connection()) # Saved connections
+        # print(nmcli.device()) # Get all network devices
+        # print(nmcli.device.wifi()) # Get all available wifis
+        # print(nmcli.general()) # Get current wifi connection state General(state=<NetworkManagerState.CONNECTED_GLOBAL: 'connected'>, connectivity=<NetworkConnectivity.FULL: 'full'>, wifi_hw=True, wifi=True, wwan_hw=True, wwan=True)
+        connection_status = nmcli.general().to_json()
+        print(connection_status['state'])
 
-        # nmcli.device.wifi_connect('AP1', 'passphrase')
+        nmcli.device.wifi_connect('AP1', 'passphrase')
         # nmcli.connection.modify('AP1', {
         #         'ipv4.addresses': '192.168.1.1/24',
         #         'ipv4.gateway': '192.168.1.255',
@@ -70,5 +72,5 @@ if __name__ == '__main__':
         # nmcli.connection.delete('AP1')
         
     except Exception as e:
-        print(e)
+        print('catch:', e)
 
