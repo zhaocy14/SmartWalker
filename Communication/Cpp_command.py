@@ -9,7 +9,7 @@ import time
 
 from Communication.Modules.Driver_recv import DriverRecv
 from Communication.Modules.Infrared_transmit import InfraredTransmit
-from Sensors.LiDAR import lidar
+from Sensors.LiDAR import LiDAR as lidar
 from Sensors.IMU import IMU
 
 class CppCommand(object):
@@ -160,3 +160,8 @@ class CppCommand(object):
         else:
           self.container.exec_run("pkill -INT -f 'draw_map_realtime*'")
         self._draw_running = False
+
+if __name__=='__main__':
+    
+    with CppCommand.get_instance() as cco :
+        cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")

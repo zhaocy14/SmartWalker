@@ -189,7 +189,7 @@ class Leg_detector(object):
         self.obstacle_array[0, 4] = obstacle_area[front_od:-1, -side_od:-1].sum()
         # print(self.obstacle_array)
 
-    def scan_procedure(self, show: bool = False, is_record: bool = False, file_path: str = data_path):
+    def scan_procedure(self, show: bool = False, is_record: bool = False, file_path: str = DATA_PATH):
         while True:
             try:
                 info = self.rplidar.get_info()
