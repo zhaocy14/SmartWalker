@@ -11,7 +11,7 @@ from Sensors.SensorConfig import *
 from Sensors.SensorFunctions import *
 
 
-class lidar(object):
+class LiDAR(object):
 
     def __init__(self,is_zmq:bool=False):
         super().__init__()
@@ -19,13 +19,17 @@ class lidar(object):
         if not is_zmq:
             self.python_lidar = rplidar.RPLidar(self.port_name)
         else:
-            self.python_lidar = []
+            self.python_lidar = rplidar.RPLidar()
+        # store the data
         self.scan_data_list = []
+        # zmq part
+        self.zmq_scan_list = []
+        self.zmq_refresh_theta = 0
 
-    def rplidar_scan_procedure(self,is_show:bool=False):
+    def python_scan(self,is_show:bool=False):
         # present_time = time.time()
         while True:
-            # try:
+            try:
                 info = self.python_lidar.get_info()
                 health = self.python_lidar.get_health()
                 print(info)
@@ -34,10 +38,25 @@ class lidar(object):
                     self.scan_data_list = scan
                     if is_show:
                         print(self.scan_data_list)
-            # except BaseException as be:
-            #     self.lidar_0.clean_input()
-                # self.lidar_0.stop()
-                # self.lidar_0.stop_motor()
+            except BaseException as be:
+                self.python_lidar.clean_input()
+                self.python_lidar.stop()
+                self.python_lidar.stop_motor()
+
+    def zmq_get_one_round(self, zmq_data: dict):
+        """
+        use zmq to get lidar data from C++
+        get scan list data per round
+        """
+        theta = float(zmq_data["theta"])
+        dist = float(zmq_data["dist"])
+        quality = float(zmq_data["q"])
+        if theta < self.zmq_refresh_theta:
+            #   if theta become 0 degree from 360 degree
+            self.scan_data_list = self.zmq_scan_list
+            self.zmq_scan_list = []
+        self.zmq_refresh_theta = theta
+        self.zmq_scan_list.append([quality, theta, dist])
 
     def zmq_scan(self,is_show:bool=False):
         while True:
@@ -47,6 +66,6 @@ class lidar(object):
                 pass
 
 if __name__ == "__main__":
-    lidar_instance = lidar()
+    lidar_instance = LiDAR()
     lidar_instance.rplidar_scan_procedure(True)
 

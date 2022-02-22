@@ -2,6 +2,8 @@ import serial.tools.list_ports
 import os,sys
 import serial
 import time
+from Sensors.SensorConfig import *
+from Sensors.SensorFunctions import *
 import numpy as np
 import threading
 pwd = os.path.abspath(os.path.abspath(__file__))
@@ -16,7 +18,7 @@ class IMU(object):
     def __init__(self, baud_rate=115200,name:str=""):
         """serial information"""
         self.baud_rate = baud_rate
-        self.port_name, self.port_list = self.detect_serials("3-2.2.2") #USB-SERIAL CH340   1-3.3
+        self.port_name, self.port_list = self.detect_serials("IMU") #USB-SERIAL CH340   1-3.3
         print(self.port_name)
         self.serial = serial.Serial(self.port_name, self.baud_rate, timeout=None)
 
