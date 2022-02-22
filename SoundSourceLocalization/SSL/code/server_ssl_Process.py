@@ -371,7 +371,7 @@ class SSL(object):
     def run(self, walker_server, SSL_AUDIO_QUEUE, ):
         # DOA
         print('-' * 20, 'Loading DOA model...', '-' * 20, )
-        doa_model_path = os.path.abspath(os.path.join(CRT_DIR, '../model/ResCNN/base_model'))
+        doa_model_path = os.path.abspath(os.path.join(CRT_DIR, '../model/ResCNN/base_model_fullData_woBN'))
         self.doa = DOA(model_dir=doa_model_path, num_gcc_bin=self.num_gcc_bin, num_mel_bin=self.num_mel_bin,
                        fft_len=self.fft_len, fft_seg_len=self.fft_seg_len, fft_stepsize_ratio=self.fft_stepsize_ratio,
                        fs=SAMPLE_RATE, loadModel=True)
@@ -717,9 +717,9 @@ class SSL_Process(object):
     
     def run(self, walker_server, SSL_AUDIO_QUEUE, ):
         ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, isDebug=self.isDebug, )
-        # ssl.run(walker_server, SSL_AUDIO_QUEUE, )
+        ssl.run(walker_server, SSL_AUDIO_QUEUE, )
         # ssl.run_D3QN(walker_server, SSL_AUDIO_QUEUE, )
-        ssl.run_SAC(walker_server, SSL_AUDIO_QUEUE, )
+        # ssl.run_SAC(walker_server, SSL_AUDIO_QUEUE, )
 
 
 if __name__ == '__main__':

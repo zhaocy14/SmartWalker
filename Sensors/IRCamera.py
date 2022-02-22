@@ -1,13 +1,6 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-"""
-@File    :   Record_data.py
-@Contact :   liumingshanneo@163.com
 
-@Modify Time      @Author    @Version    @Desciption
-------------      -------    --------    -----------
-2019/10/8 19:46   msliu      1.0         None
-"""
 
 import serial.tools.list_ports
 import os,sys
@@ -32,7 +25,7 @@ class IRCamera(object):
     def __init__(self, baud_rate=460800):
         """serial information"""
         self.baud_rate = baud_rate
-        self.port_name, self.port_list = self.detect_serials("USB2.0-Serial") #USB-SERIAL CH340       USB2.0-Serial
+        self.port_name, self.port_list = self.detect_serials("3-2.1") #USB-SERIAL CH340       USB2.0-Serial
         self.serial = serial.Serial(self.port_name, self.baud_rate, timeout=None)
         print(self.port_name, self.baud_rate)
 
@@ -67,7 +60,7 @@ class IRCamera(object):
         for port in ports:
             self.print_serial(port)
 
-            if port.description.__contains__(description):
+            if port.location.__contains__(description):
                 port_list = port.description
                 port_path = port.device
                 return port_path, port_list
@@ -228,8 +221,8 @@ class IRCamera(object):
                     # time_previous = time_new
                     if demo:
                         self.demonstrate_data()
-        if write:
-            file_ir.close()
+                    if write:
+                        file_ir.close()
 
     def demonstrate_data(self, scope=10):
         temperature = []
@@ -271,7 +264,7 @@ class IRCamera(object):
 if __name__ == '__main__':
     ir_data = IRCamera()
     while True:
-        ir_data.get_irdata_once()
+        ir_data.get_irdata_once(demo=True)
     # # portname, baudrate = ir_data.get_portname_baudrate()
     # # print(portname, baudrate)
     # for i in range(100):
