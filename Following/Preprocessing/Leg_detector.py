@@ -11,7 +11,7 @@ from Sensors.SensorConfig import *
 from Sensors.SensorFunctions import *
 
 
-class Leg_detector(object):
+class LiDARProcessor(object):
     def __init__(self, is_show: bool = False, is_zmq: bool = False):
         if not is_zmq:
             self.rplidar = LiDAR.LiDAR(is_zmq=is_zmq)
@@ -46,7 +46,14 @@ class Leg_detector(object):
         self.zmq_scan_list = []
         self.theta_flag = 0
         # obstacle part
-        self.obstacle_array = np.zeros((1, 5))  # 0 means no obstacle, else means yes
+        # five regions to detect the obstacle
+        # 0 means no obstacle, else means yes
+        self.ob_front_left = 0
+        self.ob_front = 0
+        self.ob_front_right = 0
+        self.ob_left = 0
+        self.ob_right = 0
+        # obstacle detection threshold
         self.obstacle_distance = OBSTACLE_DISTANCE  # 15 cm detection
         self.front_od = FRONT_OBSTACLE_DISTANCE  # front obstacle distance
         self.side_od = SIDE_OBSTACLE_DISTANCE   # side obstacle distance
@@ -76,7 +83,15 @@ class Leg_detector(object):
             cv2.waitKey(1)
         return img
 
-    def detect_leg_boundary_version(self, kmeans: KMeans, img: np.ndarray, theta: float = 160, show: bool = False):
+    def detect_leg_version2(self, kmeans: KMeans, img: np.ndarray, theta: float = 160, show: bool = False):
+        """
+        version for new walker
+        :param kmeans:
+        :param img:
+        :param theta:
+        :param show:
+        :return:
+        """
         theta = theta / 180 * math.pi
         tan_theta = math.tan(theta / 2)
         leg_img = np.zeros((self.walker_top_boundary + self.walker_bottom_boundary + 50,
@@ -129,7 +144,7 @@ class Leg_detector(object):
             self.right_leg = infinite_far
             return infinite_far, infinite_far
 
-    def detect_leg(self, kmeans: KMeans, img: np.ndarray, theta: float = 160, show: bool = False):
+    def detect_leg_version1(self, kmeans: KMeans, img: np.ndarray, theta: float = 160, show: bool = False):
         theta = theta / 180 * math.pi
         tan_theta = math.tan(theta / 2)
         im = np.copy(img)
@@ -182,14 +197,22 @@ class Leg_detector(object):
                             self.half_size + self.bottom_boundary,
                         self.half_size - self.walker_left_boundary - side_od:
                         self.half_size + self.walker_right_boundary + side_od]
-        self.obstacle_array[0, 0] = obstacle_area[0:front_od, 0:side_od].sum()
-        self.obstacle_array[0, 1] = obstacle_area[0:front_od - 3, side_od:-side_od].sum()
-        self.obstacle_array[0, 2] = obstacle_area[0:front_od, -side_od:-1].sum()
-        self.obstacle_array[0, 3] = obstacle_area[front_od:-1, 0:side_od].sum()
-        self.obstacle_array[0, 4] = obstacle_area[front_od:-1, -side_od:-1].sum()
+        self.ob_front_left = obstacle_area[0:front_od, 0:side_od].sum()
+        self.ob_front = obstacle_area[0:front_od - 3, side_od:-side_od].sum()
+        self.ob_front_right = obstacle_area[0:front_od, -side_od:-1].sum()
+        self.ob_left = obstacle_area[front_od:-1, 0:side_od].sum()
+        self.ob_right = obstacle_area[front_od:-1, -side_od:-1].sum()
         # print(self.obstacle_array)
 
-    def scan_procedure(self, show: bool = False, is_record: bool = False, file_path: str = data_path):
+    def python_scan(self, show: bool = False, is_record: bool = False, file_path: str = data_path):
+        """
+        use python rplidar library to scan
+        not use anymore
+        :param show: show the scanning image
+        :param is_record: whether to record the data
+        :param file_path:
+        :return:
+        """
         while True:
             try:
                 info = self.rplidar.get_info()
@@ -203,7 +226,7 @@ class Leg_detector(object):
                     self.scan_raw_data = np.array(scan)
                     img = self.turn_to_img(scan)
                     self.detect_obstacle(img)
-                    self.detect_leg(self.kmeans, img, show=show)
+                    self.detect_leg_version2(self.kmeans, img, show=show)
                     if is_record:
                         time_index = time.time()
                         leg_data = np.r_[self.left_leg, self.right_leg]
@@ -244,7 +267,7 @@ class Leg_detector(object):
                     if len(self.zmq_temp_list) == 1:
                         self.scan_raw_data = np.array(self.zmq_scan_list)
                         img = self.turn_to_img(self.zmq_scan_list)
-                        self.detect_leg_boundary_version(self.kmeans, img, show=show)
+                        self.detect_leg_version2(self.kmeans, img, show=show)
                         self.detect_obstacle(img=img)
                         if is_record:
                             time_index = time.time()
@@ -254,11 +277,12 @@ class Leg_detector(object):
                             file_leg.write(str(write_data) + '\n')
                             file_leg.flush()
             except BaseException as be:
+                print("LiDAR zmq scan error")
                 pass
 
 
 if __name__ == "__main__":
-    LD = Leg_detector(is_zmq=True)
+    LD = LiDARProcessor(is_zmq=True)
     LD.zmq_scan(show=True)
     # LD = Leg_detector(is_zmq=False)
     # LD.scan_procedure(show=True, is_record=False)
