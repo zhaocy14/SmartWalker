@@ -202,7 +202,7 @@ class LiDAR_Processor(object):
             self.right_leg = infinite_far
             return infinite_far, infinite_far
 
-    def detect_obstacle(self, img: np.ndarray):
+    def detect_obstacle(self, img: np.ndarray,is_shown:bool=False):
         front_od = self.front_od
         side_od = self.side_od
         obstacle_area = img[self.half_size - self.walker_top_boundary - front_od:
@@ -214,8 +214,9 @@ class LiDAR_Processor(object):
         self.ob_front_right = obstacle_area[0:front_od, -side_od:-1].sum()
         self.ob_left = obstacle_area[front_od:-1, 0:side_od].sum()
         self.ob_right = obstacle_area[front_od:-1, -side_od:-1].sum()
-        print("Front_Left:%i, Front:%i, Front_Right:%i, Left:%i, Right:%i"%
-              (self.ob_front_left,self.ob_front,self.ob_front_right,self.ob_left,self.ob_right))
+        if is_shown:
+            print("Front_Left:%i, Front:%i, Front_Right:%i, Left:%i, Right:%i"%
+                  (self.ob_front_left,self.ob_front,self.ob_front_right,self.ob_left,self.ob_right))
         # print(self.obstacle_array)
 
     def python_scan(self, show: bool = False, is_record: bool = False, file_path: str = DATA_PATH):
@@ -282,7 +283,7 @@ class LiDAR_Processor(object):
                         self.scan_raw_data = np.array(self.zmq_scan_list)
                         img = self.turn_to_img(self.zmq_scan_list)
                         self.detect_leg_version2(self.kmeans, img, show=show)
-                        self.detect_obstacle(img=img)
+                        self.detect_obstacle(img=img,is_shown=show)
                         if is_record:
                             time_index = time.time()
                             leg_data = np.r_[self.left_leg, self.right_leg]
