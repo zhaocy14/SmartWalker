@@ -10,7 +10,7 @@ import time
 import threading
 
 from Sensors import IRCamera, IMU, Infrared_Sensor, softskin
-from Following.Preprocessing import Leg_detector
+from Following.Preprocessing import LiDAR_Processor
 from Following.Network import FrontFollowingNetwork as FFL
 from Driver import ControlOdometryDriver as cd
 """portal num"""

@@ -27,7 +27,7 @@ from multiprocessing import Process, Value, Pipe, Queue, Event
 # independent systems
 from Sensors import IRCamera, IMU, softskin, Infrared_Sensor
 from Sensors import GPS_Module, heartrate
-from Following.Preprocessing import Leg_detector
+from Following.Preprocessing import LiDAR_Processor
 from Following.Network import FrontFollowingNetwork as FFLNetwork
 from Following import FrontFollow
 from Driver import ControlOdometryDriver as cd

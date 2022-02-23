@@ -51,7 +51,7 @@ class CppCommand(object):
             self._id = id(self)
             CppCommand._instance = self
         imuObj = IMU()
-        lidarObj = lidar()
+        lidarObj = LiDAR()
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
         if mode == "online":

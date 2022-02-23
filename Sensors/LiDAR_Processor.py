@@ -11,7 +11,7 @@ from Sensors.SensorConfig import *
 from Sensors.SensorFunctions import *
 
 
-class LiDARProcessor(object):
+class LiDAR_Processor(object):
     def __init__(self, is_show: bool = False, is_zmq: bool = False):
         if not is_zmq:
             self.rplidar = LiDAR.LiDAR(is_zmq=is_zmq)
@@ -54,12 +54,16 @@ class LiDARProcessor(object):
         self.ob_left = 0
         self.ob_right = 0
         # obstacle detection threshold
-        self.obstacle_distance = OBSTACLE_DISTANCE  # 15 cm detection
         self.front_od = FRONT_OBSTACLE_DISTANCE  # front obstacle distance
         self.side_od = SIDE_OBSTACLE_DISTANCE   # side obstacle distance
 
     def turn_to_img(self, original_list: list, show: bool = False):
-        """turn the scan data list into a ndarray"""
+        """
+        turn the scan list to a size times size image
+        :param original_list:
+        :param show:
+        :return:
+        """
         img = np.zeros((self.size, self.size))
         for i in range(len(original_list)):
             theta = original_list[i][1]
@@ -145,6 +149,14 @@ class LiDARProcessor(object):
             return infinite_far, infinite_far
 
     def detect_leg_version1(self, kmeans: KMeans, img: np.ndarray, theta: float = 160, show: bool = False):
+        """
+        for old walker
+        :param kmeans:
+        :param img:
+        :param theta:
+        :param show:
+        :return:
+        """
         theta = theta / 180 * math.pi
         tan_theta = math.tan(theta / 2)
         im = np.copy(img)
@@ -202,9 +214,11 @@ class LiDARProcessor(object):
         self.ob_front_right = obstacle_area[0:front_od, -side_od:-1].sum()
         self.ob_left = obstacle_area[front_od:-1, 0:side_od].sum()
         self.ob_right = obstacle_area[front_od:-1, -side_od:-1].sum()
+        print("Front_Left:%i, Front:%i, Front_Right:%i, Left:%i, Right:%i"%
+              (self.ob_front_left,self.ob_front,self.ob_front_right,self.ob_left,self.ob_right))
         # print(self.obstacle_array)
 
-    def python_scan(self, show: bool = False, is_record: bool = False, file_path: str = data_path):
+    def python_scan(self, show: bool = False, is_record: bool = False, file_path: str = DATA_PATH):
         """
         use python rplidar library to scan
         not use anymore
@@ -261,7 +275,7 @@ class LiDARProcessor(object):
             data_path = file_path + os.path.sep + "leg.txt"
             file_leg = open(data_path, 'w')
         while True:
-            try:
+            # try:
                 for scan in self.rzo.startLidar():
                     self.zmq_get_one_round(scan)
                     if len(self.zmq_temp_list) == 1:
@@ -276,13 +290,13 @@ class LiDARProcessor(object):
                             write_data.insert(0, time_index)
                             file_leg.write(str(write_data) + '\n')
                             file_leg.flush()
-            except BaseException as be:
-                print("LiDAR zmq scan error")
-                pass
+            # except BaseException as be:
+            #     print("LiDAR zmq scan error")
+            #     pass
 
 
 if __name__ == "__main__":
-    LD = LiDARProcessor(is_zmq=True)
+    LD = LiDAR_Processor(is_zmq=True)
     LD.zmq_scan(show=True)
     # LD = Leg_detector(is_zmq=False)
     # LD.scan_procedure(show=True, is_record=False)
