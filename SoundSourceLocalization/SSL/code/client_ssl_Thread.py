@@ -24,8 +24,7 @@ import threading
 # independent systems
 from SoundSourceLocalization.SSL_Settings import *
 from SoundSourceLocalization.SSL.code.ssl_turning import SSLturning
-# import Driver.ControlOdometryDriver as CD
-import Sensors.STM32 as STM32
+import Driver.ControlOdometryDriver as CD
 
 
 class SSL(object):
@@ -50,7 +49,7 @@ class SSL(object):
             if direction is None:
                 continue
             print(f'Direction ({direction}) is received')
-            # direction = (16 - direction) % 8
+            direction = (16 - direction) % 8
             ### 接入Owen的模块，传入aim_loca
             if self.useCD:
                 direction = direction * 45
@@ -72,8 +71,7 @@ class SSL_Thread(object):
         self.left_right = left_right
     
     def run(self, walker_client, SHARED_SSL_EVENT):
-        # cd = CD.ControlDriver(left_right=self.left_right) if self.useCD else ''
-        cd = STM32.STM32Sensors() if self.useCD else ''
+        cd = CD.ControlDriver(left_right=self.left_right) if self.useCD else ''
         if self.useCD:
             cd_thread = threading.Thread(target=cd.control_part, args=())
             cd_thread.start()

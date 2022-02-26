@@ -14,7 +14,7 @@ from Sensors.SensorFunctions import *
 
 class LiDAR(object):
 
-    def __init__(self,is_zmq:bool=True):
+    def __init__(self,is_zmq:bool=False):
         super().__init__()
         self.port_name = detect_serials(port_key=LIDAR_DISCRIPTION, sensor_name="LiDAR")
         if not is_zmq:
@@ -70,7 +70,7 @@ class LiDAR(object):
                     if len(self.zmq_temp_list) == 1:
                         self.scan_raw_data = np.array(self.zmq_scan_list)
                         img = self.turn_to_img(self.zmq_scan_list)
-                        self.detect_leg_boundary_version(self.kmeans, img, show=is_show)
+                        self.detect_leg_boundary_version(self.kmeans, img, show=show)
                         self.detect_obstacle(img=img)
             except BaseException as be:
                 pass

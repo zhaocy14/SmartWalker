@@ -4,8 +4,7 @@
 import math
 import time
 
-
-def SSLturning_control_driver(cd, angle):
+def SSLturning(cd, angle):
     '''
     turning relative to the original position
     :param cd:
@@ -124,26 +123,3 @@ def SSLturning_control_driver(cd, angle):
     cd.omega = 0
     time.sleep(0.1)
     # print('final position: ', cd.position[2])
-
-
-def SSLturning(cd, angle):
-    cd.UpdateDriver(linearVelocity=0, angularVelocity=0, distanceToCenter=0)
-    
-    config = {
-        0  : (0, 0),
-        45 : (-0.2, 3.4),
-        90 : (-0.3, 4.6),
-        135: (-0.3, 7),
-        180: (0.3, 10),
-        225: (0.3, 7),
-        270: (0.3, 4.5),
-        315: (0.2, 3.2),
-    }
-    
-    omega, time_len = config[angle]
-    cd.UpdateDriver(linearVelocity=0, angularVelocity=omega, distanceToCenter=0)
-    time.sleep(time_len)
-
-
-if __name__ == '__main__':
-    SSLturning('', 45)

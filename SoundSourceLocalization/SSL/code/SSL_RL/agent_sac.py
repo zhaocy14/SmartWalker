@@ -117,7 +117,7 @@ class SACAgent(object):
     
     def __heuristic_target_entropy__(self, action_space_size):
         ''' return target_entropy for discrete action space '''
-        return -np.log(1.0 / action_space_size) * 0.3
+        return -np.log(1.0 / action_space_size) * 0.5
     
     # @tf.function(experimental_relax_shapes=True)
     def __compute_Q_targets__(self, rewards, next_states, dones):
