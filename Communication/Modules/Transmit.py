@@ -1,4 +1,16 @@
+#
+# Created on Sun Feb 27 2022
+# Author: Owen Yip
+# Mail: me@owenyip.com
+#
+
 import zmq
+import os,sys
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
+grandpa_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + ".." + os.path.sep + "..")
+sys.path.append(grandpa_path)
 from global_variables import WalkerPort
 
 class TransmitZMQ(object):

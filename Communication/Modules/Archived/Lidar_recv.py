@@ -14,21 +14,18 @@ sys.path.append(father_path)
 import threading
 
 # from Network import FrontFollowingNetwork as FFL
+from global_variables import CommTopic
 from Communication.Modules.Receive import ReceiveZMQ
 rzo = ReceiveZMQ.get_instance()
-from Communication.Modules.Variables import *
 
 class LidarRecv(object):
-    def __init__(self, topic=None):
-        if topic is None:
-            self.topic = lidar_topic
-        else:
-            self.topic = topic
+    def __init__(self):
+        self.topic = CommTopic.LIDAR
     
 
     def start(self, use_thread=False):
         def _start():
-            for topic, msg in rzo.start(self.topic):
+            for topic, msg in rzo.start(topics=[self.topic]):
                 """Handle the pose data here"""
                 print("Received request - {}::{}".format(topic, msg))
         

@@ -5,7 +5,7 @@ sys.path.append(father_path)
 import time
 
 from Communication.Cpp_command import CppCommand
-from Communication.Receiver import Receiver
+# from Communication.Receiver import Receiver
 # cco = CppCommand.get_instance(lidar_port="/dev/ttyUSB2", imu_port="/dev/ttyUSB1")
 # cco = CppCommand.get_instance()
 if __name__ == "__main__":
