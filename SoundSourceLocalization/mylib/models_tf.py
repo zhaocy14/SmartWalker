@@ -6,10 +6,8 @@ from tensorflow.keras.regularizers import l1_l2, l2
 from tensorflow.keras.constraints import max_norm
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras import backend as K
-
-# import tensorflow.keras.backend as K
+import tensorflow.keras.backend as K
 # K.set_image_data_format('channels_first')
-print('Warning: These are channels_first models')
 
 
 # from .utils_tf import BaseClassicalModel

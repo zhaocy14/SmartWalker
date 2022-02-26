@@ -14,7 +14,7 @@ import tensorflow as tf
 from Sensors import IRCamera, softskin, Infrared_Sensor
 from Driver import ControlOdometryDriver as CD
 from Following.Network import FrontFollowingNetwork as FFL
-from Following.Preprocessing import Leg_detector
+from Following.Preprocessing import LiDAR_Processor
 # import FrontFollowing.Preprocessing.Leg_detector
 # import FrontFollowing.Network.FrontFollowingNetwork as FFL
 

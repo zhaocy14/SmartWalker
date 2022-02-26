@@ -20,7 +20,7 @@ class LiDAR(object):
         if not is_zmq:
             self.python_lidar = rplidar.RPLidar(self.port_name)
         else:
-            self.python_lidar = []
+            self.python_lidar = rplidar.RPLidar()
         # store the data
         self.scan_data_list = []
         # zmq part
@@ -68,15 +68,14 @@ class LiDAR(object):
                 for scan in self.rzo.startLidar():
                     self.zmq_get_one_round(scan)
                     if len(self.zmq_temp_list) == 1:
-                        if is_show:
-                            print(self.zmq_scan_list)
-                        # img = self.turn_to_img(self.zmq_scan_list)
-                        # self.detect_leg_boundary_version(self.kmeans, img, show=show)
-                        # self.detect_obstacle(img=img)
+                        self.scan_raw_data = np.array(self.zmq_scan_list)
+                        img = self.turn_to_img(self.zmq_scan_list)
+                        self.detect_leg_boundary_version(self.kmeans, img, show=is_show)
+                        self.detect_obstacle(img=img)
             except BaseException as be:
                 pass
 
 if __name__ == "__main__":
     lidar_instance = LiDAR()
-    lidar_instance.zmq_scan(True)
+    lidar_instance.rplidar_scan_procedure(True)
 

@@ -9,7 +9,7 @@ import time
 
 from Communication.Modules.Driver_recv import DriverRecv
 from Communication.Modules.Infrared_transmit import InfraredTransmit
-from Sensors.LiDAR import LiDAR as lidar
+from Sensors.LiDAR import LiDAR
 from Sensors.IMU import IMU
 
 class CppCommand(object):
@@ -50,13 +50,13 @@ class CppCommand(object):
         else:
             self._id = id(self)
             CppCommand._instance = self
-        # imuObj = IMU()
-        # lidarObj = lidar()
+        imuObj = IMU()
+        lidarObj = LiDAR()
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
         if mode == "online":
             imuObj = IMU()
-            lidarObj = lidar()
+            lidarObj = LiDAR()
             self.lidar_port = lidarObj.port_name
             self.imu_port = imuObj.port_name
         # Initialize the driver receiver object
