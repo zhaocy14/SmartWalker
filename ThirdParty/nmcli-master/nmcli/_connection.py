@@ -63,6 +63,7 @@ class ConnectionControl(ConnectionControlInterface):
             cmd += ['autoconnect', 'yes' if autoconnect else 'no']
         if not name is None:
             cmd += ['con-name', name]
+            cmd += ['ssid', name]
         options = {} if options is None else options
         for k, v in options.items():
             cmd += [k, v]

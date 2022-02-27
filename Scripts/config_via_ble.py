@@ -89,14 +89,24 @@ class BleManager(object):
                 # print(nmcli.device()) # Get all network devices
                 # print(nmcli.device.wifi()) # Get all available wifis
                 # print(nmcli.general()) # Get current wifi connection state General(state=<NetworkManagerState.CONNECTED_GLOBAL: 'connected'>, connectivity=<NetworkConnectivity.FULL: 'full'>, wifi_hw=True, wifi=True, wwan_hw=True, wwan=True)
+                connectionOptions = {
+                    "wifi-sec.key-mgmt": "wpa-psk",
+                    "wifi-sec.psk": wifi_config["password"]["value"]
+                }
+
+                try:
+                    nmcli.connection.delete(name=wifi_config["ssid"])
+                except Exception as e:
+                    pass
+
                 if wifi_config["hidden"]:
+                    connectionOptions["802-11-wireless.hidden"] = "yes"
                     print('This is a hidden network')
-                    nmcli.device.wifi_connect_hidden(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
-                else:
-                    print('This is a open network')
-                    nmcli.device.wifi()
-                    nmcli.device.wifi_connect(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
                     
+                    # nmcli.device.wifi_connect_hidden(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
+                nmcli.connection.add(conn_type="wifi", options=connectionOptions, name=wifi_config["ssid"], autoconnect=True)
+                nmcli.connection.up(name=wifi_config["ssid"], wait=20)
+                
                 if self.tx_obj:
                     retry = 10
                     connected = False
