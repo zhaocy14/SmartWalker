@@ -100,12 +100,14 @@ class BleManager(object):
                     pass
 
                 if wifi_config["hidden"]:
-                    connectionOptions["802-11-wireless.hidden"] = "yes"
                     print('This is a hidden network')
-                    
+                    connectionOptions["802-11-wireless.hidden"] = "yes"
                     # nmcli.device.wifi_connect_hidden(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
-                nmcli.connection.add(conn_type="wifi", options=connectionOptions, name=wifi_config["ssid"], autoconnect=True)
-                nmcli.connection.up(name=wifi_config["ssid"], wait=20)
+                    nmcli.connection.add(conn_type="wifi", options=connectionOptions, name=wifi_config["ssid"], autoconnect=True)
+                    nmcli.connection.up(name=wifi_config["ssid"], wait=20)
+                else:
+                    nmcli.device.wifi()
+                    nmcli.device.wifi_connect(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
                 
                 if self.tx_obj:
                     retry = 10

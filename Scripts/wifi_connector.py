@@ -11,7 +11,7 @@ import time
 class WifiConnector:
 
     # function to establish a new connection
-    def createNewConnection(self, name, SSID, password):
+    def createNewConnection(self, name, SSID, password, hidden=False):
         config = """<?xml version=\"1.0\"?>
     <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
         <name>"""+name+"""</name>
