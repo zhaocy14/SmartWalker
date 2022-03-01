@@ -32,11 +32,11 @@ if __name__ == '__main__':
     
     rzo = ReceiveZMQ.get_instance()
     
-    for topic, message in rzo.start(topics=[CommTopic.POSE]):
+    for topic, message in rzo.start(topics=[CommTopic.POSE.value,]):
         print(message)
     
     # """Transmit demo"""
     transmitterObj = TransmitZMQ.get_instance()
-    transmitterObj.send(topic=CommTopic.SL, msg=(330, 80))
+    transmitterObj.send(topic=CommTopic.SL.value, msg=(330, 80))
     
     p1.join()
