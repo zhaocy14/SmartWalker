@@ -10,6 +10,7 @@ RECORD_WIDTH = 2
 CHUNK = 1024
 CHUNK_SIZE = 16  # 1ms的采样点数，此参数可以使得语音队列中每一个值对应1ms的音频
 AUDIO_COMMUNICATION_TOPIC = 'audio'
+ENERGY_THRESHOLD = 0.002  # for latency test
 
 # KeyWord Spotting
 MAX_COMMAND_SECONDS = 3

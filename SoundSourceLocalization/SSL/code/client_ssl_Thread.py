@@ -61,6 +61,7 @@ class SSL(object):
             if direction is None:
                 continue
             print(f'Direction ({direction}) is received')
+            print('Direction:', time.time())
             # direction = (16 - direction) % 8
             ### 接入Owen的模块，传入aim_loca
             if self.useCD:
