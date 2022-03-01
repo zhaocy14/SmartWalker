@@ -12,17 +12,30 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 
+from threading import Thread
 from Communication.Modules.Variables import *
 from Communication.Modules.Receive import ReceiveZMQ
 from Communication.Modules.Transmit import TransmitZMQ
+from Communication.Cpp_command import CppCommand
+
+
+def start_CppCommand():
+    with CppCommand.get_instance() as cco:
+        # cco.start_sensors(stdout=True)
+        cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")
+
 
 if __name__ == '__main__':
+    p1 = Thread(target=start_CppCommand)
+    p1.start()
     
-    rzo = ReceiveZMQ.get_instance()
+    # rzo = ReceiveZMQ.get_instance()
     
-    for topic, message in rzo.start(topic=pose_topic):
-        print(message)
+    # for topic, message in rzo.start(topic=pose_topic):
+    #    print(message)
     
     # """Transmit demo"""
-    # transmitterObj = TransmitZMQ.get_instance()
-    # transmitterObj.single_send(sl_topic, "content here")
+    transmitterObj = TransmitZMQ.get_instance()
+    transmitterObj.single_send(sl_topic, (330, 80))
+    
+    p1.join()
