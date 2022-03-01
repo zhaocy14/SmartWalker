@@ -35,7 +35,7 @@ class Infrared_Sensor(object):
 
     def turn_to_distance(self, sensor_range: int = 80):
         self.distance_data = self.distance_data / 1024 * 5
-        print(self.distance_data)
+        # print(self.distance_data)
         if sensor_range == 150:
             for j in range(self.sensor_num):
                 for i in range(self.table_150.shape[1]):
