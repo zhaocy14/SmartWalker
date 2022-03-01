@@ -375,11 +375,24 @@ class MonitorVoice(object):
         '''
         print('-' * 20, "Monitoring microphones...", '-' * 20)
         
+        self.time_queue = deque(max_len=50)
+        
+        def print_time():
+            while len(self.time_queue) == 50:
+                audio = np.mean(np.concatenate(self.time_queue), axis=0)
+                energy = np.average(audio ** 2)
+                if energy > ENERGY_THRESHOLD:
+                    print('-' * 20, 'Send:', time.time(), '-' * 20)
+        
+        p1 = Thread(target=print_time, args=())
+        p1.start()
+        
         def PyAudioCallback(in_data, frame_count, time_info, status):
             if self.CompleteMappingMicro:
                 audio = self.split_channels_from_frame(frame=in_data,
                                                        mapping_flag=True, micro_mapping=self.micro_mapping)
                 walker_client.send(data=audio, subtopic=AUDIO_COMMUNICATION_TOPIC)
+                self.time_queue.append(audio)
                 # print('An audio frame is sent')
                 # if speed_test:
                 #     global audio_speed_test_frame_count, audio_speed_test_start_time
