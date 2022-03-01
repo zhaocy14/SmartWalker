@@ -2,7 +2,6 @@ import os, sys
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
-
 import time
 
 from Communication.Cpp_command import CppCommand
@@ -11,6 +10,17 @@ from Communication.Receiver import Receiver
 # cco = CppCommand.get_instance()
 if __name__ == "__main__":
     with CppCommand.get_instance() as cco:
+        '''
+            Start sensors
+        '''
+        cco.start_sensors(stdout=False)
+        # cco.start_drawing(stdout=True)
+        
+        '''
+            Start map drawing 
+        '''
+        # cco.start_drawing(stdout=True)
+        
         # cco.start_navigation(mode="offline", testing="local", stdout=False, map_file="map.2021-09-25.070808")
         '''
             Start navigation example
@@ -24,14 +34,8 @@ if __name__ == "__main__":
         # recvObj.start_DriverControl()
         # for _ in recvObj.start_Pose():
         #     print("testing", _)
-
-        '''
-            Start map drawing example
-        '''
-        # cco.start_drawing(stdout=True)
-
-        '''
-            Start sensors command example
-        '''
-        cco.start_sensors(stdout=False)
-        # cco.start_drawing(stdout=True)
+        
+        '''Force stop Cpp program'''
+        # cco.stop_navigation(force=True)
+        # cco.stop_drawing(force=True)
+        # cco.stop_sensors(force=True)

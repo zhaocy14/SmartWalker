@@ -10,6 +10,7 @@ pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 import zmq
+from global_variables import WalkerPort
 
 from Communication.Modules.Variables import *
 
@@ -17,7 +18,7 @@ class ReceiveZMQ(object):
     _instance = None
 
     @staticmethod
-    def get_instance(address="127.0.0.1", port="5454", lidarPort="5450", imuPort="5451"):
+    def get_instance(address="127.0.0.1", port=WalkerPort.RECV.value, lidarPort=WalkerPort.LIDAR.value, imuPort=WalkerPort.IMU.value):
         if ReceiveZMQ._instance is None:
             ReceiveZMQ(address=address, port=port, lidarPort=lidarPort, imuPort=imuPort)
         return ReceiveZMQ._instance
@@ -25,7 +26,7 @@ class ReceiveZMQ(object):
     def get_id(self):
         return self._id
 
-    def __init__(self, address="127.0.0.1", port="5454", lidarPort="5450", imuPort="5451"):
+    def __init__(self, address="127.0.0.1", port=WalkerPort.RECV.value, lidarPort=WalkerPort.LIDAR.value, imuPort=WalkerPort.IMU.value):
         if ReceiveZMQ._instance is not None:
             raise Exception('only one instance can exist')
         else:

@@ -54,14 +54,13 @@ class Voice_Process(object):
         #         p1 = Process(target=self.build_tunnel,
         #                      args=('sshpass -p ZpBrwNaX ssh -tt -L 6015:net-g14:8008 swang@gatekeeper.cs.hku.hk',))
         #         p1.start()
-        #         p2 = Process(target=self.build_tunnel,
+        #         p2 = Process(target=self.build_tunnel,jTPBAjXeZatDD5Lm
         #                      args=('sshpass -p ZpBrwNaX ssh -tt -L 6016:net-g14:8080 swang@gatekeeper.cs.hku.hk',))
         #         p2.start()
         #         print('-' * 20, 'Tunnelings have been built.', '-' * 20, )
         #
         #
         # TunnelBuilder().run()
-        
         walker_client = WalkerClient()
         mv = MonitorVoice(MappingMicro=self.MappingMicro)
         kws = KeyWordSpotting()

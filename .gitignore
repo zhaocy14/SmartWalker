@@ -141,5 +141,7 @@ virtualenv/
 .idea
 
 
-.vscode/sftp.json*!/SoundSourceLocalization/lib/
+.vscode/
+.DS_Store
+!/SoundSourceLocalization/lib/
 !/SoundSourceLocalization/mylib/

@@ -34,6 +34,7 @@ class InfraredTransmit(object):
     
 
     def start(self, use_thread=False):
+
         def _start():
             while True:
                 if self.mode == "online" and self.IRSensor.distance_data.size > 0:

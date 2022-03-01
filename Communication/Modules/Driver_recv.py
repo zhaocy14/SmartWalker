@@ -13,11 +13,12 @@ sys.path.append(father_path)
 import threading
 import json
 
-from Driver import ControlOdometryDriver as cd
+# from Driver import ControlOdometryDriver as cd
 # from Network import FrontFollowingNetwork as FFL
 from Communication.Modules.Receive import ReceiveZMQ
 rzo = ReceiveZMQ.get_instance()
 from Communication.Modules.Variables import *
+from Sensors.STM32 import STM32Sensors
 
 class DriverRecv(object):
     def __init__(self, topic=None, mode="online"):
@@ -28,14 +29,18 @@ class DriverRecv(object):
             self.topic = topic
 
         if mode == "online":
-            self.CD = cd.ControlDriver(record_mode=False, left_right=0)
-            thread_cd = threading.Thread(target=self.CD.control_part, args=())
-            init_control = {
-              "speed": 0,
-              "radius": 0,
-              "omega": 0
-            }
-            self.send_control(init_control)
+            # self.CD = cd.ControlDriver(record_mode=False, left_right=0)
+            # thread_cd = threading.Thread(target=self.CD.control_part, args=())
+            # init_control = {
+            #   "speed": 0,
+            #   "radius": 0,
+            #   "omega": 0
+            # }
+            # self.send_control(init_control)
+            # thread_cd.start()
+            self.STM32 = STM32Sensors()
+            thread_cd = threading.Thread(target=self.STM32.STM_loop, args=())
+            self.STM32.UpdateDriver(linearVelocity=0,angularVelocity=0,distanceToCenter=0)
             thread_cd.start()
     
 
@@ -57,9 +62,14 @@ class DriverRecv(object):
     
     def send_control(self, control = None):
         if control is not None:
-            self.CD.speed = control['speed']
-            self.CD.radius = control['radius']
-            self.CD.omega = control['omega']
+            # self.CD.speed = control['speed']
+            # self.CD.radius = control['radius']
+            # self.CD.omega = control['omega']
+            ''''Convert to new STM32 params'''
+            _linearVelocity = control['speed'] * 100
+            _angularVelocity = -control['omega']
+            _distanceToCenter = control['radius']
+            self.STM32.UpdateDriver(linearVelocity=_linearVelocity,angularVelocity=_angularVelocity,distanceToCenter=_distanceToCenter)
 
 
 if __name__ == "__main__":

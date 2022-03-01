@@ -1,10 +1,11 @@
 import zmq
+from global_variables import WalkerPort
 
 class TransmitZMQ(object):
     _instance = None
 
     @staticmethod
-    def get_instance(address="*", port="5455"):
+    def get_instance(address="*", port=WalkerPort.TRANSMIT.value):
         if TransmitZMQ._instance is None:
             TransmitZMQ(address=address, port=port)
         return TransmitZMQ._instance
@@ -12,7 +13,7 @@ class TransmitZMQ(object):
     def get_id(self):
         return self._id
 
-    def __init__(self, address="*", port="5455"):
+    def __init__(self, address="*", port=WalkerPort.TRANSMIT.value):
         if TransmitZMQ._instance is not None:
             raise Exception('only one instance can exist')
         else:
