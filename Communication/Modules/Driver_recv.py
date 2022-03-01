@@ -61,6 +61,7 @@ class DriverRecv(object):
             _angularVelocity = -control['omega']
             _distanceToCenter = control['radius']
             if self.STM32:
+                print('Current mode is "online", control received', control)
                 self.STM32.UpdateDriver(linearVelocity=_linearVelocity,angularVelocity=_angularVelocity,distanceToCenter=_distanceToCenter)
             else:
                 print('Current mode is not "online", control received', control)

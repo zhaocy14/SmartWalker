@@ -131,9 +131,9 @@ class STM32Sensors():
         try:
             while True:
                 # TODO: change every data update
-                self.GetSoftskinData()
+                #self.GetSoftskinData()
                 # self.skin.update_from_STM32(self.softskin_data)
-                self.GetInfraredData()
+                #self.GetInfraredData()
                 # self.Infrared.update_from_STM32(self.infrared_sensor_data)
                 self.SetVehicleSpeed()
         except:
@@ -158,7 +158,7 @@ if __name__ == "__main__":
         # time.sleep(2)
         STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0,distanceToCenter=0)
         time.sleep(2)
-        STM32_instance.UpdateDriver(linearVelocity=10,angularVelocity=0,distanceToCenter=0)
+        STM32_instance.UpdateDriver(linearVelocity=-10,angularVelocity=0,distanceToCenter=0)
         time.sleep(2)
         STM32_instance.UpdateDriver(linearVelocity=0,angularVelocity=0,distanceToCenter=0)
 

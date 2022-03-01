@@ -55,7 +55,7 @@ class SSL(object):
             if self.useCD:
                 direction = direction * 45
                 SSLturning(control_driver, direction)
-                speed = STEP_SIZE * 100 / FORWARD_SECONDS
+                speed = STEP_SIZE * 150 / FORWARD_SECONDS
                 control_driver.UpdateDriver(linearVelocity=speed, angularVelocity=0, distanceToCenter=0)
                 time.sleep(FORWARD_SECONDS)
                 control_driver.UpdateDriver(linearVelocity=0, angularVelocity=0, distanceToCenter=0)

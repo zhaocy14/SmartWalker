@@ -23,8 +23,8 @@ class SERVER:
         self.transmit_topic = "NAV_WALKER_POSE"
         self.receive_topic = "NAV_SL_LOCATION"
         
-        self.transmit_socket = context.socket(zmq.PUB)
-        self.transmit_socket.bind("tcp://*:5455")
+        #self.transmit_socket = context.socket(zmq.PUB)
+        #self.transmit_socket.bind("tcp://*:5455")
         
         self.receive_socket = context.socket(zmq.SUB)
         self.receive_socket.connect("tcp://127.0.0.1:%s" % sl_port)
@@ -54,8 +54,8 @@ class SERVER:
 if __name__ == "__main__":
     msg = 'server to client'
     server = SERVER()
-    p2 = threading.Thread(target=server.transmit_forever, args=((msg,)))
+    #p2 = threading.Thread(target=server.transmit_forever, args=((msg,)))
     p1 = threading.Thread(target=server.receive_forever, args=())
     
-    p2.start()
+    #p2.start()
     p1.start()
