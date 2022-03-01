@@ -189,7 +189,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
     
     MappingMicro = False
-    useCD = True
+    useCD = False
     left_right = 0
     SSL_Event = multiprocessing.Event()
     SSL_Event.set()  # TODO: for debugging
