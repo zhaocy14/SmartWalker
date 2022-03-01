@@ -13,10 +13,11 @@ father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
 
 from threading import Thread
-from Communication.Modules.Variables import *
 from Communication.Modules.Receive import ReceiveZMQ
 from Communication.Modules.Transmit import TransmitZMQ
 from Communication.Cpp_command import CppCommand
+
+from global_variables import WalkerPort, CommTopic
 
 
 def start_CppCommand():
@@ -29,13 +30,13 @@ if __name__ == '__main__':
     p1 = Thread(target=start_CppCommand)
     p1.start()
     
-    # rzo = ReceiveZMQ.get_instance()
+    rzo = ReceiveZMQ.get_instance()
     
-    # for topic, message in rzo.start(topic=pose_topic):
-    #    print(message)
+    for topic, message in rzo.start(topic=CommTopic.POSE):
+        print(message)
     
     # """Transmit demo"""
     transmitterObj = TransmitZMQ.get_instance()
-    transmitterObj.single_send(sl_topic, (330, 80))
+    transmitterObj.single_send(CommTopic.SL, (330, 80))
     
     p1.join()

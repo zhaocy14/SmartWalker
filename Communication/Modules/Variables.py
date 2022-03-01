@@ -1,7 +1,0 @@
-driver_topic="DRIVER_CONTROL"
-pose_topic="NAV_WALKER_POSE"
-lidar_topic="RP_LIDAR_SENSOR"
-imu_topic="IMU_SENSOR"
-ir_topic="IR_SENSOR"
-time_topic="TIMER"
-sl_topic="NAV_SL_LOCATION"
