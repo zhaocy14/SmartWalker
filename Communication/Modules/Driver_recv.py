@@ -10,43 +10,34 @@ import os,sys
 pwd = os.path.abspath(os.path.abspath(__file__))
 father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
 sys.path.append(father_path)
+grandpa_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + ".." + os.path.sep + "..")
+sys.path.append(grandpa_path)
 import threading
 import json
 
 # from Driver import ControlOdometryDriver as cd
 # from Network import FrontFollowingNetwork as FFL
+# from Communication.Modules.Variables import *
+from Sensors.STM32 import STM32Sensors
+from global_variables import CommTopic
 from Communication.Modules.Receive import ReceiveZMQ
 rzo = ReceiveZMQ.get_instance()
-from Communication.Modules.Variables import *
-from Sensors.STM32 import STM32Sensors
 
 class DriverRecv(object):
-    def __init__(self, topic=None, mode="online"):
+    def __init__(self, mode="online"):
         self.mode = mode
-        if topic is None:
-            self.topic = driver_topic
-        else:
-            self.topic = topic
-
-        if mode == "online":
-            # self.CD = cd.ControlDriver(record_mode=False, left_right=0)
-            # thread_cd = threading.Thread(target=self.CD.control_part, args=())
-            # init_control = {
-            #   "speed": 0,
-            #   "radius": 0,
-            #   "omega": 0
-            # }
-            # self.send_control(init_control)
-            # thread_cd.start()
-            self.STM32 = STM32Sensors()
-            thread_cd = threading.Thread(target=self.STM32.STM_loop, args=())
-            self.STM32.UpdateDriver(linearVelocity=0,angularVelocity=0,distanceToCenter=0)
-            thread_cd.start()
+        # if topic is None:
+        #     self.topic = driver_topic
+        # else:
+        #     self.topic = topic
+        self.topic = CommTopic.DRIVER.value
+        self.STM32 = None
     
 
     def start(self, use_thread=False):
+        self.start_driver()
         def _start():
-            for topic, msg in rzo.start(self.topic):
+            for topic, msg in rzo.start(topics=[self.topic]):
                 if self.mode == "online":
                     control = json.loads(msg)
                     if len(control) > 0:
@@ -69,7 +60,17 @@ class DriverRecv(object):
             _linearVelocity = control['speed'] * 100
             _angularVelocity = -control['omega']
             _distanceToCenter = control['radius']
-            self.STM32.UpdateDriver(linearVelocity=_linearVelocity,angularVelocity=_angularVelocity,distanceToCenter=_distanceToCenter)
+            if self.STM32:
+                self.STM32.UpdateDriver(linearVelocity=_linearVelocity,angularVelocity=_angularVelocity,distanceToCenter=_distanceToCenter)
+            else:
+                print('Current mode is not "online", control received', control)
+    
+    def start_driver(self):
+        if self.mode == "online":
+            self.STM32 = STM32Sensors()
+            thread_cd = threading.Thread(target=self.STM32.STM_loop, args=())
+            self.STM32.UpdateDriver(linearVelocity=0,angularVelocity=0,distanceToCenter=0)
+            thread_cd.start()
 
 
 if __name__ == "__main__":

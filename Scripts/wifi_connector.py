@@ -6,11 +6,12 @@
 import os
 import subprocess
 import nmcli
+import time
 
 class WifiConnector:
 
     # function to establish a new connection
-    def createNewConnection(self, name, SSID, password):
+    def createNewConnection(self, name, SSID, password, hidden=False):
         config = """<?xml version=\"1.0\"?>
     <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
         <name>"""+name+"""</name>
@@ -54,14 +55,32 @@ class WifiConnector:
 
 if __name__ == '__main__':
     try:
+        # connection_status = nmcli.general().to_json()
+        # print(connection_status['state'])
         # print(nmcli.connection()) # Saved connections
         # print(nmcli.device()) # Get all network devices
         # print(nmcli.device.wifi()) # Get all available wifis
         # print(nmcli.general()) # Get current wifi connection state General(state=<NetworkManagerState.CONNECTED_GLOBAL: 'connected'>, connectivity=<NetworkConnectivity.FULL: 'full'>, wifi_hw=True, wifi=True, wwan_hw=True, wwan=True)
-        connection_status = nmcli.general().to_json()
-        print(connection_status['state'])
-
-        nmcli.device.wifi_connect('AP1', 'passphrase')
+        
+        
+        # nmcli.device.disconnect('wlo1')
+        # connection_status = nmcli.general().to_json()
+        # print(connection_status['state'])
+        # time.sleep(5)
+        # connection_status = nmcli.general().to_json()
+        # print(connection_status['state'])
+        # time.sleep(5)
+        # nmcli.device.wifi_connect(ssid='Forence', password='12345678', wait=20)
+        # connection_status = nmcli.general().to_json()
+        # print(connection_status['state'])
+        # time.sleep(5)
+        # connection_status = nmcli.general().to_json()
+        # print(connection_status['state'])
+        # time.sleep(5)
+        # connection_status = nmcli.general().to_json()
+        # print(connection_status['state'])
+        
+        
         # nmcli.connection.modify('AP1', {
         #         'ipv4.addresses': '192.168.1.1/24',
         #         'ipv4.gateway': '192.168.1.255',
@@ -70,6 +89,9 @@ if __name__ == '__main__':
         # nmcli.connection.down('AP1')
         # nmcli.connection.up('AP1')
         # nmcli.connection.delete('AP1')
+        print('start')
+        print(nmcli.device.wifi())
+        print('end')
         
     except Exception as e:
         print('catch:', e)

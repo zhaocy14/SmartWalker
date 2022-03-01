@@ -82,7 +82,7 @@ if __name__ == "__main__":
             IRCamera.get_irdata_once()
             print("Abnormal Pressure!")
             continue
-        IRCamera.get_irdata_once(demo=True)
+        IRCamera.get_irdata_once()
         if len(IRCamera.temperature) == 768:
             normalized_temperature = np.array(IRCamera.temperature).reshape((ir_data_width, 1))
             normalized_temperature = (normalized_temperature-min_ir)/(max_ir-min_ir)

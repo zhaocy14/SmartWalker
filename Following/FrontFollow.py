@@ -11,7 +11,7 @@ import threading
 import numpy as np
 
 from Sensors import IRCamera, IMU, Infrared_Sensor, softskin
-from Following.Preprocessing import Leg_detector
+from Following.Preprocessing import LiDAR_Processor
 from Following.Network import FrontFollowingNetwork
 from Driver import ControlOdometryDriver
 

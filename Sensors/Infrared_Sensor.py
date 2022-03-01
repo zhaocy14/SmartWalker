@@ -1,61 +1,17 @@
 import serial
 import serial.tools.list_ports
 import numpy as np
-import os,sys
 import time
-
+from Sensors.SensorConfig import *
+from Sensors.SensorFunctions import *
 import matplotlib.pyplot as plt
-
-pwd = os.path.abspath(os.path.abspath(__file__))
-father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-sys.path.append(father_path)
-data_path = os.path.abspath(
-    os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".."  +
-    os.path.sep + "data")
-
-def print_serial(port):
-    print("---------------[ %s ]---------------" % port.name)
-    print("Path: %s" % port.device)
-    print("Descript: %s" % port.description)
-    print("HWID: %s" % port.hwid)
-    if not None == port.manufacturer:
-        print("Manufacture: %s" % port.manufacturer)
-    if not None == port.product:
-        print("Product: %s" % port.product)
-    if not None == port.interface:
-        print("Interface: %s" % port.interface)
-    print()
-
-
-def detect_serials(location="1-4.2:1.0", vid=0x10c4, pid=0xea60):
-    ports = serial.tools.list_ports.comports()
-    for port in ports:
-        print_serial(port)
-
-        if port.location.__contains__(location):
-            port_path = port.device
-            return port_path
-        else:
-            print("Cannot find the target device: %s" % location)
-    return None
 
 
 class Infrared_Sensor(object):
 
-    def __init__(self, sensor_num: int = 5, baud_rate: int = 115200, is_STM32: bool = False):
-        if not is_STM32:
-            # if not STM32, then use the USB serial
-            port_name = detect_serials()
-            print(port_name, baud_rate)
-            self.pwd = os.path.abspath(os.path.abspath(__file__))
-            self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-            self.serial = serial.Serial(port_name, baud_rate, timeout=None)
-        else:
-            port_name = detect_serials()
-            print(port_name, baud_rate)
-            self.pwd = os.path.abspath(os.path.abspath(__file__))
-            self.father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
-            self.serial = serial.Serial(port_name, baud_rate, timeout=None)
+    def __init__(self, sensor_num: int = 5, baud_rate: int = 9600, is_STM32: bool = False):
+        port_name, _ = detect_serials(port_key=INFRARED_LOCATION,sensor_name="Infrared_Sensor")
+        self.serial = serial.Serial(port_name, baud_rate, timeout=None)
         # sensor_num is the number of the sensors
         self.sensor_num = sensor_num
         self.distance_data = np.zeros((sensor_num))
@@ -77,8 +33,9 @@ class Infrared_Sensor(object):
         #
         return (x - x1) / (x0 - x1) * y0 + (x - x0) / (x1 - x0) * y1
 
-    def turn_to_distance(self, sensor_range: int = 150):
+    def turn_to_distance(self, sensor_range: int = 80):
         self.distance_data = self.distance_data / 1024 * 5
+        # print(self.distance_data)
         if sensor_range == 150:
             for j in range(self.sensor_num):
                 for i in range(self.table_150.shape[1]):
@@ -108,7 +65,7 @@ class Infrared_Sensor(object):
 
     def read_data(self, is_shown:bool=False, is_record:bool=False, is_average:bool=False):
         if is_record:
-            file_path = data_path + os.path.sep + "infrared.txt"
+            file_path = DATA_PATH + os.path.sep + "infrared.txt"
             file = open(file_path, "w")
         while True:
             try:
@@ -117,6 +74,7 @@ class Infrared_Sensor(object):
                 one_line_data = one_line_data.strip('\n')
                 one_line_data = one_line_data.strip('\r')
                 one_line_data = one_line_data.split('|')
+                # print(one_line_data)
                 if len(one_line_data) == self.sensor_num:
                     one_line_data = list(map(float, one_line_data))
                     self.buffer[0:-1, :] = self.buffer[1:self.buffer_length, :]
@@ -152,6 +110,6 @@ class Infrared_Sensor(object):
             pass
 
 if __name__ == '__main__':
-    infrared = Infrared_Sensor(sensor_num=7,baud_rate=115200)
+    infrared = Infrared_Sensor(sensor_num=6)
     infrared.read_data(is_shown=True,is_average=True)
     # softskin.record_label()

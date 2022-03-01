@@ -31,6 +31,7 @@ from bluezero import peripheral
 from wifi_connector import WifiConnector
 import subprocess
 import nmcli
+import time
 
 # constants
 # Custom service uuid
@@ -88,18 +89,40 @@ class BleManager(object):
                 # print(nmcli.device()) # Get all network devices
                 # print(nmcli.device.wifi()) # Get all available wifis
                 # print(nmcli.general()) # Get current wifi connection state General(state=<NetworkManagerState.CONNECTED_GLOBAL: 'connected'>, connectivity=<NetworkConnectivity.FULL: 'full'>, wifi_hw=True, wifi=True, wwan_hw=True, wwan=True)
+                connectionOptions = {
+                    "wifi-sec.key-mgmt": "wpa-psk",
+                    "wifi-sec.psk": wifi_config["password"]["value"]
+                }
+
+                try:
+                    nmcli.connection.delete(name=wifi_config["ssid"])
+                except Exception as e:
+                    pass
+
                 if wifi_config["hidden"]:
-                    nmcli.device.wifi_connect_hidden(wifi_config["ssid"], wifi_config["password"]["value"])
+                    print('This is a hidden network')
+                    connectionOptions["802-11-wireless.hidden"] = "yes"
+                    # nmcli.device.wifi_connect_hidden(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
+                    nmcli.connection.add(conn_type="wifi", options=connectionOptions, name=wifi_config["ssid"], autoconnect=True)
+                    nmcli.connection.up(name=wifi_config["ssid"], wait=20)
                 else:
-                    nmcli.device.wifi_rescan()
-                    nmcli.device.wifi_connect(wifi_config["ssid"], wifi_config["password"]["value"])
-                    
-                connection_status = nmcli.general().to_json()
+                    nmcli.device.wifi()
+                    nmcli.device.wifi_connect(ssid=wifi_config["ssid"], password=wifi_config["password"]["value"], wait=20)
+                
                 if self.tx_obj:
-                    if connection_status['state'] == 'connected':
-                        self.tx_obj.set_value(b'success')
-                    else:
+                    retry = 10
+                    connected = False
+                    while retry > 0:
+                        connection_status = nmcli.general().to_json()
+                        if connection_status['state'] == 'connected':
+                            connected = True
+                            self.tx_obj.set_value(b'success')
+                            break
+                        retry = retry - 1
+                        time.sleep(1)
+                    if not connected:
                         self.tx_obj.set_value(b'failure')
+                        
                 else:
                     pass
                 
@@ -114,7 +137,7 @@ class BleManager(object):
 
 
     def wificonfig_notify_callback(self, notifying, characteristic):
-        print('notifying', notifying)
+        # print('notifying', notifying)
         if notifying:
             self.tx_obj = characteristic
         else:

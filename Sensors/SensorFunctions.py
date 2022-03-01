@@ -67,6 +67,8 @@ def detect_serials(port_key: str, sensor_name: str):
         # print(port.serial_number)
         # print(port.location)
         # print(port.description)
+        # print(port.name)
+        # print("\n\n")
         if port.description.__contains__(port_key):
             port_list = port.description
             port_path = port.device
@@ -86,3 +88,6 @@ def detect_serials(port_key: str, sensor_name: str):
         else:
             print("Cannot find the device: %s" % sensor_name)
     return None, None
+
+if __name__ == "__main__":
+    detect_serials("ACM",sensor_name="0000")
