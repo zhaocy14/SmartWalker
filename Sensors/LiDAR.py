@@ -14,7 +14,7 @@ from Sensors.SensorFunctions import *
 
 class LiDAR(object):
 
-    def __init__(self,is_zmq:bool=False):
+    def __init__(self,is_zmq:bool=True):
         super().__init__()
         self.port_name = detect_serials(port_key=LIDAR_DISCRIPTION, sensor_name="LiDAR")
         if not is_zmq:
