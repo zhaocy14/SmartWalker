@@ -56,7 +56,7 @@ class CppCommand(object):
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
         if mode == "online":
             imuObj = IMU()
-            lidarObj = LiDAR()
+            lidarObj = LiDAR(is_zmq=False)
             self.lidar_port = lidarObj.port_name
             self.imu_port = imuObj.port_name
         # Initialize the driver receiver object
@@ -164,5 +164,5 @@ class CppCommand(object):
 if __name__=='__main__':
     
     with CppCommand.get_instance() as cco :
-        # cco.start_sensors(stdout=True)
-        cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")
+        cco.start_sensors(stdout=True)
+        # cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")

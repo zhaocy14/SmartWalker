@@ -18,7 +18,7 @@ class IMU(object):
     def __init__(self, baud_rate=115200,name:str=""):
         """serial information"""
         self.baud_rate = baud_rate
-        self.port_name, self.port_list = self.detect_serials("IMU") #USB-SERIAL CH340   1-3.3
+        self.port_name, self.port_list = detect_serials(port_key=IMU_LOCATION,sensor_name="IMU") #USB-SERIAL CH340   1-3.3
         print(self.port_name)
         self.serial = serial.Serial(self.port_name, self.baud_rate, timeout=None)
 
@@ -40,36 +40,6 @@ class IMU(object):
         """for txt saving"""
         self.name = name
     """Print the port information"""
-
-    def print_serial(self, port):
-        print("---------------[ %s ]---------------" % port.name)
-        print("Path: %s" % port.device)
-        print("Descript: %s" % port.description)
-        print("HWID: %s" % port.hwid)
-        if not None == port.manufacturer:
-            print("Manufacture: %s" % port.manufacturer)
-        if not None == port.product:
-            print("Product: %s" % port.product)
-        if not None == port.interface:
-            print("Interface: %s" % port.interface)
-        print()
-
-    """list all the port"""
-
-    def detect_serials(self, description="1-3.3", vid=0x10c4, pid=0xea60):
-        ports = serial.tools.list_ports.comports()
-        port_cnt = 0
-        port_list = []
-        for port in ports:
-            self.print_serial(port)
-            if port.location.__contains__(description):
-                port_list = port.description
-                port_path = port.device
-                self.print_serial(port)
-                # print(port.name)
-                return port_path, port_list
-        print("Cannot find the device: IMU")
-        return None, None
 
     """ Collect all of the original data"""
     def collect_all(self,show=False):  # 新增的核心程序，对读取的数据进行划分，各自读到对应的数组里
