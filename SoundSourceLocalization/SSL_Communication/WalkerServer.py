@@ -33,12 +33,12 @@ class WalkerServer(CommunicationPeer):
         print('-' * 20, 'init a WalkerServer class', '-' * 20, )
         context = zmq.Context()
         
-        self.send_port = 8009
+        self.send_port = 8001
         self.send_topic = 'WalkerServer Sends...'
         self.send_socket = context.socket(zmq.PUB)
         self.send_socket.bind('tcp://*:%d' % self.send_port)
         
-        self.recv_port = 8080
+        self.recv_port = 8002
         self.recv_topic = 'WalkerClient Sends...'
         self.recv_socket = context.socket(zmq.SUB)
         self.recv_socket.bind('tcp://*:%d' % self.recv_port)

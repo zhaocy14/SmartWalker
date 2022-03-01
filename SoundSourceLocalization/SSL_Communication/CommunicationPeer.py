@@ -133,7 +133,7 @@ class CommunicationPeer(object):
         return data
 
 
-class testPeer(CommunicationPeer):
+class testClient(CommunicationPeer):
     def __init__(self, ):
         # Client
         context = zmq.Context()
@@ -147,22 +147,10 @@ class testPeer(CommunicationPeer):
         self.recv_socket.connect("tcp://127.0.0.1:%d" % self.recv_port)
         self.recv_socket.setsockopt_string(zmq.SUBSCRIBE, self.recv_topic)
         
-        # # Server
-        # context = zmq.Context()
-        # self.send_port = 8008
-        # self.send_topic = 'Server Sends'
-        # self.send_socket = context.socket(zmq.PUB)
-        # self.send_socket.bind('tcp://*:%d' % self.send_port)
-        # self.recv_port = 8080
-        # self.recv_topic = 'Client Sends'
-        # self.recv_socket = context.socket(zmq.SUB)
-        # self.recv_socket.bind('tcp://*:%d' % self.recv_port)
-        # self.recv_socket.setsockopt_string(zmq.SUBSCRIBE, self.recv_topic)
-        
-        super(testPeer, self).__init__(send_port=self.send_port, send_topic=self.send_topic,
-                                       send_socket=self.send_socket,
-                                       recv_port=self.recv_port, recv_topic=self.recv_topic,
-                                       recv_socket=self.recv_socket)
+        super(testClient, self).__init__(send_port=self.send_port, send_topic=self.send_topic,
+                                         send_socket=self.send_socket,
+                                         recv_port=self.recv_port, recv_topic=self.recv_topic,
+                                         recv_socket=self.recv_socket)
     
     def send_forever(self, message='', subtopic='', ):
         '''
@@ -199,11 +187,67 @@ class testPeer(CommunicationPeer):
             print("Received data:", data)
 
 
+class testServer(CommunicationPeer):
+    def __init__(self, ):
+        # Server
+        context = zmq.Context()
+        self.send_port = 6015
+        self.send_topic = 'Server Sends'
+        self.send_socket = context.socket(zmq.PUB)
+        self.send_socket.bind('tcp://*:%d' % self.send_port)
+        self.recv_port = 6016
+        self.recv_topic = 'Client Sends'
+        self.recv_socket = context.socket(zmq.SUB)
+        self.recv_socket.bind('tcp://*:%d' % self.recv_port)
+        self.recv_socket.setsockopt_string(zmq.SUBSCRIBE, self.recv_topic)
+        
+        super(testServer, self).__init__(send_port=self.send_port, send_topic=self.send_topic,
+                                         send_socket=self.send_socket,
+                                         recv_port=self.recv_port, recv_topic=self.recv_topic,
+                                         recv_socket=self.recv_socket)
+    
+    def send_forever(self, message='', subtopic='', ):
+        '''
+        test send function
+        Args:
+            message:
+            subtopic:
+                '': no subtopic is used
+                string: use the specified string as subtopic
+        '''
+        i = 0
+        while True:
+            data = np.full(shape=(2, 2), fill_value=i, dtype=int, )
+            self.send(data=data, subtopic=subtopic)
+            print('Send data:', data)
+            i += 1
+            i %= 100000
+            time.sleep(1)
+    
+    def recv_forever(self, subtopic='', ):
+        '''
+        test receive function
+        Args:
+            message:
+            subtopic:
+                '': self.recv_topic will be used as the default topic
+                string: the conjecture ('/') of self.recv_topic and subtopic will be used as the topic
+        Returns:
+            the received message
+        '''
+        
+        while True:
+            data = self.recv(subtopic=subtopic, )
+            print("Received data:", data)
+            
+
+
 if __name__ == "__main__":
-    send_subtopic = 'audio'
+    send_subtopic = ''
     send_message = ''
-    recv_subtopic = 'direction'
-    peer = testPeer()
+    recv_subtopic = ''
+    # peer = testClient()
+    peer = testServer()
     p1 = threading.Thread(target=peer.send_forever, args=((send_message, send_subtopic)))
     p2 = threading.Thread(target=peer.recv_forever, args=(recv_subtopic,))
     

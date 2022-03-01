@@ -6,27 +6,23 @@
 # @File: temp.py
 # @Time: 2022/02/13/15:54
 # @Software: PyCharm
-import os
-import sys
-import time
-import random
-import warnings
-import numpy as np
-from copy import deepcopy
+import os, sys
+
+pwd = os.path.abspath(os.path.abspath(__file__))
+father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + "..")
+sys.path.append(father_path)
+
+from Communication.Modules.Variables import *
+from Communication.Modules.Receive import ReceiveZMQ
+from Communication.Modules.Transmit import TransmitZMQ
 
 if __name__ == '__main__':
     
-    print('Hello World!')
-    while True:
-        print('Done?', end='\t')
-        while True:
-            with open('/home/swadmin/project/SmartWalker-master/SoundSourceLocalization/temp_input.txt', 'r+') as f:
-                lines = f.readlines()
-            if len(lines) > 0:
-                input_str = lines[0].strip('\n')
-                print('input_str:', input_str)
-                f.truncate(0)
-                break
-        time.sleep(0.5)
-
-print('Brand-new World!')
+    rzo = ReceiveZMQ.get_instance()
+    
+    for topic, message in rzo.start(topic=pose_topic):
+        print(message)
+    
+    # """Transmit demo"""
+    # transmitterObj = TransmitZMQ.get_instance()
+    # transmitterObj.single_send(sl_topic, "content here")
