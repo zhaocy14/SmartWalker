@@ -26,17 +26,24 @@ def start_CppCommand():
         cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")
 
 
-if __name__ == '__main__':
-    p1 = Thread(target=start_CppCommand)
-    p1.start()
-    
+def receive_data():
     rzo = ReceiveZMQ.get_instance()
     
-    for topic, message in rzo.start(topics=[CommTopic.POSE]):
+    for topic, message in rzo.start(topics=[CommTopic.POSE.value, ]):
         print(message)
-    
-    # """Transmit demo"""
+
+
+def send_data():
     transmitterObj = TransmitZMQ.get_instance()
-    transmitterObj.send(topic=CommTopic.SL, msg=(330, 80))
+    transmitterObj.send(topic=CommTopic.SL.value, msg=(330, 80))
+
+
+if __name__ == '__main__':
+    p1 = Thread(target=start_CppCommand)
+    p2 = Thread(target=receive_data)
+    p3 = Thread(target=receive_data)
+    p1.start()
+    p2.start()
+    p3.start()
     
     p1.join()

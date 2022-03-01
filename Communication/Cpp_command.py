@@ -164,5 +164,5 @@ class CppCommand(object):
 if __name__=='__main__':
     
     with CppCommand.get_instance() as cco :
-        cco.start_sensors(stdout=True)
-        # cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")
+        # cco.start_sensors(stdout=True)
+        cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")
