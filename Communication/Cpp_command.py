@@ -50,8 +50,8 @@ class CppCommand(object):
         else:
             self._id = id(self)
             CppCommand._instance = self
-        imuObj = IMU()
-        lidarObj = LiDAR()
+        #imuObj = IMU()
+        #lidarObj = LiDAR()
         self.client = docker.from_env()
         self.container = self.client.containers.get('SMARTWALKER_CARTO')
         if mode == "online":
@@ -164,4 +164,5 @@ class CppCommand(object):
 if __name__=='__main__':
     
     with CppCommand.get_instance() as cco :
+        # cco.start_sensors(stdout=True)
         cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")
