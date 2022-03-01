@@ -44,7 +44,7 @@ class StateClient():
         state_string = ''
         if isinstance(state, Enum):
             state_string = state.value
-        elif isinstance(state, Enum):
+        elif isinstance(state, str):
             state_string = state
         else:
             print('only Enum or str allowed')
@@ -80,6 +80,22 @@ class StateClient():
     
     def set_charging(self, charging):
         self.socket.send_string("state_control.set_charging::{}".format(charging))
+        result = self.socket.recv_string()
+        if result == 'success':
+            return True
+        else:
+            return False
+    
+    def can_i_run(self, state):
+        state_string = ''
+        if isinstance(state, Enum):
+            state_string = state.value
+        elif isinstance(state, str):
+            state_string = state
+        else:
+            print('only Enum or str allowed')
+            return False
+        self.socket.send_string("state_control.set_charging::{}".format(state_string))
         result = self.socket.recv_string()
         if result == 'success':
             return True

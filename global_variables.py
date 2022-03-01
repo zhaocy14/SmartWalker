@@ -76,7 +76,18 @@ class WalkerPort(Enum):
     LIDAR = '5450'
     IMU = '5451' 
     WALKER_STATE = '5456'
-    
+
+
+@enum.unique
+class CommTopic(Enum):
+    DRIVER = 'DRIVER_CONTROL'
+    POSE = 'NAV_WALKER_POSE'
+    LIDAR = 'RP_LIDAR_SENSOR'
+    IMU = 'IMU_SENSOR' 
+    IR = 'IR_SENSOR'
+    TIME = 'TIMER'
+    SL = 'NAV_SL_LOCATION'
+        
 # @enum.unique    
 # class WalkerState(Enum):
 #     NOT_CHARGING = 'not_charging'

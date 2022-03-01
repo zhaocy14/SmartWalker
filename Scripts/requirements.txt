@@ -1,0 +1,5 @@
+dbus-python
+wifi==0.3.8
+pycairo
+PyGObject
+bluezero
