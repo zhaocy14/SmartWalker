@@ -26,22 +26,21 @@ def start_CppCommand():
         cco.start_navigation(stdout=True, driver_ctrl=False, ir_sensor=False, map_file="latest")
 
 
-def receive_data():
+def receive_msg():
     rzo = ReceiveZMQ.get_instance()
-    
     for topic, message in rzo.start(topics=[CommTopic.POSE.value, ]):
         print(message)
 
 
-def send_data():
+def send_msg():
     transmitterObj = TransmitZMQ.get_instance()
     transmitterObj.send(topic=CommTopic.SL.value, msg=(330, 80))
 
 
 if __name__ == '__main__':
     p1 = Thread(target=start_CppCommand)
-    p2 = Thread(target=receive_data)
-    p3 = Thread(target=receive_data)
+    p2 = Thread(target=receive_msg)
+    p3 = Thread(target=send_msg)
     p1.start()
     p2.start()
     p3.start()
