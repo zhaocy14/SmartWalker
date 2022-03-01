@@ -61,7 +61,7 @@ class WalkerServer(CommunicationPeer):
         take different recv actions based on the subtopics.
         AUDIO_COMMUNICATION_TOPIC: only audio_receiver will block until an audio frame is received and all the other messages will be stored in the class.
         KWS_COMMUNICATION_TOPIC: only check this class's buffer for messages
-        
+
         Warning: will rewrite the data in {self.subtopic_buffer_dict} even if the last data is not used.
         Args:
             subtopic:

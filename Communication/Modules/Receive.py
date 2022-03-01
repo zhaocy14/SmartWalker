@@ -3,6 +3,8 @@
 # Author: Owen Yip
 # Mail: me@owenyip.com
 #
+import time
+
 import numpy as np
 import re
 import os,sys
@@ -40,14 +42,17 @@ class ReceiveZMQ(object):
         self.context = zmq.Context()
     
     
+        
     def start(self, topics=[CommTopic.DRIVER.value, CommTopic.POSE.value]):
         poller = zmq.Poller()
         subs = []
+
         for _topic in topics:
             sub = self.context.socket(zmq.SUB)
             sub.connect("tcp://%s:%s" % (self.address, self.port))
             sub.setsockopt_string(zmq.SUBSCRIBE, _topic)
             subs.append(sub)
+            poller.register(sub, zmq.POLLIN)
         
         while True:
             socks = dict(poller.poll())
@@ -55,6 +60,7 @@ class ReceiveZMQ(object):
                 if _sub in socks and socks[_sub] == zmq.POLLIN:
                     string = _sub.recv_string()
                     yield string.split("::")
+                    
                     
 
     def start_old(self, topic=""):
@@ -75,6 +81,7 @@ class ReceiveZMQ(object):
         should_continue = True
         while should_continue:
             socks = dict(poller.poll())
+            print(socks)
             if drvSocket_sub in socks and socks[drvSocket_sub] == zmq.POLLIN:
                 string = drvSocket_sub.recv_string()
                 if topic == CommTopic.DRIVER.value:
