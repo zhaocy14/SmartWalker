@@ -16,7 +16,7 @@ class LiDAR(object):
 
     def __init__(self,is_zmq:bool=True):
         super().__init__()
-        self.port_name = detect_serials(port_key=LIDAR_DISCRIPTION, sensor_name="LiDAR")
+        self.port_name, _ = detect_serials(port_key=LIDAR_DISCRIPTION, sensor_name="LiDAR")
         if not is_zmq:
             self.python_lidar = rplidar.RPLidar(self.port_name)
         else:
