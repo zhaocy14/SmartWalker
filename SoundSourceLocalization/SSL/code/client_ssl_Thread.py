@@ -33,7 +33,18 @@ class SSL(object):
         super(SSL, self).__init__()
         self.useCD = useCD
     
+    def send_pose(self, walker_client, ):
+        from Communication.Modules.Receive import ReceiveZMQ
+        
+        rzo = ReceiveZMQ.get_instance()
+        for topic, message in rzo.start(topics=[SSL_POSE_COMMUNICATION_TOPIC, ]):
+            walker_client.send(data=message, subtopic=SSL_POSE_COMMUNICATION_TOPIC)
+    
     def run(self, walker_client, control_driver, SHARED_SSL_EVENT):
+        # send pose to server
+        # p1 = threading.Thread(target=self.send_pose, args=(walker_client,))
+        # p1.start()
+        
         Server_SSL_Wait = False  # TODO: for debugging
         while True:
             time.sleep(0.1)
@@ -46,7 +57,7 @@ class SSL(object):
             else:
                 pass
             
-            direction = walker_client.recv(subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+            direction = walker_client.recv(subtopic=SSL_NAV_COMMUNICATION_TOPIC)
             if direction is None:
                 continue
             print(f'Direction ({direction}) is received')

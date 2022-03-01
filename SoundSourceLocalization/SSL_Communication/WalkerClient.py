@@ -56,7 +56,7 @@ class WalkerClient(CommunicationPeer):
             # AUDIO_COMMUNICATION_TOPIC           : None,
             KWS_COMMUNICATION_TOPIC             : None,
             WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC: False,
-            SSL_DOA_COMMUNICATION_TOPIC         : None,
+            SSL_NAV_COMMUNICATION_TOPIC         : None,
         }
     
     def recv(self, subtopic='', ):
@@ -95,9 +95,9 @@ class WalkerClient(CommunicationPeer):
             self.subtopic_buffer_dict[WORD_QUEUE_CLEAR_COMMUNICATION_TOPIC] = False
             return data
         
-        elif subtopic == SSL_DOA_COMMUNICATION_TOPIC:
-            data = self.subtopic_buffer_dict[SSL_DOA_COMMUNICATION_TOPIC]
-            self.subtopic_buffer_dict[SSL_DOA_COMMUNICATION_TOPIC] = None
+        elif subtopic == SSL_NAV_COMMUNICATION_TOPIC:
+            data = self.subtopic_buffer_dict[SSL_NAV_COMMUNICATION_TOPIC]
+            self.subtopic_buffer_dict[SSL_NAV_COMMUNICATION_TOPIC] = None
             return data
         
         else:

@@ -84,16 +84,20 @@ class Voice_Process(object):
 
 if __name__ == '__main__':
     print('-' * 20, 'Hello World!', '-' * 20)
+    
+    import multiprocessing
+    
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
     
     MappingMicro = False
-    isDebug = True
-    useCD = False
+    useCD = True
     left_right = 0
-    
-    vp = Voice_Process(MappingMicro=MappingMicro, isDebug=isDebug, useCD=useCD, left_right=left_right, )
+    SSL_Event = multiprocessing.Event()
+    SSL_Event.set()  # TODO: for debugging
+    VoiceMenu_Command_Queue = multiprocessing.Queue()  # TODO: Warning: maxlen is not set. And it may raise Error (out of memory)
+    vp = Voice_Process(VoiceMenu_Command_Queue=VoiceMenu_Command_Queue, SSL_Event=SSL_Event, MappingMicro=MappingMicro,
+                       useCD=useCD, left_right=left_right, )
     p1 = Process(target=vp.start, args=())
     p1.start()
-    p1.join()
     
     print('-' * 20, 'Brand-new World!', '-' * 20)

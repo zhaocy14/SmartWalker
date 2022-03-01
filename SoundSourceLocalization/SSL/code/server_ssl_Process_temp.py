@@ -389,7 +389,7 @@ class SSL(object):
             # SSL predict
             direction, _ = self.doa.predict_sample(audio=audio, invalid_classes=None)
             print("Producing action ...\n", 'Direction', direction)
-            walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+            walker_server.send(data=direction, subtopic=SSL_NAV_COMMUNICATION_TOPIC)
     
     def run_D3QN(self, walker_server, SSL_AUDIO_QUEUE, ):
         from SoundSourceLocalization.SSL.code.SSL_RL.agent_d3qn import DQNAgent

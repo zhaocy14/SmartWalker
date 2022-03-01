@@ -1,5 +1,6 @@
 import os, sys
 import pyaudio
+import global_variables
 
 # sample audio
 RECORD_DEVICE_NAME = "USB Camera-B4.09.24.1"
@@ -22,8 +23,10 @@ RECORD_SECONDS = 1.1  # 1
 
 # SSL
 KWS_TIMEOUT_SECONDS = 0.5
-SSL_DOA_COMMUNICATION_TOPIC = 'DOA'
 SSL_WAIT_COMMUNICATION_TOPIC = 'WAIT'
+SSL_POSE_COMMUNICATION_TOPIC = global_variables.CommTopic.POSE.value
+SSL_NAV_COMMUNICATION_TOPIC = global_variables.CommTopic.SL.value
+
 # 在SSL模块接收KWS识别的关键词时，由于会在一个（可能）连续的时间内，传来多段语音。此参数集用来表征用户说一次关键词，SSL收集持续多长时间内的关键词语音
 
 # Reinforcement Learning
@@ -50,3 +53,7 @@ WAV_PATH = father_path + "/resource/wav/online"
 ONLINE_MODEL_PATH = father_path + "/resource/model/online.ckpt"
 
 # sliding window size can be seen in KWS detector
+
+
+if __name__ == '__main__':
+    print(SSL_NAV_COMMUNICATION_TOPIC, SSL_POSE_COMMUNICATION_TOPIC)

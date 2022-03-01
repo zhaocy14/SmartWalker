@@ -404,7 +404,7 @@ class SSL(object):
             direction, probs = self.doa.predict_sample(audio=audio, invalid_classes=None)
             print("Producing action ...\n", 'Direction', direction)
             print('Probs:', np.around(probs, 3))
-            walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+            walker_server.send(data=direction, subtopic=SSL_NAV_COMMUNICATION_TOPIC)
     
     def run_D3QN(self, walker_server, SSL_AUDIO_QUEUE, ):
         def get_input():
@@ -527,7 +527,7 @@ class SSL(object):
                 
                 print('Send this direction?', end='\t')
                 if get_input() == 'y':  # TODO: for debugging
-                    walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+                    walker_server.send(data=direction, subtopic=SSL_NAV_COMMUNICATION_TOPIC)
                 print('End this eposoide?', end='\t')
                 if get_input() == 'y':
                     self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
@@ -677,7 +677,7 @@ class SSL(object):
                 
                 print('Send this direction?', end='\t')
                 if get_input() == 'y':  # TODO: for debugging
-                    walker_server.send(data=direction, subtopic=SSL_DOA_COMMUNICATION_TOPIC)
+                    walker_server.send(data=direction, subtopic=SSL_NAV_COMMUNICATION_TOPIC)
                 print('End this eposoide?', end='\t')
                 if get_input() == 'y':
                     self.clear_Queue(Queue=SSL_AUDIO_QUEUE,
@@ -717,8 +717,8 @@ class SSL_Process(object):
     
     def run(self, walker_server, SSL_AUDIO_QUEUE, ):
         ssl = SSL(seg_len=self.seg_len, doDenoise=self.doDenoise, isDebug=self.isDebug, )
-        ssl.run(walker_server, SSL_AUDIO_QUEUE, )
-        # ssl.run_D3QN(walker_server, SSL_AUDIO_QUEUE, )
+        # ssl.run(walker_server, SSL_AUDIO_QUEUE, )
+        ssl.run_D3QN(walker_server, SSL_AUDIO_QUEUE, )
         # ssl.run_SAC(walker_server, SSL_AUDIO_QUEUE, )
 
 

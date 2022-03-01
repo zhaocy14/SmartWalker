@@ -110,6 +110,6 @@ class ReceiveZMQ(object):
 
 
 if __name__ == "__main__":
-    ReceiveZMQObject = ReceiveZMQ(address="127.0.0.1", port="5455")
-    for topic, messagedata in ReceiveZMQObject.start():
+    rzo = ReceiveZMQ(address="127.0.0.1", port="5455")
+    for topic, messagedata in rzo.start():
         print("Processing ... %s: %s" % (topic, messagedata))
