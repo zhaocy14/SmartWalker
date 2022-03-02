@@ -12,9 +12,9 @@ from Sensors.SensorFunctions import *
 
 
 class LiDAR_Processor(object):
-    def __init__(self, is_show: bool = False, is_zmq: bool = False):
+    def __init__(self, is_show: bool = False, is_zmq: bool = True):
         if not is_zmq:
-            self.rplidar = LiDAR.LiDAR(is_zmq=is_zmq)
+            self.rplidar,_ = LiDAR.LiDAR(is_zmq=is_zmq)
         else:
             self.rplidar = []
 

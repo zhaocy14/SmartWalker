@@ -72,8 +72,8 @@ class STM32Sensors():
             return data
 
     def UpdateDriver(self, linearVelocity: float, angularVelocity: float, distanceToCenter: int):
-        if linearVelocity != self.vehicle_linear_velocity and angularVelocity != self.vehicle_angular_velocity and \
-                distanceToCenter != self.vehicle_angular_distance:
+        # if linearVelocity != self.vehicle_linear_velocity and angularVelocity != self.vehicle_angular_velocity and \
+        #         distanceToCenter != self.vehicle_angular_distance:
             self.vehicle_linear_velocity = linearVelocity
             self.vehicle_angular_velocity = angularVelocity
             self.vehicle_angular_distance = distanceToCenter

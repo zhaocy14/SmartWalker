@@ -11,7 +11,7 @@ import numpy as np
 import time
 import threading
 import tensorflow as tf
-from Sensors import IRCamera, softskin, Infrared_Sensor
+from Sensors import IRCamera, softskin, Infrared_Sensor,STM32
 from Driver import ControlOdometryDriver as CD
 from Following.Network import FrontFollowingNetwork as FFL
 from Following.Preprocessing import LiDAR_Processor
@@ -39,11 +39,12 @@ if __name__ == "__main__":
     # LD = Leg_detector.Leg_detector()
     # thread_leg = threading.Thread(target=LD.scan_procedure,args=())
     # thread_leg.start()
-    LD = Leg_detector.Leg_detector(is_zmq=True)
+    LD = LiDAR_Processor.LiDAR_Processor(is_zmq=True)
     IRCamera = IRCamera.IRCamera()
-    IRSensor = Infrared_Sensor.Infrared_Sensor(sensor_num=5)
-    cd = CD.ControlDriver(left_right=0)
-    skin = softskin.SoftSkin()
+    STM = STM32.STM32Sensors()
+    # IRSensor = Infrared_Sensor.Infrared_Sensor(sensor_num=5)
+    # cd = CD.ControlDriver(left_right=0)
+    # skin = softskin.SoftSkin()
 
     # initialize the network
     win_width = 10
@@ -64,12 +65,12 @@ if __name__ == "__main__":
 
     thread_leg = threading.Thread(target=LD.zmq_scan,args=())
     thread_leg.start()
-    thread_skin = threading.Thread(target=skin.read_and_record,args=())
-    thread_skin.start()
+    # thread_skin = threading.Thread(target=skin.read_and_record,args=())
+    # thread_skin.start()
 
     time.sleep(2) # wait for the start of the lidar
 
-    thread_control_driver = threading.Thread(target=cd.control_part, args=())
+    # thread_control_driver = threading.Thread(target=cd.control_part, args=())
     # thread_control_driver.start()
     # thread_infrared = threading.Thread(target=IRSensor.read_data, args=())
     # thread_infrared.start()
@@ -77,11 +78,11 @@ if __name__ == "__main__":
 
     while True:
         # present_time = time.time()
-        if skin.max_pressure >= 120:
-            CD.speed = CD.omega = CD.radius = 0
-            IRCamera.get_irdata_once()
-            print("Abnormal Pressure!")
-            continue
+        # if skin.max_pressure >= 120:
+        #     CD.speed = CD.omega = CD.radius = 0
+        #     IRCamera.get_irdata_once()
+        #     print("Abnormal Pressure!")
+        #     continue
         IRCamera.get_irdata_once(demo=True)
         if len(IRCamera.temperature) == 768:
             normalized_temperature = np.array(IRCamera.temperature).reshape((ir_data_width, 1))
@@ -116,62 +117,69 @@ if __name__ == "__main__":
             human_position = (LD.left_leg+LD.right_leg)/2
             if backward_boundry>human_position[0]>still_security_boundry:
                 print("\rbackward!",end="")
-                cd.speed = -0.1
-                cd.omega=0
-                cd.radius=0
+                STM.UpdateDriver(-10,0,0)
+                # cd.speed = -0.1
+                # cd.omega=0
+                # cd.radius=0
             elif max_result == result[0, 0] or human_position[0] < still_security_boundry:
                 print("\rstill!",end="")
-                cd.speed = 0
-                cd.omega = 0
-                cd.radius = 0
+                STM.UpdateDriver(0, 0, 0)
+                # cd.speed = 0
+                # cd.omega = 0
+                # cd.radius = 0
             elif max_result == result[0, 1]:
                 print("\rforward!",end="")
-                if LD.obstacle_array[0, 1] > 1:
-                    print("\r obstacle in forward!!!!",end="")
-                    cd.speed = cd.omega = cd.radius = 0
-                    continue
+                # if LD.obstacle_array[0, 1] > 1:
+                #     print("\r obstacle in forward!!!!",end="")
+                #     cd.speed = cd.omega = cd.radius = 0
+                #     continue
                 if human_position[0] > forward_security_boundry:
-                    cd.speed = 0.05
-                    cd.omega = 0
-                    cd.radius = 0
+                    STM.UpdateDriver(5, 0, 0)
+                    # cd.speed = 0.05
+                    # cd.omega = 0
+                    # cd.radius = 0
             elif max_result == result[0, 2]:
                 print("\rturn left!",end="")
-                cd.speed = 0
-                cd.omega = 0.1
-                cd.radius = 70
-                if LD.obstacle_array[0,0] > 1 or LD.obstacle_array[0,3] > 1 or LD.obstacle_array[0,1]:
-                    print("\r obstacle in turning left!!!!",end="")
-                    # cd.radius = cd.radius * (200-IRSensor.distance_data[0])/100
-                    cd.speed = cd.omega = cd.radius = 0
-                    continue
+                # cd.speed = 0
+                # cd.omega = 0.1
+                # cd.radius = 70
+                STM.UpdateDriver(0, 0.1, -70)
+                # if LD.obstacle_array[0,0] > 1 or LD.obstacle_array[0,3] > 1 or LD.obstacle_array[0,1]:
+                #     print("\r obstacle in turning left!!!!",end="")
+                #     # cd.radius = cd.radius * (200-IRSensor.distance_data[0])/100
+                #     cd.speed = cd.omega = cd.radius = 0
+                #     continue
             elif max_result == result[0, 3]:
                 print("\rturn right!",end="")
-                cd.speed = 0
-                cd.omega = -0.1
-                cd.radius = 70
-                if LD.obstacle_array[0, 2] > 1 or LD.obstacle_array[0, 4] or LD.obstacle_array[0,1] > 1:
-                    print("\r obstacle in turning right!!!!",end="")
-                    # cd.radius = max(cd.radius-5,0)
-                    cd.speed = cd.omega = cd.radius = 0
-                    continue
+                # cd.speed = 0
+                # cd.omega = -0.1
+                # cd.radius = 70
+                STM.UpdateDriver(0, 0.1, 70)
+                # if LD.obstacle_array[0, 2] > 1 or LD.obstacle_array[0, 4] or LD.obstacle_array[0,1] > 1:
+                #     print("\r obstacle in turning right!!!!",end="")
+                #     # cd.radius = max(cd.radius-5,0)
+                #     cd.speed = cd.omega = cd.radius = 0
+                #     continue
             elif max_result == result[0, 4]:
                 print("\ryuandi left",end="")
-                cd.speed = 0
-                cd.omega = 0.3
-                cd.radius = 0
-                if LD.obstacle_array[0,0] > 1 or LD.obstacle_array[0,3] > 1:
-                    print("\r obstacle in turning left!!!!",end="")
-                    cd.speed = cd.omega = cd.radius = 0
-                    continue
+                # cd.speed = 0
+                # cd.omega = 0.3
+                # cd.radius = 0
+                STM.UpdateDriver(0, -0.1, 0)
+                # if LD.obstacle_array[0,0] > 1 or LD.obstacle_array[0,3] > 1:
+                #     print("\r obstacle in turning left!!!!",end="")
+                #     cd.speed = cd.omega = cd.radius = 0
+                #     continue
             elif max_result == result[0, 5]:
                 print("\ryuandi right",end="")
-                cd.speed = 0
-                cd.omega = -0.3
-                cd.radius = 0
-                if LD.obstacle_array[0, 2] > 1 or LD.obstacle_array[0, 4] > 1:
-                    print("\r obstacle in turning right in space!!!!",end="")
-                    cd.speed = cd.omega = cd.radius = 0
-                    continue
+                # cd.speed = 0
+                # cd.omega = -0.3
+                # cd.radius = 0
+                STM.UpdateDriver(0, 0.1, 0)
+                # if LD.obstacle_array[0, 2] > 1 or LD.obstacle_array[0, 4] > 1:
+                #     print("\r obstacle in turning right in space!!!!",end="")
+                #     cd.speed = cd.omega = cd.radius = 0
+                #     continue
             # print(1/(time.time()-present_time))
             # present_time = time.time()
     
