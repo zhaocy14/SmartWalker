@@ -14,6 +14,7 @@ grandpa_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + ".." + os.pa
 sys.path.append(grandpa_path)
 import threading
 import json
+import time
 
 # from Driver import ControlOdometryDriver as cd
 # from Network import FrontFollowingNetwork as FFL
@@ -24,7 +25,7 @@ from Communication.Modules.Receive import ReceiveZMQ
 rzo = ReceiveZMQ.get_instance()
 
 class DriverRecv(object):
-    def __init__(self, mode="online"):
+    def __init__(self, mode="online", freq_hz=10):
         self.mode = mode
         # if topic is None:
         #     self.topic = driver_topic
@@ -32,6 +33,8 @@ class DriverRecv(object):
         #     self.topic = topic
         self.topic = CommTopic.DRIVER.value
         self.STM32 = None
+        self.last_ts = time.time()
+        self.freq_hz = freq_hz
     
 
     def start(self, use_thread=False):
@@ -61,7 +64,12 @@ class DriverRecv(object):
             _angularVelocity = -control['omega']
             _distanceToCenter = control['radius']
             if self.STM32:
-                self.STM32.UpdateDriver(linearVelocity=_linearVelocity,angularVelocity=_angularVelocity,distanceToCenter=_distanceToCenter)
+                current_ts = time.time()
+                if current_ts - self.last_ts > (1.0 / self.freq_hz):
+                    self.STM32.UpdateDriver(linearVelocity=_linearVelocity,angularVelocity=_angularVelocity,distanceToCenter=_distanceToCenter)
+                    self.last_ts = current_ts
+                else:
+                    pass
             else:
                 print('Current mode is not "online", control received', control)
     

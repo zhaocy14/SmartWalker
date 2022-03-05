@@ -102,14 +102,14 @@ class CppCommand(object):
         offline mode is mainly for testing purpose
         stdout is to determine the output of console, need to run in a new thread in order to unblock the process
     """
-    def start_navigation(self, map_file="latest", mode="online", testing="", stdout=False, driver_ctrl=False, ir_sensor=False):
+    def start_navigation(self, map_file="latest", mode="online", testing="", stdout=False, driver_ctrl=False, ir_sensor=False, driver_freq_hz=10):
         filter = "60"
         if mode == "online":
             # Start the sensors if it is not runing
             if not self._sensors_running:
                 self.start_sensors()
             if driver_ctrl:
-                drvObj = DriverRecv(mode=mode)
+                drvObj = DriverRecv(mode=mode, freq_hz=driver_freq_hz)
                 drvObj.start(use_thread=True)
             if ir_sensor:
                 irObj = InfraredTransmit(mode=mode)
